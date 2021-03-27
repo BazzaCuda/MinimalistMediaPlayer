@@ -70,7 +70,6 @@
         <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
         <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
         <SanitizedProjectName>MediaPlayer</SanitizedProjectName>
-        <Custom_Styles>&quot;Charcoal Dark Slate|VCLSTYLE|$(BDSCOMMONDIR)\Styles\CharcoalDarkSlate.vsf&quot;</Custom_Styles>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_UsePackage>DBXSqliteDriver;RARComponent_d2009;IndyIPCommon;GR32_D;DBXInterBaseDriver;vcl;IndyIPServer;vclactnband;IndySystem;tethering;VirtualTreesR;vclimg;Jcl;inetdb;DbxCommonDriver;fmx;xmlrtl;fmxobj;vclwinx;GR32_R;rtl;vcl30;CustomIPTransport;dbexpress;IndyCore;vclx;dsnap;IndyIPClient;VclSmp;JclDeveloperTools;JclVcl;vclie;DBXMySQLDriver;dsnapxml;dbrtl;WindowsMediaPlayer;IndyProtocols;inetdbxpress;inet;CodeSiteExpressPkg;EsVclComponents;EsVclCore;OverbyteIcsD103Run;NexusDB450pv260;NexusDB450ll260;NexusDB450sq260;NexusDB450sr260;NexusDB450sd260;NexusDB450se260;NexusDB450db260;NexusDB450lg260;$(DCC_UsePackage)</DCC_UsePackage>

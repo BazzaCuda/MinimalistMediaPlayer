@@ -12,7 +12,6 @@ uses
 begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  TStyleManager.TrySetStyle('Charcoal Dark Slate');
   Application.CreateForm(TUI, UI);
   try
     Application.Run;
