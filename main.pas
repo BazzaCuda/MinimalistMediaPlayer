@@ -51,6 +51,8 @@ type
     procedure WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
   private
   public
+    function  Fullscreen: boolean;
+    function  ToggleControlPanel: boolean;
   end;
 
 var
@@ -78,39 +80,39 @@ type
 
   TFX = class
   private
-    procedure ClearMediaMetaData;
-    procedure DeleteThisFile(AFilePath: string);
-    function  DoCommandLine(ACommandLIne: string): boolean;
-    procedure DoNightTime(AFolderPath: string);
-    procedure DoMuteUnmute;
-    procedure DoNOFile;
-    procedure DoYESFile;
-    procedure FetchMediaMetaData;
-    function  FindMediaFilesInFolder(AFilePath: string; AFileList: TStringList; MinFileSize: int64 = 0): integer;
-    function  isAltKeyDown: boolean;
-    function  isCapsLockOn: boolean;
-    function  isControlKeyDown: boolean;
-    function  isLastFile: boolean;
-    function  isShiftKeyDown: boolean;
-    procedure PlayCurrentFile;
-    procedure PlayFirstFile;
-    procedure PlayLastFile;
-    procedure PlayNextFile;
-    procedure PlayPrevFile;
-    procedure RateDecrease;
-    procedure RateIncrease;
-    procedure RateReset;
-    procedure RenameCurrentFile;
-    procedure ResizeWindow;
-    function  SetDateTimes(FileName: string; dt: TDateTime): Boolean;
-    function  ShowOKCancelMsgDlg(aMsg: string): TModalResult;
-    procedure TabForwardsBackwards;
-    procedure UIKeyUp(var Key: Word; Shift: TShiftState);
-    procedure UpdateRateLabel;
-    procedure UpdateTimeDisplay;
-    procedure WindowCaption;
-    procedure WindowMaximizeRestore;
-    procedure WMPplay;
+    function ClearMediaMetaData: boolean;
+    function DeleteThisFile(AFilePath: string): boolean;
+    function DoCommandLine(aCommandLIne: string): boolean;
+    function DoNightTime(AFolderPath: string): boolean;
+    function DoMuteUnmute: boolean;
+    function DoNOFile: boolean;
+    function DoYESFile: boolean;
+    function FetchMediaMetaData: boolean;
+    function FindMediaFilesInFolder(aFilePath: string; aFileList: TStringList; MinFileSize: int64 = 0): integer;
+    function isAltKeyDown: boolean;
+    function isCapsLockOn: boolean;
+    function isControlKeyDown: boolean;
+    function isLastFile: boolean;
+    function isShiftKeyDown: boolean;
+    function PlayCurrentFile: boolean;
+    function PlayFirstFile: boolean;
+    function PlayLastFile: boolean;
+    function PlayNextFile: boolean;
+    function PlayPrevFile: boolean;
+    function RateDecrease: boolean;
+    function RateIncrease: boolean;
+    function RateReset: boolean;
+    function RenameCurrentFile: boolean;
+    function ResizeWindow: boolean;
+    function SetDateTimes(aFileOrFolderPath: string; aDT: TDateTime): Boolean;
+    function ShowOKCancelMsgDlg(aMsg: string): TModalResult;
+    function TabForwardsBackwards: boolean;
+    function UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
+    function UpdateRateLabel: boolean;
+    function UpdateTimeDisplay: boolean;
+    function WindowCaption: boolean;
+    function WindowMaximizeRestore: boolean;
+    function WMPplay: boolean;
   end;
 
 var
@@ -119,7 +121,7 @@ var
 
 { TFX }
 
-procedure TFX.ClearMediaMetaData;
+function TFX.ClearMediaMetaData: boolean;
 begin
   UI.lblXY.Caption            := format('XY:', []);
   UI.lblFrameRate.Caption     := format('FR:', []);
@@ -130,36 +132,36 @@ begin
   UI.lblFileSize.Caption      := format('FS:', []);
 end;
 
-procedure TFX.DeleteThisFile(AFilePath: string);
+function TFX.DeleteThisFile(AFilePath: string): boolean;
 begin
   DoCommandLine('rot -nobanner -p 1 -r "' + AFilePath + '"');
 end;
 
-function TFX.DoCommandLine(ACommandLIne: string): boolean;
+function TFX.DoCommandLine(aCommandLIne: string): boolean;
 var
-  StartInfo:  TStartupInfo;
-  ProcInfo:   TProcessInformation;
-  cmd:        string;
-  params:     string;
+  vStartInfo:  TStartupInfo;
+  vProcInfo:   TProcessInformation;
+  vCmd:        string;
+  vParams:     string;
 begin
   result := FALSE;
-  case trim(ACommandLine) = ''  of TRUE: EXIT; end;
+  case trim(aCommandLIne) = ''  of TRUE: EXIT; end;
 
-  FillChar(StartInfo, SizeOf(TStartupInfo), #0);
-  FillChar(ProcInfo, SizeOf(TProcessInformation), #0);
-  StartInfo.cb          := SizeOf(TStartupInfo);
-  StartInfo.wShowWindow := SW_HIDE;
-  StartInfo.dwFlags     := STARTF_USESHOWWINDOW;
+  FillChar(vStartInfo, SizeOf(TStartupInfo), #0);
+  FillChar(vProcInfo, SizeOf(TProcessInformation), #0);
+  vStartInfo.cb          := SizeOf(TStartupInfo);
+  vStartInfo.wShowWindow := SW_HIDE;
+  vStartInfo.dwFlags     := STARTF_USESHOWWINDOW;
 
-  cmd := 'c:\windows\system32\cmd.exe';
-  params := '/c ' + ACommandLine;
+  vCmd := 'c:\windows\system32\cmd.exe';
+  vParams := '/c ' + aCommandLIne;
 
-  result := CreateProcess(PWideChar(cmd), PWideChar(params), nil, nil, FALSE,
+  result := CreateProcess(PWideChar(vCmd), PWideChar(vParams), nil, nil, FALSE,
                           CREATE_NEW_PROCESS_GROUP + NORMAL_PRIORITY_CLASS, nil, PWideChar(ExtractFilePath(application.ExeName)),
-                          StartInfo, ProcInfo);
+                          vStartInfo, vProcInfo);
 end;
 
-procedure TFX.DoMuteUnmute;
+function TFX.DoMuteUnmute: boolean;
 begin
   GV.Mute := NOT GV.Mute;
   UI.WMP.settings.mute := GV.Mute;
@@ -169,40 +171,37 @@ begin
   end;
 end;
 
-procedure TFX.DoNightTime(AFolderPath: string);
+function TFX.DoNightTime(AFolderPath: string): boolean;
 const
   DayTime   = 42049;
   NightTime = 2;
   StrDbsys  = '.db.sys';
 var
-  RC: integer;
-  SR: TSearchRec;
+  sr: TSearchRec;
 begin
   case DirectoryExists(AFolderPath) of FALSE: EXIT; end;
 
   SetDateTimes(AFolderPath, DayTime);
   case isControlKeyDown of FALSE: FileSetAttr(AFolderPath, NightTime); end;
 
-  RC := FindFirst(AFolderPath + '*.*', faAnyFile, SR);
+  case FindFirst(AFolderPath + '*.*', faAnyFile, sr) = 0 of  TRUE:
+    repeat
 
-  while RC = 0 do begin
+      case (sr.Attr AND faDirectory) = faDirectory of
+        TRUE: case (sr.Name <> '.') AND (sr.Name <> '..') of TRUE: DoNightTime(AFolderPath + sr.Name + '\'); end;
+       FALSE: case pos(ExtractFileExt(sr.Name), StrDbsys) >= 0 of
+                TRUE:  begin  SetDateTimes(AFolderPath + sr.Name, DayTime);
+                              case isControlKeyDown of
+                                FALSE: FileSetAttr(AFolderPath + sr.Name, NightTime); end;end;end;end;
 
-    case (SR.Attr AND faDirectory) = faDirectory of
-      TRUE: case (SR.Name <> '.') AND (SR.Name <> '..') of TRUE: DoNightTime(AFolderPath + SR.Name + '\'); end;
-     FALSE: case pos(ExtractFileExt(SR.Name), StrDbsys) >= 0 of
-              TRUE:  begin  SetDateTimes(AFolderPath + SR.Name, DayTime);
-                            case isControlKeyDown of
-                              FALSE: FileSetAttr(AFolderPath + SR.Name, NightTime); end;end;end;end;
-
-    RC := FindNext(SR);
-
-    application.ProcessMessages;
+      application.ProcessMessages;
+    until FindNext(sr) <> 0;
   end;
 
-  FindClose(SR);
+  FindClose(sr);
 end;
 
-procedure TFX.DoNOFile;
+function TFX.DoNOFile: boolean;
 var
   vMsg: string;
 begin
@@ -224,14 +223,14 @@ begin
   end;
 end;
 
-procedure TFX.DoYESFile;
+function TFX.DoYESFile: boolean;
 begin
   case isLastFile of TRUE: begin UI.CLOSE; EXIT; end;end;  // Close app after approving final file
 
   PlayNextFile;
 end;
 
-procedure TFX.FetchMediaMetaData;
+function TFX.FetchMediaMetaData: boolean;
 begin
   UI.lblXY.Caption                := format('XY:  %s / %s', [UI.WMP.currentMedia.getItemInfo('WM/VideoWidth'), UI.WMP.currentMedia.getItemInfo('WM/VideoHeight')]);
   try UI.lblFrameRate.Caption     := format('FR:  %f fps', [StrToFloat(UI.WMP.currentMedia.getItemInfo('FrameRate')) / 1000]); except end;
@@ -243,45 +242,42 @@ begin
 //  ShowMessage(UI.WMP.currentMedia.getItemInfo('WM/VideoFormat'));
 end;
 
-function TFX.FindMediaFilesInFolder(AFilePath: string; AFileList: TStringList; MinFileSize: int64 = 0): integer;
+function TFX.FindMediaFilesInFolder(aFilePath: string; aFileList: TStringList; MinFileSize: int64 = 0): integer;
 const EXTS_FILTER = '.wmv.mp4.avi.flv.mpg.mpeg.mkv.3gp.mov.m4v.vob.ts.webm.divx.m4a.mp3.wav.aac';
 var
-  RC:           integer;
-  SR:           TSearchRec;
+  sr:           TSearchRec;
   vFolderPath:  string;
 
-  function FileSizeOK: boolean;
+  function isFileSizeOK: boolean;
   begin
-    result := (MinFileSize <= 0) OR (AFilePath = vFolderPath + SR.Name) OR (FileSizeByName(vFolderPath + SR.Name) >= MinFileSize);
+    result := (MinFileSize <= 0) OR (AFilePath = vFolderPath + sr.Name) OR (FileSizeByName(vFolderPath + sr.Name) >= MinFileSize);
   end;
 
-  function FileExtOK: boolean;
+  function isFileExtOK: boolean;
   begin
-    result := pos(LowerCase(ExtractFileExt(SR.Name)), EXTS_FILTER) <> 0;
+    result := pos(LowerCase(ExtractFileExt(sr.Name)), EXTS_FILTER) <> 0;
   end;
 begin
   result := -1;
   case FileExists(AFilePath) of FALSE: EXIT; end;
 
-  AFileList.Clear;
-  AFileList.Sorted := FALSE;
+  aFileList.Clear;
+  aFileList.Sorted := FALSE;
 
   vFolderPath := ExtractFilePath(AFilePath);
 
-  RC := FindFirst(vFolderPath + '*.*', faAnyFile, SR);
-
-  while RC = 0 do begin
-    case (SR.Attr AND faDirectory) = faDirectory of FALSE:
-      case FileSizeOK AND FileExtOK of TRUE: AFileList.Add(vFolderPath + SR.Name); end;
-    end;
-    RC := FindNext(SR);
+  case FindFirst(vFolderPath + '*.*', faAnyFile, sr) = 0 of  TRUE:
+    repeat
+      case (sr.Attr AND faDirectory) = faDirectory of FALSE:
+        case isFileSizeOK AND isFileExtOK of TRUE: aFileList.Add(vFolderPath + sr.Name); end;end;
+    until FindNext(sr) <> 0;
   end;
 
-  FindClose(SR);
+  FindClose(sr);
 
-  AFileList.Sorted  := TRUE;
-  AFileList.Sorted  := FALSE;
-  result            := AFileList.IndexOf(AFilePath);
+  aFileList.Sorted  := TRUE;
+  aFileList.Sorted  := FALSE; // so that files in the list can be renamed without screwing up the order
+  result            := aFileList.IndexOf(aFilePath);
 end;
 
 function TFX.isAltKeyDown: boolean;
@@ -315,7 +311,7 @@ begin
   result := (GetKeyState(VK_SHIFT) AND $80) <> 0;
 end;
 
-procedure TFX.PlayCurrentFile;
+function TFX.PlayCurrentFile: boolean;
 begin
   case (GV.FileIx < 0) OR (GV.FileIx > GV.Files.Count - 1) of TRUE: EXIT; end;
 
@@ -326,7 +322,7 @@ begin
   end;end;
 end;
 
-procedure TFX.PlayFirstFile;
+function TFX.PlayFirstFile: boolean;
 begin
   case GV.Files.Count > 0 of TRUE:  begin
                                       GV.FileIx := 0;
@@ -335,7 +331,7 @@ begin
   end;
 end;
 
-procedure TFX.PlayLastFile;
+function TFX.PlayLastFile: boolean;
 begin
   case GV.Files.Count > 0 of TRUE:  begin
                                       GV.FileIx := GV.Files.Count - 1;
@@ -344,7 +340,7 @@ begin
   end;
 end;
 
-procedure TFX.PlayNextFile;
+function TFX.PlayNextFile: boolean;
 begin
   case GV.FileIx < GV.Files.Count - 1 of TRUE:  begin
                                                   GV.FileIx := GV.FileIx + 1;
@@ -353,7 +349,7 @@ begin
   end;
 end;
 
-procedure TFX.PlayPrevFile;
+function TFX.PlayPrevFile: boolean;
 begin
   case GV.FileIx > 0 of TRUE:   begin
                                   GV.FileIx := GV.FileIx - 1;
@@ -362,48 +358,48 @@ begin
   end;
 end;
 
-procedure TFX.RateDecrease;
+function TFX.RateDecrease: boolean;
 begin
   UI.WMP.settings.rate    := UI.WMP.settings.rate - 0.1;
   UI.tmrRateLabel.Enabled := TRUE;
 end;
 
-procedure TFX.RateIncrease;
+function TFX.RateIncrease: boolean;
 begin
   UI.WMP.settings.rate    := UI.WMP.settings.rate + 0.1;
   UI.tmrRateLabel.Enabled := TRUE;
 end;
 
-procedure TFX.RateReset;
+function TFX.RateReset: boolean;
 begin
   UI.WMP.settings.rate    := 1;
   UI.tmrRateLabel.Enabled := TRUE;
 end;
 
-procedure TFX.RenameCurrentFile;
+function TFX.RenameCurrentFile: boolean;
 var
-  OldFileName:  string;
-  ext:          string;
+  vOldFileName: string;
+  vExt:         string;
   s:            string;
-  NewFilePath:  string;
+  vNewFilePath: string;
 begin
   UI.WMP.controls.pause;
   try
-    OldFileName := ExtractFileName(GV.Files[GV.FileIx]);
-    ext         := ExtractFileExt(OldFileName);
-    OldFileName := copy(OldFileName, 1, pos(ext, OldFileName) - 1);
-    s           := InputBoxForm(OldFileName);
+    vOldFileName  := ExtractFileName(GV.Files[GV.FileIx]);
+    vExt          := ExtractFileExt(vOldFileName);
+    vOldFileName  := copy(vOldFileName, 1, pos(vExt, vOldFileName) - 1);
+    s             := InputBoxForm(vOldFileName);
   except
     s := '';
   end;
-  case (s = '') OR (s = OldFileName) of TRUE: EXIT; end;
-  NewFilePath := ExtractFilePath(GV.Files[GV.FileIx]) + s + ext;
-  RenameFile(GV.Files[GV.FileIx], NewFilePath);
-  GV.Files[GV.FileIx] := NewFilePath;
+  case (s = '') OR (s = vOldFileName) of TRUE: EXIT; end;
+  vNewFilePath := ExtractFilePath(GV.Files[GV.FileIx]) + s + vExt;
+  RenameFile(GV.Files[GV.FileIx], vNewFilePath);
+  GV.Files[GV.FileIx] := vNewFilePath;
   WindowCaption;
 end;
 
-procedure TFX.ResizeWindow;
+function TFX.ResizeWindow: boolean;
 var
   vR: TRect;
 begin
@@ -418,33 +414,33 @@ begin
                               (GetSystemMetrics(SM_CYVIRTUALSCREEN) - (vR.Bottom - vR.Top)) div 2, 0, 0, SWP_NOZORDER + SWP_NOSIZE);
 end;
 
-function TFX.SetDateTimes(FileName: string; dt: TDateTime): Boolean;
+function TFX.SetDateTimes(aFileOrFolderPath: string; aDT: TDateTime): Boolean;
 // Folders and Files
 var
-  hDir:       THandle;
-  SystemTime: TSystemTime;
-  FileTime:   TFiletime;
+  vHandle:      THandle;
+  vSystemTime:  TSystemTime;
+  vFileTime:    TFiletime;
 begin
-  hDir := CreateFile(PChar(FileName),
+  vHandle := CreateFile(PChar(aFileOrFolderPath),
                      GENERIC_READ or GENERIC_WRITE,
                      0,
                      nil,
                      OPEN_EXISTING,
                      FILE_FLAG_BACKUP_SEMANTICS,
                      0);
-  case hDir <> INVALID_HANDLE_VALUE of
+  case vHandle <> INVALID_HANDLE_VALUE of
     TRUE:   try
-              DateTimeToSystemTime(dt, SystemTime);
-              SystemTimeToFileTime(SystemTime, FileTime);
-              result := SetFileTime(hDir, @FileTime, @FileTime, @FileTime);
+              DateTimeToSystemTime(aDT, vSystemTime);
+              SystemTimeToFileTime(vSystemTime, vFileTime);
+              result := SetFileTime(vHandle, @vFileTime, @vFileTime, @vFileTime);
             finally
-              CloseHandle(hDir);
+              CloseHandle(vHandle);
             end;
    FALSE:  result := FALSE;
   end;
 end;
 
-procedure TFX.TabForwardsBackwards;
+function TFX.TabForwardsBackwards: boolean;
 //  Default   = 10th
 //  SHIFT     = 20th
 //  ALT       = 50th
@@ -467,7 +463,7 @@ begin
   end;
 end;
 
-procedure TFX.UIKeyUp(var Key: Word; Shift: TShiftState);
+function TFX.UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
 const
   StrTestInternalFolder = 'B:\AudioLibrary\system\';
 begin
@@ -484,17 +480,17 @@ begin
     ord('#'), 222     : DoNightTime(StrTestInternalFolder);   // # = NightTime                      Mods: Ctrl-#
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
-    ord('c'), ord('C'): UI.pnlControls.Visible := NOT UI.pnlControls.Visible; // C = Control Panel show/hide
+    ord('c'), ord('C'): UI.ToggleControlPanel;                // C = Control Panel show/hide
     ord('d'), ord('D'): DoNOFile;                             // D = Delete File
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
-    ord('f'), ord('F'): UI.WMP.fullScreen := TRUE;            // F = Fullscreen
+    ord('f'), ord('F'): UI.Fullscreen;                        // F = Fullscreen
     ord('g'), ord('G'): ResizeWindow;                         // G = Greater window size            Mods: Ctrl-G
     ord('m'), ord('M'): WindowMaximizeRestore;                // M = Maximize/Restore
     ord('n'), ord('N'): application.Minimize;                 // N = miNimize
     ord('q'), ord('Q'): PlayPrevFile;                         // Q = Play previous in folder
     ord('r'), ord('R'): RenameCurrentFile;                    // R = Rename
     ord('s'), ord('S'): UI.WMP.controls.currentPosition := 0; // S = start-over
-    ord('t'), ord('T'): TabForwardsBackwards;                 // T = Tab forwards/backwards 10%     Mods: Ctrl-T, SHIFT-T
+    ord('t'), ord('T'): TabForwardsBackwards;                 // T = Tab forwards/backwards n%     Mods: SHIFT-T, ALT-T, CAPSLOCK, Ctrl-T,
     ord('v'), ord('V'): WindowMaximizeRestore;                // V = View Maximize/Restore
     ord('w'), ord('W'): PlayNextFile;                         // W = Watch next in folder
     ord('x'), ord('X'): UI.CLOSE;                             // X = eXit app
@@ -505,12 +501,12 @@ begin
   Key := 0;
 end;
 
-procedure TFX.UpdateRateLabel;
+function TFX.UpdateRateLabel: boolean;
 begin
   UI.lblRate.Caption  := IntToStr(round(UI.WMP.settings.rate * 100)) + '%';
 end;
 
-procedure TFX.UpdateTimeDisplay;
+function TFX.UpdateTimeDisplay: boolean;
 begin
   UI.lblTimeDisplay.Caption := UI.WMP.controls.currentPositionString + ' / ' + UI.WMP.currentMedia.durationString;
 
@@ -518,18 +514,18 @@ begin
   UI.ProgressBar.Position   := trunc(UI.WMP.controls.currentPosition);
 end;
 
-procedure TFX.WindowCaption;
+function TFX.WindowCaption: boolean;
 begin
   UI.caption := '[' + IntToStr(GV.FileIx + 1) + '/' + IntToStr(GV.Files.Count) + '] ' + ExtractFileName(GV.Files[GV.FileIx]);
 end;
 
-procedure TFX.WindowMaximizeRestore;
+function TFX.WindowMaximizeRestore: boolean;
 begin
   case UI.WindowState = wsMaximized of TRUE: UI.WindowState := wsNormal;
                                       FALSE: UI.WindowState := wsMaximized; end;
 end;
 
-procedure TFX.WMPplay;
+function TFX.WMPplay: boolean;
 begin
   try
     UI.tmrMetaData.Enabled := FALSE;
@@ -551,13 +547,13 @@ begin
   try
     Font.Name := 'Segoe UI';
     Font.Size := 12;
-    Height := Height + 50;
-    Width := width + 200;
+    Height    := Height + 50;
+    Width     := width + 200;
     for i := 0 to ControlCount - 1 do begin
       case Controls[i] is TLabel  of   TRUE: with Controls[i] as TLabel do Width := Width + 200; end;
       case Controls[i] is TButton of   TRUE: with Controls[i] as TButton do begin
-                                                                                Top   := Top + 60;
-                                                                                Left  := Left + 100;
+                                                                              Top   := Top + 60;
+                                                                              Left  := Left + 100;
                                                                             end;end;
     end;
     result := ShowModal;
@@ -611,7 +607,7 @@ begin
 
   SetThemeAppProperties(0);
   ProgressBar.Brush.Color := clBlack; // Set Background colour
-  SendMessage (ProgressBar.Handle, PBM_SETBARCOLOR, 0, clDkGray); // Set bar colour
+  SendMessage(ProgressBar.Handle, PBM_SETBARCOLOR, 0, clDkGray); // Set bar colour
 
   lblTimeDisplay.Caption := '';
 
@@ -640,6 +636,11 @@ end;
 procedure TUI.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
   WMP.cursor := crDefault;
+end;
+
+function TUI.Fullscreen: boolean;
+begin
+  WMP.fullScreen := TRUE
 end;
 
 procedure TUI.lblMuteUnmuteClick(Sender: TObject);
@@ -704,6 +705,11 @@ end;
 procedure TUI.tmrTimeDisplayTimer(Sender: TObject);
 begin
   FX.UpdateTimeDisplay;
+end;
+
+function TUI.ToggleControlPanel: boolean;
+begin
+  pnlControls.Visible := NOT pnlControls.Visible;
 end;
 
 procedure TUI.WMPClick(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
