@@ -5,7 +5,8 @@ uses
   main in 'main.pas' {UI},
   FormInputBox in 'FormInputBox.pas' {InputBoxForm},
   Vcl.Themes,
-  Vcl.Styles;
+  Vcl.Styles,
+  TUtilsClass in '..\AppTemplate\TUtilsClass.pas';
 
 {$R *.res}
 

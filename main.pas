@@ -3,9 +3,8 @@ unit main;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.OleCtrls, WMPLib_TLB, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
-  CommCtrl, uxTheme, Vcl.Buttons, Math, idGlobalProtocols;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.OleCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.Buttons,
+  System.Classes, WMPLib_TLB;
 
 type
   TUI = class(TForm)
@@ -31,7 +30,6 @@ type
     lblFileSize: TLabel;
     lblXYRatio: TLabel;
     lblBitRate: TLabel;
-    procedure AppException(Sender: TObject; E: Exception);
     procedure btnNoClick(Sender: TObject);
     procedure btnPrevClick(Sender: TObject);
     procedure btnYesClick(Sender: TObject);
@@ -60,22 +58,25 @@ var
 
 implementation
 
-uses FormInputBox;
+uses
+  WinApi.CommCtrl, WinApi.Windows, WinApi.Messages, WinApi.uxTheme,
+  System.SysUtils, System.Generics.Collections, System.Math, System.Variants,
+  FormInputBox, TUtilsClass;
 
 type
   TGV = class
   strict private
     FFileIx:  integer;
-    FFiles:   TStringList;
+    FFiles:   TList<string>;
     FMute:    boolean;
     function  GetExePath: string;
   public
     constructor Create;
     destructor  Destroy;  override;
-    property    ExePath:  string      read GetExePath;
-    property    FileIx:   integer     read FFileIx  write FFileIx;
-    property    Files:    TStringList read FFiles;
-    property    Mute:     boolean     read FMute    write FMute;
+    property    ExePath:  string        read GetExePath;
+    property    FileIx:   integer       read FFileIx  write FFileIx;
+    property    Files:    TList<string> read FFiles;
+    property    Mute:     boolean       read FMute    write FMute;
   end;
 
   TFX = class
@@ -88,7 +89,7 @@ type
     function DoNOFile: boolean;
     function DoYESFile: boolean;
     function FetchMediaMetaData: boolean;
-    function FindMediaFilesInFolder(aFilePath: string; aFileList: TStringList; MinFileSize: int64 = 0): integer;
+    function FindMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
     function isAltKeyDown: boolean;
     function isCapsLockOn: boolean;
     function isControlKeyDown: boolean;
@@ -242,7 +243,7 @@ begin
 //  ShowMessage(UI.WMP.currentMedia.getItemInfo('WM/VideoFormat'));
 end;
 
-function TFX.FindMediaFilesInFolder(aFilePath: string; aFileList: TStringList; MinFileSize: int64 = 0): integer;
+function TFX.FindMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
 const EXTS_FILTER = '.wmv.mp4.avi.flv.mpg.mpeg.mkv.3gp.mov.m4v.vob.ts.webm.divx.m4a.mp3.wav.aac';
 var
   sr:           TSearchRec;
@@ -250,7 +251,7 @@ var
 
   function isFileSizeOK: boolean;
   begin
-    result := (MinFileSize <= 0) OR (AFilePath = vFolderPath + sr.Name) OR (FileSizeByName(vFolderPath + sr.Name) >= MinFileSize);
+    result := (MinFileSize <= 0) OR (AFilePath = vFolderPath + sr.Name) OR (GetFileSize(vFolderPath + sr.Name) >= MinFileSize);
   end;
 
   function isFileExtOK: boolean;
@@ -262,7 +263,7 @@ begin
   case FileExists(AFilePath) of FALSE: EXIT; end;
 
   aFileList.Clear;
-  aFileList.Sorted := FALSE;
+  aFileList.Sort;
 
   vFolderPath := ExtractFilePath(AFilePath);
 
@@ -275,9 +276,8 @@ begin
 
   FindClose(sr);
 
-  aFileList.Sorted  := TRUE;
-  aFileList.Sorted  := FALSE; // so that files in the list can be renamed without screwing up the order
-  result            := aFileList.IndexOf(aFilePath);
+  aFileList.Sort;
+  result := aFileList.IndexOf(aFilePath);
 end;
 
 function TFX.isAltKeyDown: boolean;
@@ -566,11 +566,6 @@ end;
 
 {$R *.dfm}
 
-procedure TUI.AppException(Sender: TObject; E: Exception);
-begin
-  application.Terminate;
-end;
-
 procedure TUI.btnNoClick(Sender: TObject);
 begin
   FX.DoNOFile;
@@ -596,8 +591,6 @@ procedure TUI.FormCreate(Sender: TObject);
 var
   ProgressBarStyle: integer;
 begin
-  Application.OnException := AppException;
-
   width   := 780;
   height  := 460;
 
@@ -756,7 +749,7 @@ end;
 constructor TGV.Create;
 begin
   inherited;
-  FFiles := TStringList.Create;
+  FFiles := TList<string>.Create;
 end;
 
 destructor TGV.Destroy;
