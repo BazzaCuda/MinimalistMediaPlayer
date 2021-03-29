@@ -6949,6 +6949,7 @@ object UI: TUI
   Position = poScreenCenter
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
+  OnKeyDown = FormKeyDown
   OnKeyUp = FormKeyUp
   OnMouseMove = FormMouseMove
   PixelsPerInch = 96

@@ -47,6 +47,7 @@ type
     procedure tmrMetaDataTimer(Sender: TObject);
     procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
   public
     function  Fullscreen: boolean;
@@ -256,7 +257,6 @@ var
 
   function isFileExtOK: boolean;
   begin
-//    result := pos(LowerCase(ExtractFileExt(sr.Name)), EXTS_FILTER) <> 0;
     result := EXTS_FILTER.Contains(LowerCase(ExtractFileExt(sr.Name)));
   end;
 begin
@@ -620,6 +620,14 @@ begin
   end;
 
   FX.PlayCurrentFile;
+end;
+
+procedure TUI.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  case Key of
+    VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards
+    VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards
+  end;
 end;
 
 procedure TUI.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
