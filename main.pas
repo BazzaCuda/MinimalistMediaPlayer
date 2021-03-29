@@ -256,7 +256,8 @@ var
 
   function isFileExtOK: boolean;
   begin
-    result := pos(LowerCase(ExtractFileExt(sr.Name)), EXTS_FILTER) <> 0;
+//    result := pos(LowerCase(ExtractFileExt(sr.Name)), EXTS_FILTER) <> 0;
+    result := EXTS_FILTER.Contains(LowerCase(ExtractFileExt(sr.Name)));
   end;
 begin
   result := -1;
