@@ -171,6 +171,8 @@ begin
      TRUE:  UI.lblMuteUnmute.Caption  := 'Unmute';
     FALSE:  UI.lblMuteUnmute.Caption  := 'Mute';
   end;
+  case GV.Mute of  TRUE: with TStringList.Create do begin SaveToFile(GV.ExePath + 'muted'); Free; end;
+                  FALSE: DeleteFile(GV.ExePath + 'muted'); end;
 end;
 
 function TFX.DoNightTime(AFolderPath: string): boolean;
@@ -613,6 +615,8 @@ begin
   ProgressBarStyle  := GetWindowLong(ProgressBar.Handle, GWL_STYLE);
   ProgressBarStyle  := ProgressBarStyle - WS_BORDER;
   SetWindowLong(ProgressBar.Handle, GWL_STYLE, ProgressBarStyle);
+
+  case FileExists(GV.ExePath + 'muted') of TRUE: FX.DoMuteUnmute; end;
 
   case FX.isCapsLockOn of
      TRUE: GV.FileIx := FX.FindMediaFilesInFolder(ParamStr(1), GV.Files, 100000000);
