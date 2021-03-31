@@ -7066,7 +7066,6 @@ object UI: TUI
       Width = 100
       Height = 144
       BevelOuter = bvNone
-      Caption = 'Panel3'
       TabOrder = 0
       object lblXY: TLabel
         Left = 12

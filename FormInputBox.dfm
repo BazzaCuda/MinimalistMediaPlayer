@@ -6946,6 +6946,7 @@ object InputBoxForm: TInputBoxForm
     0000000000000000000000000000E0070000E0070000F00F0000F81F0000}
   OldCreateOrder = False
   Position = poScreenCenter
+  OnCreate = FormCreate
   PixelsPerInch = 96
   TextHeight = 21
   object edtInputBox: TEdit
@@ -6957,7 +6958,7 @@ object InputBoxForm: TInputBoxForm
   end
   object btnModalResultmrOK: TButton
     Left = 229
-    Top = 40
+    Top = 41
     Width = 75
     Height = 25
     Caption = 'OK'
