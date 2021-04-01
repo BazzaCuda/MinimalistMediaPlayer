@@ -7028,9 +7028,9 @@ object UI: TUI
       OnClick = btnPrevClick
     end
     object lblRate: TLabel
-      Left = 37
+      Left = 21
       Top = 386
-      Width = 29
+      Width = 59
       Height = 13
       Alignment = taCenter
       Anchors = [akLeft, akBottom]
@@ -7240,6 +7240,12 @@ object UI: TUI
     Interval = 5000
     OnTimer = tmrMetaDataTimer
     Left = 488
+    Top = 368
+  end
+  object tmrTab: TTimer
+    Interval = 100
+    OnTimer = tmrTabTimer
+    Left = 456
     Top = 368
   end
 end

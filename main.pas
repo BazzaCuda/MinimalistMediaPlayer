@@ -30,6 +30,7 @@ type
     lblFileSize: TLabel;
     lblXYRatio: TLabel;
     lblBitRate: TLabel;
+    tmrTab: TTimer;
     procedure btnNoClick(Sender: TObject);
     procedure btnPrevClick(Sender: TObject);
     procedure btnYesClick(Sender: TObject);
@@ -48,6 +49,7 @@ type
     procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure tmrTabTimer(Sender: TObject);
   private
   public
     function  Fullscreen: boolean;
@@ -450,20 +452,25 @@ function TFX.TabForwardsBackwards: boolean;
 //  CAPS LOCK = 100th
 //  CTRL      = reverse
 var
-  vIncrement: double;
+  vFactor: integer;
 begin
   case isCapsLockOn of
-     TRUE:  vIncrement := UI.WMP.currentMedia.duration / 100;
+     TRUE:  vFactor := 100;
     FALSE:  case isAltKeyDown of
-               TRUE: vIncrement := UI.WMP.currentMedia.duration / 50;
+               TRUE: vFactor := 50;
               FALSE: case isShiftKeyDown of
-                       TRUE: vIncrement := UI.WMP.currentMedia.duration / 20;
-                      FALSE: vIncrement := UI.WMP.currentMedia.duration / 10; end;end;end;
+                       TRUE: vFactor := 20;
+                      FALSE: vFactor := 10; end;end;end;
+
+
 
   case isControlKeyDown of
-    TRUE: UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition - vIncrement;
-   FALSE: UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition + vIncrement;
+    TRUE: UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition - (UI.WMP.currentMedia.duration / vFactor);
+   FALSE: UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition + (UI.WMP.currentMedia.duration / vFactor);
   end;
+
+  UI.lblRate.Caption  := format('%dth', [vFactor]);
+  UI.tmrTab.Enabled   := TRUE;
 end;
 
 function TFX.UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
@@ -686,12 +693,12 @@ begin
   FX.UpdateRateLabel;
   case lblRate.Visible of FALSE:  begin
                                     lblRate.Visible       := TRUE;
-                                    tmrRateLabel.Interval := 500;
+                                    tmrRateLabel.Interval := 500; // delay showing to allow WMP time to adjust the rate internally
                                     tmrRateLabel.Enabled  := TRUE;
                                   end;
                            TRUE:  begin
                                     lblRate.Visible := FALSE;
-                                    tmrRateLabel.Interval := 100;
+                                    tmrRateLabel.Interval := 100; // hide it quickly so that the rate can be adjusted quickly in succession
                                   end;
   end;
 end;
@@ -706,6 +713,20 @@ procedure TUI.tmrPlayNextTimer(Sender: TObject);
 begin
   tmrPlayNext.Enabled := FALSE;
   FX.PlayNextFile;
+end;
+
+procedure TUI.tmrTabTimer(Sender: TObject);
+begin
+  tmrTab.Enabled := FALSE;
+  case lblRate.Visible of FALSE:  begin
+                                    lblRate.Visible := TRUE;
+                                    tmrTab.Interval := 1000; // hide slow
+                                    tmrTab.Enabled  := TRUE;
+                                  end;
+                           TRUE:  begin
+                                    lblRate.Visible := FALSE;
+                                    tmrTab.Interval := 100;  // show quick
+                                  end;end;
 end;
 
 procedure TUI.tmrTimeDisplayTimer(Sender: TObject);
