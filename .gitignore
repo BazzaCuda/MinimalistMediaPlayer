@@ -69,4 +69,4 @@ __recovery/
 modules/
 
 # application specific
-*muted*
+muted.*

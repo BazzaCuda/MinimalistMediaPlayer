@@ -45,7 +45,11 @@ end;
 
 procedure TInputBoxForm.FormCreate(Sender: TObject);
 begin
-  TStyleManager.LoadFromFile('C:\Users\Public\Documents\Embarcadero\Studio\20.0\Styles\CharcoalDarkSlate.vsf');
+  try
+    TStyleManager.LoadFromFile('C:\Users\Public\Documents\Embarcadero\Studio\20.0\Styles\CharcoalDarkSlate.vsf');
+  except
+
+  end;
 //  TStyleManager.SetStyle('Charcoal Dark Slate');
 //  styleName := 'Charcoal Dark Slate'; // might be a 10.4 thing
 //  var style: string;

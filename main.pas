@@ -399,8 +399,8 @@ begin
   end;
   case (s = '') OR (s = vOldFileName) of TRUE: EXIT; end;
   vNewFilePath := ExtractFilePath(GV.Files[GV.FileIx]) + s + vExt;
-  RenameFile(GV.Files[GV.FileIx], vNewFilePath);
-  GV.Files[GV.FileIx] := vNewFilePath;
+  case RenameFile(GV.Files[GV.FileIx], vNewFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
+                                                         TRUE: GV.Files[GV.FileIx] := vNewFilePath; end;
   WindowCaption;
 end;
 
@@ -454,15 +454,14 @@ function TFX.TabForwardsBackwards: boolean;
 var
   vFactor: integer;
 begin
-  case isCapsLockOn of
-     TRUE:  vFactor := 100;
+  case isShiftKeyDown of
+     TRUE:  vFactor := 20;
     FALSE:  case isAltKeyDown of
-               TRUE: vFactor := 50;
-              FALSE: case isShiftKeyDown of
-                       TRUE: vFactor := 20;
-                      FALSE: vFactor := 10; end;end;end;
-
-
+               TRUE:  vFactor := 50;
+              FALSE:  case isCapsLockOn of
+                         TRUE: vFactor := 100;
+                        FALSE: vFactor := 10;
+                      end;end;end;
 
   case isControlKeyDown of
     TRUE: UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition - (UI.WMP.currentMedia.duration / vFactor);
@@ -601,8 +600,8 @@ procedure TUI.FormCreate(Sender: TObject);
 var
   ProgressBarStyle: integer;
 begin
-  width   := 780;
-  height  := 460;
+  width   := trunc(780 * 1.5);
+  height  := trunc(460 * 1.5);
 
   WMP.uiMode          := 'none';
   WMP.windowlessVideo := TRUE;
