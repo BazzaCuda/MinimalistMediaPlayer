@@ -11,6 +11,8 @@ uses
 {$R *.res}
 
 begin
+  ReportMemoryLeaksOnShutdown := TRUE;
+
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TUI, UI);
