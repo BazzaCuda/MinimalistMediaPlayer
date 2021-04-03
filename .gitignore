@@ -70,3 +70,7 @@ modules/
 
 # application specific
 muted.*
+*muted*.*
+muted*.*
+debug/
+release/
