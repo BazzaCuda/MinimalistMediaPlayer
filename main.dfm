@@ -6965,6 +6965,7 @@ object UI: TUI
     Color = clBlack
     ParentBackground = False
     TabOrder = 0
+    Visible = False
     DesignSize = (
       102
       417)
