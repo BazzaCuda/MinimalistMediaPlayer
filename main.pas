@@ -64,7 +64,7 @@ implementation
 uses
   WinApi.CommCtrl, WinApi.Windows, WinApi.Messages, WinApi.uxTheme,
   System.SysUtils, System.Generics.Collections, System.Math, System.Variants,
-  FormInputBox, TUtilsClass;
+  FormInputBox, bzUtils;
 
 type
   TGV = class
@@ -103,6 +103,7 @@ type
     function PlayLastFile: boolean;
     function PlayNextFile: boolean;
     function PlayPrevFile: boolean;
+    function PlayWithPotPlayer: boolean;
     function RateDecrease: boolean;
     function RateIncrease: boolean;
     function RateReset: boolean;
@@ -249,7 +250,7 @@ begin
 end;
 
 function TFX.FindMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
-const EXTS_FILTER = '.wmv.mp4.avi.flv.mpg.mpeg.mkv.3gp.mov.m4v.vob.ts.webm.divx.m4a.mp3.wav.aac';
+const EXTS_FILTER = '.wmv.mp4.avi.flv.mpg.mpeg.mkv.3gp.mov.m4v.vob.ts.webm.divx.m4a.mp3.wav.aac.m2ts';
 var
   sr:           TSearchRec;
   vFolderPath:  string;
@@ -361,6 +362,12 @@ begin
                                   PlayCurrentFile;
                                 end;
   end;
+end;
+
+function TFX.PlayWithPotPlayer: boolean;
+//
+begin
+  DoCommandLine('B:\Tools\Pot\PotPlayerMini64.exe "' + GV.Files[GV.FileIx] + '"');
 end;
 
 function TFX.RateDecrease: boolean;
@@ -496,6 +503,7 @@ begin
     ord('g'), ord('G'): ResizeWindow;                         // G = Greater window size            Mods: Ctrl-G
     ord('m'), ord('M'): WindowMaximizeRestore;                // M = Maximize/Restore
     ord('n'), ord('N'): application.Minimize;                 // N = miNimize
+    ord('p'), ord('P'): PlayWithPotPlayer;                    // P = Play current video with Pot Player
     ord('q'), ord('Q'): PlayPrevFile;                         // Q = Play previous in folder
     ord('r'), ord('R'): RenameCurrentFile;                    // R = Rename
     ord('s'), ord('S'): UI.WMP.controls.currentPosition := 0; // S = start-over

@@ -6,7 +6,7 @@ uses
   FormInputBox in 'FormInputBox.pas' {InputBoxForm},
   Vcl.Themes,
   Vcl.Styles,
-  TUtilsClass in '..\AppTemplate\TUtilsClass.pas';
+  bzUtils in '..\..\bzLib\bzUtils.pas';
 
 {$R *.res}
 
