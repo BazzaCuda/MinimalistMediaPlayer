@@ -93,6 +93,10 @@ type
     function DoYESFile: boolean;
     function FetchMediaMetaData: boolean;
     function FindMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
+    function GoLeft: boolean;
+    function GoRight: boolean;
+    function GoUp: boolean;
+    function GoDown: boolean;
     function isAltKeyDown: boolean;
     function isCapsLockOn: boolean;
     function isControlKeyDown: boolean;
@@ -287,6 +291,27 @@ begin
 
   aFileList.Sort;
   result := aFileList.IndexOf(aFilePath);
+end;
+
+const MOVE_PIXELS = 10;
+function TFX.GoDown: boolean;
+begin
+  UI.WMP.Top := UI.WMP.Top + MOVE_PIXELS;
+end;
+
+function TFX.GoLeft: boolean;
+begin
+  UI.WMP.Left := UI.WMP.Left - MOVE_PIXELS;
+end;
+
+function TFX.GoRight: boolean;
+begin
+  UI.WMP.Left := UI.WMP.left + MOVE_PIXELS;
+end;
+
+function TFX.GoUp: boolean;
+begin
+  UI.WMP.Top := UI.WMP.Top - MOVE_PIXELS;
 end;
 
 function TFX.isAltKeyDown: boolean;
@@ -496,6 +521,11 @@ begin
     191, VK_UP:         RateIncrease; // Slash               // Speed up
     220, VK_DOWN:       RateDecrease; // Backslash           // Slow down
 
+    VK_NUMPAD8:         GoUp;
+    VK_NUMPAD2:         GoDown;
+    ord('k'), ord('K'): GoLeft;
+    ord('l'), ord('L'): GoRight;
+
     ord('#'), 222     : DoNightTime(StrTestInternalFolder);   // # = NightTime                      Mods: Ctrl-#
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
@@ -526,7 +556,11 @@ end;
 
 function TFX.UnZoom: boolean;
 begin
-  UI.WMP.Align := alClient;
+  UI.WMP.Width  := UI.Panel2.Width -1;
+  UI.WMP.Height := UI.Panel2.Height -1;
+  UI.WMP.Top    := UI.Panel2.Top + 1;
+  UI.WMP.Left   := UI.Panel2.Left + 1;
+  UI.WMP.Align  := alClient;
 end;
 
 function TFX.UpdateRateLabel: boolean;
@@ -558,6 +592,7 @@ begin
   try
     UI.tmrMetaData.Enabled := FALSE;
     ClearMediaMetaData;
+    Unzoom;
     UI.WMP.controls.play;
     UI.WMP.settings.mute := GV.Mute;
     UI.tmrMetaData.Enabled := TRUE;
@@ -678,6 +713,12 @@ begin
   case Key of
     VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards
     VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards
+    VK_NUMPAD8: FX.GoUp;
+    VK_NUMPAD2: FX.GoDown;
+    ord('i'), ord('I'): FX.ZoomIn;
+    ord('o'), ord('O'): FX.ZoomOut;
+    ord('k'), ord('K'): FX.GoLeft;
+    ord('l'), ord('L'): FX.GoRight;
   end;
 end;
 
