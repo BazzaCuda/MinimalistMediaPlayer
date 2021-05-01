@@ -113,11 +113,14 @@ type
     function ShowOKCancelMsgDlg(aMsg: string): TModalResult;
     function TabForwardsBackwards: boolean;
     function UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
+    function UnZoom: boolean;
     function UpdateRateLabel: boolean;
     function UpdateTimeDisplay: boolean;
     function WindowCaption: boolean;
     function WindowMaximizeRestore: boolean;
     function WMPplay: boolean;
+    function ZoomIn: boolean;
+    function ZoomOut: boolean;
   end;
 
 var
@@ -501,13 +504,16 @@ begin
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): UI.Fullscreen;                        // F = Fullscreen
     ord('g'), ord('G'): ResizeWindow;                         // G = Greater window size            Mods: Ctrl-G
+    ord('i'), ord('I'): ZoomIn;                               // I = zoom In
     ord('m'), ord('M'): WindowMaximizeRestore;                // M = Maximize/Restore
     ord('n'), ord('N'): application.Minimize;                 // N = miNimize
+    ord('o'), ord('O'): ZoomOut;                              // I = zoom Out
     ord('p'), ord('P'): PlayWithPotPlayer;                    // P = Play current video with Pot Player
     ord('q'), ord('Q'): PlayPrevFile;                         // Q = Play previous in folder
     ord('r'), ord('R'): RenameCurrentFile;                    // R = Rename
     ord('s'), ord('S'): UI.WMP.controls.currentPosition := 0; // S = start-over
     ord('t'), ord('T'): TabForwardsBackwards;                 // T = Tab forwards/backwards n%     Mods: SHIFT-T, ALT-T, CAPSLOCK, Ctrl-T,
+    ord('u'), ord('U'): UnZoom;                               // U = Unzoom
     ord('v'), ord('V'): WindowMaximizeRestore;                // V = View Maximize/Restore
     ord('w'), ord('W'): PlayNextFile;                         // W = Watch next in folder
     ord('x'), ord('X'): UI.CLOSE;                             // X = eXit app
@@ -516,6 +522,11 @@ begin
   end;
   UpdateTimeDisplay;
   Key := 0;
+end;
+
+function TFX.UnZoom: boolean;
+begin
+  UI.WMP.Align := alClient;
 end;
 
 function TFX.UpdateRateLabel: boolean;
@@ -554,6 +565,28 @@ begin
     ShowMessage('Oops!');
     UI.WMP.controls.stop;
   end;end;
+end;
+
+function TFX.ZoomIn: boolean;
+begin
+  case UI.WMP.Align = alClient of TRUE: begin
+                                          UI.WMP.Align    := alNone;
+                                          UI.WMP.Height   := UI.Panel2.Height;
+                                          UI.WMP.Width    := UI.Panel2.Width;
+  end;end;
+
+  UI.WMP.Width    := trunc(UI.WMP.Width * 1.1);
+  UI.WMP.Height   := trunc(UI.WMP.Height * 1.1);
+  UI.WMP.Top      := UI.Panel2.Top - ((UI.WMP.Height - UI.Panel2.Height) div 2);
+  UI.WMP.Left     := UI.Panel2.Left - ((UI.WMP.Width - UI.Panel2.Width) div 2);
+end;
+
+function TFX.ZoomOut: boolean;
+begin
+  UI.WMP.Width    := trunc(UI.WMP.Width * 0.9);
+  UI.WMP.Height   := trunc(UI.WMP.Height * 0.9);
+  UI.WMP.Top      := UI.Panel2.Top - ((UI.WMP.Height - UI.Panel2.Height) div 2);
+  UI.WMP.Left     := UI.Panel2.Left - ((UI.WMP.Width - UI.Panel2.Width) div 2);
 end;
 
 function TFX.ShowOKCancelMsgDlg(aMsg: string): TModalResult;
