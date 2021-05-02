@@ -511,6 +511,19 @@ function TFX.UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
 const
   StrTestInternalFolder = 'B:\AudioLibrary\system\';
 begin
+  case ssCtrl in Shift of
+     TRUE:  begin
+              case Key of
+                VK_RIGHT:     GoRight;
+                VK_LEFT:      GoLeft;
+                191, VK_UP:   GoUp;
+                220, VK_DOWN: GoDown;
+              end;
+              Key := 0;
+              EXIT;
+            end;
+  end;
+
   case Key of
 //    VK_ESCAPE: case UI.WMP.fullScreen of FALSE: UI.CLOSE; end; // eXit app  - needs work
     VK_SPACE:  case UI.WMP.playState of                      // Pause / Play
@@ -710,6 +723,19 @@ end;
 
 procedure TUI.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
+  case ssCtrl in Shift of
+     TRUE:  begin
+              case Key of
+                VK_RIGHT:     FX.GoRight;
+                VK_LEFT:      FX.GoLeft;
+                191, VK_UP:   FX.GoUp;
+                220, VK_DOWN: FX.GoDown;
+              end;
+              Key := 0;
+              EXIT;
+            end;
+  end;
+
   case Key of
     VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards
     VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards
