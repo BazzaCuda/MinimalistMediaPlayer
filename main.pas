@@ -8,9 +8,6 @@ uses
 
 type
   TUI = class(TForm)
-    btnNo: TLabel;
-    btnPrev: TLabel;
-    btnYes: TLabel;
     lblTimeDisplay: TLabel;
     pnlControls: TPanel;
     Panel2: TPanel;
@@ -21,7 +18,7 @@ type
     lblRate: TLabel;
     tmrRateLabel: TTimer;
     lblMuteUnmute: TLabel;
-    Panel3: TPanel;
+    pnlInfo: TPanel;
     lblXY: TLabel;
     tmrMetaData: TTimer;
     lblFrameRate: TLabel;
@@ -31,9 +28,6 @@ type
     lblXYRatio: TLabel;
     lblBitRate: TLabel;
     tmrTab: TTimer;
-    procedure btnNoClick(Sender: TObject);
-    procedure btnPrevClick(Sender: TObject);
-    procedure btnYesClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -50,7 +44,9 @@ type
     procedure WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure tmrTabTimer(Sender: TObject);
+    procedure pnlControlsResize(Sender: TObject);
   private
+    procedure setupProgressBar;
   public
     function  Fullscreen: boolean;
     function  ToggleControlPanel: boolean;
@@ -64,7 +60,7 @@ implementation
 uses
   WinApi.CommCtrl, WinApi.Windows, WinApi.Messages, WinApi.uxTheme,
   System.SysUtils, System.Generics.Collections, System.Math, System.Variants,
-  FormInputBox, bzUtils;
+  FormInputBox, bzUtils, MMSystem, Mixer;
 
 type
   TGV = class
@@ -73,13 +69,16 @@ type
     FFiles:   TList<string>;
     FMute:    boolean;
     function  GetExePath: string;
+  private
+    function getZoomed: boolean;
   public
     constructor Create;
     destructor  Destroy;  override;
-    property    ExePath:  string        read GetExePath;
-    property    FileIx:   integer       read FFileIx  write FFileIx;
-    property    Files:    TList<string> read FFiles;
-    property    Mute:     boolean       read FMute    write FMute;
+    property    ExePath:      string        read GetExePath;
+    property    FileIx:       integer       read FFileIx    write FFileIx;
+    property    Files:        TList<string> read FFiles;
+    property    Mute:         boolean       read FMute      write FMute;
+    property    zoomed:       boolean       read getZoomed;
   end;
 
   TFX = class
@@ -87,7 +86,6 @@ type
     function ClearMediaMetaData: boolean;
     function DeleteThisFile(AFilePath: string): boolean;
     function DoCommandLine(aCommandLIne: string): boolean;
-    function DoNightTime(AFolderPath: string): boolean;
     function DoMuteUnmute: boolean;
     function DoNOFile: boolean;
     function DoYESFile: boolean;
@@ -108,14 +106,15 @@ type
     function PlayNextFile: boolean;
     function PlayPrevFile: boolean;
     function PlayWithPotPlayer: boolean;
-    function RateDecrease: boolean;
-    function RateIncrease: boolean;
     function RateReset: boolean;
     function RenameCurrentFile: boolean;
     function ResizeWindow: boolean;
     function SetDateTimes(aFileOrFolderPath: string; aDT: TDateTime): Boolean;
     function ShowOKCancelMsgDlg(aMsg: string): TModalResult;
+    function SpeedDecrease: boolean;
+    function SpeedIncrease: boolean;
     function TabForwardsBackwards: boolean;
+    function UIKeyDown(var Key: Word; Shift: TShiftState): boolean;
     function UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
     function UnZoom: boolean;
     function UpdateRateLabel: boolean;
@@ -185,36 +184,6 @@ begin
                   FALSE: DeleteFile(GV.ExePath + 'muted'); end;
 end;
 
-function TFX.DoNightTime(AFolderPath: string): boolean;
-const
-  DayTime   = 42049;
-  NightTime = 2;
-  StrDbsys  = '.db.sys';
-var
-  sr: TSearchRec;
-begin
-  case DirectoryExists(AFolderPath) of FALSE: EXIT; end;
-
-  SetDateTimes(AFolderPath, DayTime);
-  case isControlKeyDown of FALSE: FileSetAttr(AFolderPath, NightTime); end;
-
-  case FindFirst(AFolderPath + '*.*', faAnyFile, sr) = 0 of  TRUE:
-    repeat
-
-      case (sr.Attr AND faDirectory) = faDirectory of
-        TRUE: case (sr.Name <> '.') AND (sr.Name <> '..') of TRUE: DoNightTime(AFolderPath + sr.Name + '\'); end;
-       FALSE: case pos(ExtractFileExt(sr.Name), StrDbsys) >= 0 of
-                TRUE:  begin  SetDateTimes(AFolderPath + sr.Name, DayTime);
-                              case isControlKeyDown of
-                                FALSE: FileSetAttr(AFolderPath + sr.Name, NightTime); end;end;end;end;
-
-      application.ProcessMessages;
-    until FindNext(sr) <> 0;
-  end;
-
-  FindClose(sr);
-end;
-
 function TFX.DoNOFile: boolean;
 var
   vMsg: string;
@@ -246,14 +215,13 @@ end;
 
 function TFX.FetchMediaMetaData: boolean;
 begin
-  UI.lblXY.Caption                := format('XY:  %s / %s', [UI.WMP.currentMedia.getItemInfo('WM/VideoWidth'), UI.WMP.currentMedia.getItemInfo('WM/VideoHeight')]);
+  UI.lblXY.Caption                := format('XY:  %s x %s', [UI.WMP.currentMedia.getItemInfo('WM/VideoWidth'), UI.WMP.currentMedia.getItemInfo('WM/VideoHeight')]);
   try UI.lblFrameRate.Caption     := format('FR:  %f fps', [StrToFloat(UI.WMP.currentMedia.getItemInfo('FrameRate')) / 1000]); except end;
   try UI.lblBitRate.Caption       := format('BR:  %d Kb/s', [trunc(StrToFloat(UI.WMP.currentMedia.getItemInfo('BitRate')) / 1024)]); except end;
   try UI.lblAudioBitRate.Caption  := format('AR:  %d Kb/s', [trunc(StrToFloat(UI.WMP.currentMedia.getItemInfo('AudioBitRate')) / 1024)]); except end;
   try UI.lblVideoBitRate.Caption  := format('VR:  %d Kb/s', [trunc(StrToFloat(UI.WMP.currentMedia.getItemInfo('VideoBitRate')) / 1024)]); except end;
   try UI.lblXYRatio.Caption       := format('XY:  %s:%s', [UI.WMP.currentMedia.getItemInfo('PixelAspectRatioX'), UI.WMP.currentMedia.getItemInfo('PixelAspectRatioY')]); except end;
   try UI.lblFileSize.Caption      := format('FS:  %d MB', [trunc(StrToFloat(UI.WMP.currentMedia.getItemInfo('FileSize')) / 1024 / 1024)]); except end;
-//  ShowMessage(UI.WMP.currentMedia.getItemInfo('WM/VideoFormat'));
 end;
 
 function TFX.FindMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
@@ -393,21 +361,8 @@ begin
 end;
 
 function TFX.PlayWithPotPlayer: boolean;
-//
 begin
   DoCommandLine('B:\Tools\Pot\PotPlayerMini64.exe "' + GV.Files[GV.FileIx] + '"');
-end;
-
-function TFX.RateDecrease: boolean;
-begin
-  UI.WMP.settings.rate    := UI.WMP.settings.rate - 0.1;
-  UI.tmrRateLabel.Enabled := TRUE;
-end;
-
-function TFX.RateIncrease: boolean;
-begin
-  UI.WMP.settings.rate    := UI.WMP.settings.rate + 0.1;
-  UI.tmrRateLabel.Enabled := TRUE;
 end;
 
 function TFX.RateReset: boolean;
@@ -480,6 +435,18 @@ begin
   end;
 end;
 
+function TFX.SpeedDecrease: boolean;
+begin
+  UI.WMP.settings.rate    := UI.WMP.settings.rate - 0.1;
+  UI.tmrRateLabel.Enabled := TRUE;
+end;
+
+function TFX.SpeedIncrease: boolean;
+begin
+  UI.WMP.settings.rate    := UI.WMP.settings.rate + 0.1;
+  UI.tmrRateLabel.Enabled := TRUE;
+end;
+
 function TFX.TabForwardsBackwards: boolean;
 //  Default   = 10th
 //  SHIFT     = 20th
@@ -507,22 +474,65 @@ begin
   UI.tmrTab.Enabled   := TRUE;
 end;
 
-function TFX.UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
-const
-  StrTestInternalFolder = 'B:\AudioLibrary\system\';
+function TFX.UIKeyDown(var Key: Word; Shift: TShiftState): boolean;
 begin
-  case ssCtrl in Shift of
-     TRUE:  begin
-              case Key of
-                VK_RIGHT:     GoRight;
-                VK_LEFT:      GoLeft;
-                191, VK_UP:   GoUp;
-                220, VK_DOWN: GoDown;
-              end;
-              Key := 0;
-              EXIT;
-            end;
+  case (ssCtrl in Shift) AND GV.zoomed of
+     TRUE:  case key in [VK_RIGHT, VK_LEFT, VK_UP, 191, VK_DOWN, 220] of
+               TRUE:  begin
+                        case Key of
+                          VK_RIGHT:     FX.GoRight;
+                          VK_LEFT:      FX.GoLeft;
+                          VK_UP, 191:   FX.GoUp;
+                          VK_DOWN, 220: FX.GoDown;
+                        end;
+                        Key := 0;
+                        EXIT;
+                      end;end;end;
+
+  case (ssCtrl in Shift) and NOT GV.zoomed of
+     TRUE:  case Key in [VK_UP, 191, VK_DOWN, 220] of
+               TRUE:  begin
+                        case Key of
+                          VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (g_mixer.Volume div 10);
+                          VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (g_mixer.Volume div 10);
+                        end;
+                        Key := 0;
+                        EXIT;
+                      end;end;end;
+
+  case Key of
+    VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards
+    VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards
+    ord('i'), ord('I'): FX.ZoomIn;
+    ord('o'), ord('O'): FX.ZoomOut;
   end;
+end;
+
+function TFX.UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
+begin
+  case (ssCtrl in Shift) and GV.zoomed of
+     TRUE:  case key in [VK_RIGHT, VK_LEFT, VK_UP, 191, VK_DOWN, 220] of
+               TRUE:  begin
+                        case Key of
+                          VK_RIGHT:     GoRight;
+                          VK_LEFT:      GoLeft;
+                          VK_UP, 191:   GoUp;
+                          VK_DOWN, 220: GoDown;
+                        end;
+                        Key := 0;
+                        EXIT;
+                      end;end;end;
+
+  case (ssCtrl in Shift) and NOT GV.zoomed of
+     TRUE:  case Key in [VK_UP, 191, VK_DOWN, 220] of
+               TRUE:  begin
+                        case Key of
+                          VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (g_mixer.Volume div 10);
+                          VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (g_mixer.Volume div 10);
+                        end;
+                        Key := 0;
+                        EXIT;
+                      end;end;end;
 
   case Key of
 //    VK_ESCAPE: case UI.WMP.fullScreen of FALSE: UI.CLOSE; end; // eXit app  - needs work
@@ -531,15 +541,10 @@ begin
                                   wmppsPaused, wmppsStopped:  WMPplay; end;
     VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards
     VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards
-    191, VK_UP:         RateIncrease; // Slash               // Speed up
-    220, VK_DOWN:       RateDecrease; // Backslash           // Slow down
+    VK_UP, 191:         SpeedIncrease; // Slash               // Speed up
+    VK_DOWN, 220:       SpeedDecrease; // Backslash           // Slow down
 
-    VK_NUMPAD8:         GoUp;
-    VK_NUMPAD2:         GoDown;
-    ord('k'), ord('K'): GoLeft;
-    ord('l'), ord('L'): GoRight;
-
-    ord('#'), 222     : DoNightTime(StrTestInternalFolder);   // # = NightTime                      Mods: Ctrl-#
+//    ord('#'), 222     :    // # = NightTime
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
     ord('c'), ord('C'): UI.ToggleControlPanel;                // C = Control Panel show/hide
@@ -568,6 +573,8 @@ begin
 end;
 
 function TFX.UnZoom: boolean;
+// If the size of WMP is much smaller than panel2, the re-align doesn't work
+// So we resize WMP first, then re-align it.
 begin
   UI.WMP.Width  := UI.Panel2.Width -1;
   UI.WMP.Height := UI.Panel2.Height -1;
@@ -660,24 +667,9 @@ begin
   end;
 end;
 
-//=====================
+//===== UI Event Handlers =====
 
 {$R *.dfm}
-
-procedure TUI.btnNoClick(Sender: TObject);
-begin
-  FX.DoNOFile;
-end;
-
-procedure TUI.btnPrevClick(Sender: TObject);
-begin
-  FX.PlayPrevFile;
-end;
-
-procedure TUI.btnYesClick(Sender: TObject);
-begin
-  FX.DoYESFile;
-end;
 
 procedure TUI.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
@@ -686,8 +678,6 @@ begin
 end;
 
 procedure TUI.FormCreate(Sender: TObject);
-var
-  ProgressBarStyle: integer;
 begin
   width   := trunc(780 * 1.5);
   height  := trunc(460 * 1.5);
@@ -696,20 +686,9 @@ begin
   WMP.windowlessVideo := TRUE;
   WMP.settings.volume := 100;
 
-  SetThemeAppProperties(0);
-  ProgressBar.Brush.Color := clBlack; // Set Background colour
-  SendMessage(ProgressBar.Handle, PBM_SETBARCOLOR, 0, clDkGray); // Set bar colour
-
   lblTimeDisplay.Caption := '';
 
-  ProgressBarStyle  := GetWindowLong(ProgressBar.Handle, GWL_EXSTYLE);
-  ProgressBarStyle  := ProgressBarStyle - WS_EX_STATICEDGE;
-  SetWindowLong(ProgressBar.Handle, GWL_EXSTYLE, ProgressBarStyle);
-
-  // add thin border to fix redraw problems
-  ProgressBarStyle  := GetWindowLong(ProgressBar.Handle, GWL_STYLE);
-  ProgressBarStyle  := ProgressBarStyle - WS_BORDER;
-  SetWindowLong(ProgressBar.Handle, GWL_STYLE, ProgressBarStyle);
+  setupProgressBar;
 
   case FileExists(GV.ExePath + 'muted') of TRUE: FX.DoMuteUnmute; end;
 
@@ -723,29 +702,7 @@ end;
 
 procedure TUI.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  case ssCtrl in Shift of
-     TRUE:  begin
-              case Key of
-                VK_RIGHT:     FX.GoRight;
-                VK_LEFT:      FX.GoLeft;
-                191, VK_UP:   FX.GoUp;
-                220, VK_DOWN: FX.GoDown;
-              end;
-              Key := 0;
-              EXIT;
-            end;
-  end;
-
-  case Key of
-    VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards
-    VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards
-    VK_NUMPAD8: FX.GoUp;
-    VK_NUMPAD2: FX.GoDown;
-    ord('i'), ord('I'): FX.ZoomIn;
-    ord('o'), ord('O'): FX.ZoomOut;
-    ord('k'), ord('K'): FX.GoLeft;
-    ord('l'), ord('L'): FX.GoRight;
-  end;
+  FX.UIKeyDown(Key, Shift);
 end;
 
 procedure TUI.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -766,6 +723,11 @@ end;
 procedure TUI.lblMuteUnmuteClick(Sender: TObject);
 begin
   FX.DoMuteUnmute;
+end;
+
+procedure TUI.pnlControlsResize(Sender: TObject);
+begin
+  pnlInfo.Top := (pnlControls.Height - pnlInfo.Height) div 2;
 end;
 
 procedure TUI.ProgressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
@@ -846,6 +808,24 @@ begin
   pnlControls.Visible := NOT pnlControls.Visible;
 end;
 
+procedure TUI.setupProgressBar;
+var
+  ProgressBarStyle: Integer;
+begin
+  SetThemeAppProperties(0);
+  ProgressBar.Brush.Color := clBlack;
+  // Set Background colour
+  SendMessage(ProgressBar.Handle, PBM_SETBARCOLOR, 0, clDkGray);
+  // Set bar colour
+  ProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_EXSTYLE);
+  ProgressBarStyle := ProgressBarStyle - WS_EX_STATICEDGE;
+  SetWindowLong(ProgressBar.Handle, GWL_EXSTYLE, ProgressBarStyle);
+  // add thin border to fix redraw problems
+  ProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_STYLE);
+  ProgressBarStyle := ProgressBarStyle - WS_BORDER;
+  SetWindowLong(ProgressBar.Handle, GWL_STYLE, ProgressBarStyle);
+end;
+
 procedure TUI.WMPClick(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
 begin
   case WMP.playState of
@@ -902,6 +882,11 @@ end;
 function TGV.GetExePath: string;
 begin
   result := IncludeTrailingBackslash(ExtractFilePath(ParamStr(0)));
+end;
+
+function TGV.getZoomed: boolean;
+begin
+  result := UI.WMP.Align = alNone;
 end;
 
 initialization

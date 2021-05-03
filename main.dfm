@@ -6966,6 +6966,7 @@ object UI: TUI
     ParentBackground = False
     TabOrder = 0
     Visible = False
+    OnResize = pnlControlsResize
     DesignSize = (
       102
       417)
@@ -6979,54 +6980,11 @@ object UI: TUI
       AutoSize = False
       Caption = '00:00:00 / 00:00:00'
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clTeal
+      Font.Color = clWhite
       Font.Height = -11
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-    end
-    object btnYes: TLabel
-      Left = 25
-      Top = 67
-      Width = 54
-      Height = 39
-      Caption = 'YES'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clOlive
-      Font.Height = -32
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-      OnClick = btnYesClick
-    end
-    object btnNo: TLabel
-      Left = 31
-      Top = 336
-      Width = 44
-      Height = 39
-      Anchors = [akLeft, akBottom]
-      Caption = 'NO'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clMaroon
-      Font.Height = -32
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-      OnClick = btnNoClick
-    end
-    object btnPrev: TLabel
-      Left = 10
-      Top = 129
-      Width = 86
-      Height = 39
-      Caption = '<Prev'
-      Font.Charset = DEFAULT_CHARSET
-      Font.Color = clGray
-      Font.Height = -32
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      ParentFont = False
-      OnClick = btnPrevClick
     end
     object lblRate: TLabel
       Left = 21
@@ -7038,7 +6996,7 @@ object UI: TUI
       AutoSize = False
       Caption = '100%'
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clTeal
+      Font.Color = clWhite
       Font.Height = -11
       Font.Name = 'Tahoma'
       Font.Style = []
@@ -7061,9 +7019,9 @@ object UI: TUI
       ParentFont = False
       OnClick = lblMuteUnmuteClick
     end
-    object Panel3: TPanel
+    object pnlInfo: TPanel
       Left = 0
-      Top = 186
+      Top = 136
       Width = 100
       Height = 144
       BevelOuter = bvNone
@@ -7076,7 +7034,7 @@ object UI: TUI
         AutoSize = False
         Caption = 'XY:'
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clTeal
+        Font.Color = clWhite
         Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
@@ -7090,7 +7048,7 @@ object UI: TUI
         AutoSize = False
         Caption = 'FR: '
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clTeal
+        Font.Color = clWhite
         Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
@@ -7104,7 +7062,7 @@ object UI: TUI
         AutoSize = False
         Caption = 'VR:'
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clTeal
+        Font.Color = clWhite
         Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
@@ -7118,7 +7076,7 @@ object UI: TUI
         AutoSize = False
         Caption = 'AR:'
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clTeal
+        Font.Color = clWhite
         Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
@@ -7132,7 +7090,7 @@ object UI: TUI
         AutoSize = False
         Caption = 'FS:'
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clTeal
+        Font.Color = clWhite
         Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
@@ -7146,7 +7104,7 @@ object UI: TUI
         AutoSize = False
         Caption = 'X:Y'
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clTeal
+        Font.Color = clWhite
         Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
@@ -7160,7 +7118,7 @@ object UI: TUI
         AutoSize = False
         Caption = 'BR:'
         Font.Charset = DEFAULT_CHARSET
-        Font.Color = clTeal
+        Font.Color = clWhite
         Font.Height = -11
         Font.Name = 'Tahoma'
         Font.Style = []
@@ -7200,7 +7158,7 @@ object UI: TUI
         0003000008000200000000000500000000000000F03F03000000000005000000
         00000000000008000200000000000300010000000B00FFFF0300000000000B00
         FFFF08000200000000000300640000000B00000008000A0000006E006F006E00
-        650000000B00FFFF0B0000000B0000000B00FFFF0B0000000800020000000000
+        650000000B00FFFF0B00FFFF0B0000000B00FFFF0B0000000800020000000000
         0800020000000000080002000000000008000200000000000B00000002440000
         112A0000}
     end
