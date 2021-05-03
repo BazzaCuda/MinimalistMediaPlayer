@@ -223,6 +223,7 @@ begin
   try UI.lblVideoBitRate.Caption  := format('VR:  %d Kb/s', [trunc(StrToFloat(UI.WMP.currentMedia.getItemInfo('VideoBitRate')) / 1024)]); except end;
   try UI.lblXYRatio.Caption       := format('XY:  %s:%s', [UI.WMP.currentMedia.getItemInfo('PixelAspectRatioX'), UI.WMP.currentMedia.getItemInfo('PixelAspectRatioY')]); except end;
   try UI.lblFileSize.Caption      := format('FS:  %d MB', [trunc(StrToFloat(UI.WMP.currentMedia.getItemInfo('FileSize')) / 1024 / 1024)]); except end;
+  case trim(UI.lblXY.Caption) = 'XY:   x' of TRUE: UI.lblXY.Caption := 'XY:'; end;
 end;
 
 function TFX.FindMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
@@ -484,10 +485,10 @@ begin
      TRUE:  case key in [VK_RIGHT, VK_LEFT, VK_UP, 191, VK_DOWN, 220] of
                TRUE:  begin
                         case Key of
-                          VK_RIGHT:     FX.GoRight;
-                          VK_LEFT:      FX.GoLeft;
-                          VK_UP, 191:   FX.GoUp;
-                          VK_DOWN, 220: FX.GoDown;
+                          VK_RIGHT:     FX.GoRight;                      // Move zoomed WMP right
+                          VK_LEFT:      FX.GoLeft;                       // Move zoomed WMP left
+                          VK_UP, 191:   FX.GoUp;                         // Move zoomed WMP up
+                          VK_DOWN, 220: FX.GoDown;                       // Move zoomed WMP down
                         end;
                         Key := 0;
                         EXIT;
@@ -497,8 +498,8 @@ begin
      TRUE:  case Key in [VK_UP, 191, VK_DOWN, 220] of
                TRUE:  begin
                         case Key of
-                          VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (g_mixer.Volume div 10);
-                          VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (g_mixer.Volume div 10);
+                          VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (g_mixer.Volume div 10);  // volume up 10%
+                          VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (g_mixer.Volume div 10);  // volume down 10%
                         end;
                         Key := 0;
                         EXIT;
@@ -509,8 +510,8 @@ begin
               case Key of
                 VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards
                 VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards
-                ord('i'), ord('I'): FX.ZoomIn;
-                ord('o'), ord('O'): FX.ZoomOut;
+                ord('i'), ord('I'): FX.ZoomIn;                           // Zoom In
+                ord('o'), ord('O'): FX.ZoomOut;                          // Zoom Out
               end;
               Key := 0;
               EXIT
