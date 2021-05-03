@@ -114,6 +114,7 @@ type
     function SpeedDecrease: boolean;
     function SpeedIncrease: boolean;
     function TabForwardsBackwards: boolean;
+    function UIKey(var Key: Word; Shift: TShiftState): boolean;
     function UIKeyDown(var Key: Word; Shift: TShiftState): boolean;
     function UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
     function UnZoom: boolean;
@@ -474,8 +475,11 @@ begin
   UI.tmrTab.Enabled   := TRUE;
 end;
 
-function TFX.UIKeyDown(var Key: Word; Shift: TShiftState): boolean;
+function TFX.UIKey(var Key: Word; Shift: TShiftState): boolean;
+// Keys that can be pressed singly or held down for repeat action
 begin
+  result := TRUE;
+
   case (ssCtrl in Shift) AND GV.zoomed of
      TRUE:  case key in [VK_RIGHT, VK_LEFT, VK_UP, 191, VK_DOWN, 220] of
                TRUE:  begin
@@ -500,47 +504,35 @@ begin
                         EXIT;
                       end;end;end;
 
-  case Key of
-    VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards
-    VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards
-    ord('i'), ord('I'): FX.ZoomIn;
-    ord('o'), ord('O'): FX.ZoomOut;
-  end;
+  case Key in [VK_RIGHT, VK_LEFT, ord('i'), ord('I'), ord('o'), ord('O')] of
+     TRUE:  begin
+              case Key of
+                VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards
+                VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards
+                ord('i'), ord('I'): FX.ZoomIn;
+                ord('o'), ord('O'): FX.ZoomOut;
+              end;
+              Key := 0;
+              EXIT
+            end;end;
+
+  result := FALSE;
+end;
+
+function TFX.UIKeyDown(var Key: Word; Shift: TShiftState): boolean;
+begin
+  UIKey(Key, Shift);
 end;
 
 function TFX.UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
 begin
-  case (ssCtrl in Shift) and GV.zoomed of
-     TRUE:  case key in [VK_RIGHT, VK_LEFT, VK_UP, 191, VK_DOWN, 220] of
-               TRUE:  begin
-                        case Key of
-                          VK_RIGHT:     GoRight;
-                          VK_LEFT:      GoLeft;
-                          VK_UP, 191:   GoUp;
-                          VK_DOWN, 220: GoDown;
-                        end;
-                        Key := 0;
-                        EXIT;
-                      end;end;end;
-
-  case (ssCtrl in Shift) and NOT GV.zoomed of
-     TRUE:  case Key in [VK_UP, 191, VK_DOWN, 220] of
-               TRUE:  begin
-                        case Key of
-                          VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (g_mixer.Volume div 10);
-                          VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (g_mixer.Volume div 10);
-                        end;
-                        Key := 0;
-                        EXIT;
-                      end;end;end;
+  case UIKey(Key, Shift) of TRUE: EXIT; end;  // Keys that can be pressed singly or held down for repeat action
 
   case Key of
 //    VK_ESCAPE: case UI.WMP.fullScreen of FALSE: UI.CLOSE; end; // eXit app  - needs work
     VK_SPACE:  case UI.WMP.playState of                      // Pause / Play
                                   wmppsPlaying:               UI.WMP.controls.pause;
                                   wmppsPaused, wmppsStopped:  WMPplay; end;
-    VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards
-    VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards
     VK_UP, 191:         SpeedIncrease; // Slash               // Speed up
     VK_DOWN, 220:       SpeedDecrease; // Backslash           // Slow down
 
@@ -552,14 +544,12 @@ begin
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): UI.Fullscreen;                        // F = Fullscreen
     ord('g'), ord('G'): ResizeWindow;                         // G = Greater window size            Mods: Ctrl-G
-    ord('i'), ord('I'): ZoomIn;                               // I = zoom In
     ord('m'), ord('M'): WindowMaximizeRestore;                // M = Maximize/Restore
     ord('n'), ord('N'): application.Minimize;                 // N = miNimize
-    ord('o'), ord('O'): ZoomOut;                              // I = zoom Out
     ord('p'), ord('P'): PlayWithPotPlayer;                    // P = Play current video with Pot Player
     ord('q'), ord('Q'): PlayPrevFile;                         // Q = Play previous in folder
     ord('r'), ord('R'): RenameCurrentFile;                    // R = Rename
-    ord('s'), ord('S'): UI.WMP.controls.currentPosition := 0; // S = start-over
+    ord('s'), ord('S'): UI.WMP.controls.currentPosition := 0; // S = Start-over
     ord('t'), ord('T'): TabForwardsBackwards;                 // T = Tab forwards/backwards n%     Mods: SHIFT-T, ALT-T, CAPSLOCK, Ctrl-T,
     ord('u'), ord('U'): UnZoom;                               // U = Unzoom
     ord('v'), ord('V'): WindowMaximizeRestore;                // V = View Maximize/Restore
