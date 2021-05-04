@@ -53,8 +53,8 @@ type
     Function SetChannelVolumeLevelScalar(nChannel: Integer; fLevelDB: single; pguidEventContext: TGUID):Integer; stdcall;
     Function GetChannelVolumeLevel(nChannel: Integer; out fLevelDB: double) : Integer; stdcall;
     Function GetChannelVolumeLevelScalar(nChannel: Integer; out fLevel: double) : Integer; stdcall;
-    Function SetMute(bMute: boolean; pguidEventContext: PGUID) :Integer; stdcall;
-    Function GetMute(out bMute: boolean):Integer; stdcall;
+    Function SetMute(bMute: integer; pguidEventContext: PGUID) :Integer; stdcall;
+    Function GetMute(out bMute: integer):Integer; stdcall;
     Function GetVolumeStepInfo( pnStep: Integer; out pnStepCount: Integer):Integer; stdcall;
     Function VolumeStepUp(pguidEventContext: TGUID) :Integer; stdcall;
     Function VolumeStepDown(pguidEventContext: TGUID) :Integer; stdcall;

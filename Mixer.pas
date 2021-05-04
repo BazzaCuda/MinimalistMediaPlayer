@@ -266,8 +266,11 @@ end;
 // ---------------------------------------------------------------------------
 
 function TvistaMixer.getMute: boolean;
+var
+  vResult: integer;
 begin
-  FmmEndpoint.GetMute(Result);
+  FmmEndpoint.GetMute(vResult);
+  result := boolean(vResult);
 end;
 
 // ---------------------------------------------------------------------------
@@ -284,7 +287,7 @@ end;
 
 procedure TvistaMixer.setMute(Value: boolean);
 begin
-  FmmEndpoint.SetMute(Value, nil);
+  FmmEndpoint.SetMute(integer(Value), nil);
 end;
 
 // ---------------------------------------------------------------------------

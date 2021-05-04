@@ -6954,45 +6954,46 @@ object UI: TUI
   OnMouseMove = FormMouseMove
   PixelsPerInch = 96
   TextHeight = 13
-  object pnlControls: TPanel
-    Left = 658
+  object pnlBackground: TPanel
+    Left = 0
     Top = 0
-    Width = 102
+    Width = 760
     Height = 417
-    Align = alRight
+    Align = alClient
     BevelEdges = []
     BevelOuter = bvNone
+    Caption = 'pnlBackground'
     Color = clBlack
     ParentBackground = False
     TabOrder = 0
-    Visible = False
-    OnResize = pnlControlsResize
     DesignSize = (
-      102
+      760
       417)
-    object lblTimeDisplay: TLabel
-      Left = 3
-      Top = 404
-      Width = 98
-      Height = 13
+    object lblMuteUnmute: TLabel
+      Left = 664
+      Top = 17
+      Width = 73
+      Height = 23
       Alignment = taCenter
-      Anchors = [akLeft, akBottom]
+      Anchors = [akTop, akRight]
       AutoSize = False
-      Caption = '00:00:00 / 00:00:00'
+      Caption = 'Mute'
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clWhite
-      Font.Height = -11
+      Font.Color = clTeal
+      Font.Height = -19
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      Visible = False
+      OnClick = lblMuteUnmuteClick
     end
     object lblRate: TLabel
-      Left = 21
-      Top = 386
+      Left = 677
+      Top = 377
       Width = 59
       Height = 13
       Alignment = taCenter
-      Anchors = [akLeft, akBottom]
+      Anchors = [akRight, akBottom]
       AutoSize = False
       Caption = '100%'
       Font.Charset = DEFAULT_CHARSET
@@ -7003,169 +7004,161 @@ object UI: TUI
       ParentFont = False
       Visible = False
     end
-    object lblMuteUnmute: TLabel
-      Left = 16
-      Top = 17
-      Width = 73
-      Height = 23
+    object lblTimeDisplay: TLabel
+      Left = 657
+      Top = 394
+      Width = 98
+      Height = 13
       Alignment = taCenter
+      Anchors = [akRight, akBottom]
       AutoSize = False
-      Caption = 'Mute'
+      Caption = '00:00:00 / 00:00:00'
       Font.Charset = DEFAULT_CHARSET
-      Font.Color = clTeal
-      Font.Height = -19
+      Font.Color = clWhite
+      Font.Height = -11
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
-      OnClick = lblMuteUnmuteClick
+      Visible = False
     end
-    object pnlInfo: TPanel
-      Left = 0
-      Top = 136
-      Width = 100
-      Height = 144
-      BevelOuter = bvNone
-      TabOrder = 0
-      object lblXY: TLabel
-        Left = 12
-        Top = 1
-        Width = 86
-        Height = 13
-        AutoSize = False
-        Caption = 'XY:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        ParentFont = False
-      end
-      object lblFrameRate: TLabel
-        Left = 12
-        Top = 18
-        Width = 86
-        Height = 13
-        AutoSize = False
-        Caption = 'FR: '
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        ParentFont = False
-      end
-      object lblVideoBitRate: TLabel
-        Left = 12
-        Top = 69
-        Width = 86
-        Height = 13
-        AutoSize = False
-        Caption = 'VR:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        ParentFont = False
-      end
-      object lblAudioBitRate: TLabel
-        Left = 12
-        Top = 52
-        Width = 86
-        Height = 13
-        AutoSize = False
-        Caption = 'AR:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        ParentFont = False
-      end
-      object lblFileSize: TLabel
-        Left = 12
-        Top = 103
-        Width = 86
-        Height = 13
-        AutoSize = False
-        Caption = 'FS:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        ParentFont = False
-      end
-      object lblXYRatio: TLabel
-        Left = 12
-        Top = 86
-        Width = 86
-        Height = 13
-        AutoSize = False
-        Caption = 'X:Y'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        ParentFont = False
-      end
-      object lblBitRate: TLabel
-        Left = 12
-        Top = 35
-        Width = 86
-        Height = 13
-        AutoSize = False
-        Caption = 'BR:'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWhite
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = []
-        ParentFont = False
-      end
+    object lblXY: TLabel
+      Left = 664
+      Top = 249
+      Width = 86
+      Height = 13
+      Anchors = [akRight, akBottom]
+      AutoSize = False
+      Caption = 'XY:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWhite
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      Visible = False
     end
-  end
-  object Panel2: TPanel
-    Left = 0
-    Top = 0
-    Width = 658
-    Height = 417
-    Align = alClient
-    BevelEdges = []
-    BevelOuter = bvNone
-    Caption = 'Panel2'
-    Color = clBlack
-    ParentBackground = False
-    TabOrder = 1
+    object lblFrameRate: TLabel
+      Left = 664
+      Top = 266
+      Width = 86
+      Height = 13
+      Anchors = [akRight, akBottom]
+      AutoSize = False
+      Caption = 'FR: '
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWhite
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      Visible = False
+    end
+    object lblBitRate: TLabel
+      Left = 664
+      Top = 283
+      Width = 86
+      Height = 13
+      Anchors = [akRight, akBottom]
+      AutoSize = False
+      Caption = 'BR:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWhite
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      Visible = False
+    end
+    object lblAudioBitRate: TLabel
+      Left = 664
+      Top = 300
+      Width = 86
+      Height = 13
+      Anchors = [akRight, akBottom]
+      AutoSize = False
+      Caption = 'AR:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWhite
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      Visible = False
+    end
+    object lblVideoBitRate: TLabel
+      Left = 664
+      Top = 317
+      Width = 86
+      Height = 13
+      Anchors = [akRight, akBottom]
+      AutoSize = False
+      Caption = 'VR:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWhite
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      Visible = False
+    end
+    object lblXYRatio: TLabel
+      Left = 664
+      Top = 334
+      Width = 86
+      Height = 13
+      Anchors = [akRight, akBottom]
+      AutoSize = False
+      Caption = 'X:Y'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWhite
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      Visible = False
+    end
+    object lblFileSize: TLabel
+      Left = 664
+      Top = 351
+      Width = 86
+      Height = 13
+      Anchors = [akRight, akBottom]
+      AutoSize = False
+      Caption = 'FS:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWhite
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      Visible = False
+    end
     object WMP: TWindowsMediaPlayer
-      Left = 0
-      Top = 0
-      Width = 658
-      Height = 407
+      Left = 193
+      Top = 100
+      Width = 200
+      Height = 174
       Margins.Left = 0
       Margins.Top = 0
       Margins.Right = 0
       Margins.Bottom = 0
       TabStop = False
-      Align = alClient
       TabOrder = 0
       OnPlayStateChange = WMPPlayStateChange
       OnClick = WMPClick
       OnMouseMove = WMPMouseMove
-      ExplicitTop = -3
       ControlData = {
         0003000008000200000000000500000000000000F03F03000000000005000000
         00000000000008000200000000000300010000000B00FFFF0300000000000B00
         FFFF08000200000000000300640000000B00000008000A0000006E006F006E00
         650000000B00FFFF0B00FFFF0B0000000B00FFFF0B0000000800020000000000
-        0800020000000000080002000000000008000200000000000B00000002440000
-        112A0000}
+        0800020000000000080002000000000008000200000000000B000000AC140000
+        FC110000}
     end
     object ProgressBar: TProgressBar
       Left = 0
       Top = 407
-      Width = 658
+      Width = 760
       Height = 10
       Align = alBottom
       BackgroundColor = clBlack
@@ -7178,33 +7171,34 @@ object UI: TUI
     Enabled = False
     Interval = 200
     OnTimer = tmrTimeDisplayTimer
-    Left = 584
-    Top = 368
+    Left = 392
+    Top = 208
   end
   object tmrPlayNext: TTimer
     Enabled = False
     Interval = 10
     OnTimer = tmrPlayNextTimer
-    Left = 552
-    Top = 368
+    Left = 360
+    Top = 208
   end
   object tmrRateLabel: TTimer
     Enabled = False
     Interval = 100
     OnTimer = tmrRateLabelTimer
-    Left = 520
-    Top = 368
+    Left = 328
+    Top = 208
   end
   object tmrMetaData: TTimer
     Interval = 5000
     OnTimer = tmrMetaDataTimer
-    Left = 488
-    Top = 368
+    Left = 296
+    Top = 208
   end
   object tmrTab: TTimer
+    Enabled = False
     Interval = 100
     OnTimer = tmrTabTimer
-    Left = 456
-    Top = 368
+    Left = 264
+    Top = 208
   end
 end

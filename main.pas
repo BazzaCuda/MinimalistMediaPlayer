@@ -3,31 +3,29 @@ unit main;
 interface
 
 uses
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.OleCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.Buttons,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.OleCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.Buttons,
   System.Classes, WMPLib_TLB;
 
 type
   TUI = class(TForm)
-    lblTimeDisplay: TLabel;
-    pnlControls: TPanel;
-    Panel2: TPanel;
+    pnlBackground: TPanel;
     ProgressBar: TProgressBar;
     tmrPlayNext: TTimer;
     tmrTimeDisplay: TTimer;
     WMP: TWindowsMediaPlayer;
-    lblRate: TLabel;
     tmrRateLabel: TTimer;
-    lblMuteUnmute: TLabel;
-    pnlInfo: TPanel;
-    lblXY: TLabel;
     tmrMetaData: TTimer;
-    lblFrameRate: TLabel;
-    lblVideoBitRate: TLabel;
-    lblAudioBitRate: TLabel;
-    lblFileSize: TLabel;
-    lblXYRatio: TLabel;
-    lblBitRate: TLabel;
     tmrTab: TTimer;
+    lblMuteUnmute: TLabel;
+    lblRate: TLabel;
+    lblTimeDisplay: TLabel;
+    lblXY: TLabel;
+    lblFrameRate: TLabel;
+    lblBitRate: TLabel;
+    lblAudioBitRate: TLabel;
+    lblVideoBitRate: TLabel;
+    lblXYRatio: TLabel;
+    lblFileSize: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -44,12 +42,11 @@ type
     procedure WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure tmrTabTimer(Sender: TObject);
-    procedure pnlControlsResize(Sender: TObject);
   private
     procedure setupProgressBar;
   public
     function  Fullscreen: boolean;
-    function  ToggleControlPanel: boolean;
+    function  ToggleControls: boolean;
   end;
 
 var
@@ -60,7 +57,7 @@ implementation
 uses
   WinApi.CommCtrl, WinApi.Windows, WinApi.Messages, WinApi.uxTheme,
   System.SysUtils, System.Generics.Collections, System.Math, System.Variants,
-  FormInputBox, bzUtils, MMSystem, Mixer;
+  FormInputBox, bzUtils, MMSystem, Mixer, VCL.Graphics;
 
 type
   TGV = class
@@ -109,7 +106,6 @@ type
     function RateReset: boolean;
     function RenameCurrentFile: boolean;
     function ResizeWindow: boolean;
-    function SetDateTimes(aFileOrFolderPath: string; aDT: TDateTime): Boolean;
     function ShowOKCancelMsgDlg(aMsg: string): TModalResult;
     function SpeedDecrease: boolean;
     function SpeedIncrease: boolean;
@@ -176,13 +172,11 @@ end;
 function TFX.DoMuteUnmute: boolean;
 begin
   GV.Mute := NOT GV.Mute;
-  UI.WMP.settings.mute := GV.Mute;
+  g_mixer.muted := GV.Mute;
   case GV.Mute of
      TRUE:  UI.lblMuteUnmute.Caption  := 'Unmute';
     FALSE:  UI.lblMuteUnmute.Caption  := 'Mute';
   end;
-  case GV.Mute of  TRUE: with TStringList.Create do begin SaveToFile(GV.ExePath + 'muted'); Free; end;
-                  FALSE: DeleteFile(GV.ExePath + 'muted'); end;
 end;
 
 function TFX.DoNOFile: boolean;
@@ -411,32 +405,6 @@ begin
                               (GetSystemMetrics(SM_CYVIRTUALSCREEN) - (vR.Bottom - vR.Top)) div 2, 0, 0, SWP_NOZORDER + SWP_NOSIZE);
 end;
 
-function TFX.SetDateTimes(aFileOrFolderPath: string; aDT: TDateTime): Boolean;
-// Folders and Files
-var
-  vHandle:      THandle;
-  vSystemTime:  TSystemTime;
-  vFileTime:    TFiletime;
-begin
-  vHandle := CreateFile(PChar(aFileOrFolderPath),
-                     GENERIC_READ or GENERIC_WRITE,
-                     0,
-                     nil,
-                     OPEN_EXISTING,
-                     FILE_FLAG_BACKUP_SEMANTICS,
-                     0);
-  case vHandle <> INVALID_HANDLE_VALUE of
-    TRUE:   try
-              DateTimeToSystemTime(aDT, vSystemTime);
-              SystemTimeToFileTime(vSystemTime, vFileTime);
-              result := SetFileTime(vHandle, @vFileTime, @vFileTime, @vFileTime);
-            finally
-              CloseHandle(vHandle);
-            end;
-   FALSE:  result := FALSE;
-  end;
-end;
-
 function TFX.SpeedDecrease: boolean;
 begin
   UI.WMP.settings.rate    := UI.WMP.settings.rate - 0.1;
@@ -540,7 +508,7 @@ begin
 //    ord('#'), 222     :    // # = NightTime
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
-    ord('c'), ord('C'): UI.ToggleControlPanel;                // C = Control Panel show/hide
+    ord('c'), ord('C'): UI.ToggleControls;                // C = Control Panel show/hide
     ord('d'), ord('D'): DoNOFile;                             // D = Delete File
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): UI.Fullscreen;                        // F = Fullscreen
@@ -567,10 +535,10 @@ function TFX.UnZoom: boolean;
 // If the size of WMP is much smaller than panel2, the re-align doesn't work
 // So we resize WMP first, then re-align it.
 begin
-  UI.WMP.Width  := UI.Panel2.Width -1;
-  UI.WMP.Height := UI.Panel2.Height -1;
-  UI.WMP.Top    := UI.Panel2.Top + 1;
-  UI.WMP.Left   := UI.Panel2.Left + 1;
+  UI.WMP.Width  := UI.pnlBackground.Width -1;
+  UI.WMP.Height := UI.pnlBackground.Height -1;
+  UI.WMP.Top    := UI.pnlBackground.Top + 1;
+  UI.WMP.Left   := UI.pnlBackground.Left + 1;
   UI.WMP.Align  := alClient;
 end;
 
@@ -605,7 +573,6 @@ begin
     ClearMediaMetaData;
     Unzoom;
     UI.WMP.controls.play;
-    UI.WMP.settings.mute := GV.Mute;
     UI.tmrMetaData.Enabled := TRUE;
   except begin
     ShowMessage('Oops!');
@@ -617,22 +584,22 @@ function TFX.ZoomIn: boolean;
 begin
   case UI.WMP.Align = alClient of TRUE: begin
                                           UI.WMP.Align    := alNone;
-                                          UI.WMP.Height   := UI.Panel2.Height;
-                                          UI.WMP.Width    := UI.Panel2.Width;
+                                          UI.WMP.Height   := UI.pnlBackground.Height;
+                                          UI.WMP.Width    := UI.pnlBackground.Width;
   end;end;
 
   UI.WMP.Width    := trunc(UI.WMP.Width * 1.1);
   UI.WMP.Height   := trunc(UI.WMP.Height * 1.1);
-  UI.WMP.Top      := UI.Panel2.Top - ((UI.WMP.Height - UI.Panel2.Height) div 2);
-  UI.WMP.Left     := UI.Panel2.Left - ((UI.WMP.Width - UI.Panel2.Width) div 2);
+  UI.WMP.Top      := UI.pnlBackground.Top - ((UI.WMP.Height - UI.pnlBackground.Height) div 2);
+  UI.WMP.Left     := UI.pnlBackground.Left - ((UI.WMP.Width - UI.pnlBackground.Width) div 2);
 end;
 
 function TFX.ZoomOut: boolean;
 begin
   UI.WMP.Width    := trunc(UI.WMP.Width * 0.9);
   UI.WMP.Height   := trunc(UI.WMP.Height * 0.9);
-  UI.WMP.Top      := UI.Panel2.Top - ((UI.WMP.Height - UI.Panel2.Height) div 2);
-  UI.WMP.Left     := UI.Panel2.Left - ((UI.WMP.Width - UI.Panel2.Width) div 2);
+  UI.WMP.Top      := UI.pnlBackground.Top - ((UI.WMP.Height - UI.pnlBackground.Height) div 2);
+  UI.WMP.Left     := UI.pnlBackground.Left - ((UI.WMP.Width - UI.pnlBackground.Width) div 2);
 end;
 
 function TFX.ShowOKCancelMsgDlg(aMsg: string): TModalResult;
@@ -676,12 +643,24 @@ begin
   WMP.uiMode          := 'none';
   WMP.windowlessVideo := TRUE;
   WMP.settings.volume := 100;
+  WMP.Align           := alClient;
+
+  lblMuteUnmute.Parent    := WMP;
+  lblXY.Parent            := WMP;
+  lblFrameRate.Parent     := WMP;
+  lblBitRate.Parent       := WMP;
+  lblAudioBitRate.Parent  := WMP;
+  lblVideoBitRate.Parent  := WMP;
+  lblXYRatio.Parent       := WMP;
+  lblFileSize.Parent      := WMP;
+  lblRate.Parent          := WMP;
+  lblTimeDisplay.Parent   := WMP;
 
   lblTimeDisplay.Caption := '';
 
   setupProgressBar;
 
-  case FileExists(GV.ExePath + 'muted') of TRUE: FX.DoMuteUnmute; end;
+  case g_mixer.muted of TRUE: FX.DoMuteUnmute; end; // GV.Mute starts out FALSE; this brings it in line with the system
 
   case FX.isCapsLockOn of
      TRUE: GV.FileIx := FX.FindMediaFilesInFolder(ParamStr(1), GV.Files, 100000000);
@@ -714,11 +693,6 @@ end;
 procedure TUI.lblMuteUnmuteClick(Sender: TObject);
 begin
   FX.DoMuteUnmute;
-end;
-
-procedure TUI.pnlControlsResize(Sender: TObject);
-begin
-  pnlInfo.Top := (pnlControls.Height - pnlInfo.Height) div 2;
 end;
 
 procedure TUI.ProgressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
@@ -794,9 +768,17 @@ begin
   FX.UpdateTimeDisplay;
 end;
 
-function TUI.ToggleControlPanel: boolean;
+function TUI.ToggleControls: boolean;
 begin
-  pnlControls.Visible := NOT pnlControls.Visible;
+  lblMuteUnmute.Visible   := NOT lblMuteUnmute.Visible;
+  lblXY.Visible           := NOT lblXY.Visible;
+  lblFrameRate.Visible    := NOT lblFrameRate.Visible;
+  lblBitRate.Visible      := NOT lblBitRate.Visible;
+  lblAudioBitRate.Visible := NOT lblAudioBitRate.Visible;
+  lblVideoBitRate.Visible := NOT lblVideoBitRate.Visible;
+  lblXYRatio.Visible      := NOT lblXYRatio.Visible;
+  lblFileSize.Visible     := NOT lblFileSize.Visible;
+  lblTimeDisplay.Visible  := NOT lblTimeDisplay.Visible;
 end;
 
 procedure TUI.setupProgressBar;
