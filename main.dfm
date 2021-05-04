@@ -7145,7 +7145,7 @@ object UI: TUI
     end
     object WMP: TWindowsMediaPlayer
       Left = 193
-      Top = 100
+      Top = 105
       Width = 200
       Height = 174
       Margins.Left = 0

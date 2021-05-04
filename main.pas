@@ -82,6 +82,7 @@ type
   private
     function ClearMediaMetaData: boolean;
     function DeleteThisFile(AFilePath: string): boolean;
+    function doAspectRation: boolean;
     function DoCommandLine(aCommandLIne: string): boolean;
     function DoMuteUnmute: boolean;
     function DoNOFile: boolean;
@@ -143,6 +144,21 @@ end;
 function TFX.DeleteThisFile(AFilePath: string): boolean;
 begin
   DoCommandLine('rot -nobanner -p 1 -r "' + AFilePath + '"');
+end;
+
+function TFX.doAspectRation: boolean;
+var
+  vRatio: double;
+  X, Y: integer;
+begin
+  X := StrToIntDef(UI.WMP.currentMedia.getItemInfo('WM/VideoWidth'), 0);
+  Y := StrToIntDef(UI.WMP.currentMedia.getItemInfo('WM/VideoHeight'), 0);
+
+  case (X = 0) OR (Y = 0) of TRUE: EXIT; end;
+
+  vRatio := Y / X;
+
+  UI.Height := trunc(UI.Width * vRatio) + UI.ProgressBar.Height + 33;
 end;
 
 function TFX.DoCommandLine(aCommandLIne: string): boolean;
@@ -316,6 +332,7 @@ begin
   case FileExists(GV.Files[GV.FileIx]) of TRUE: begin
     WindowCaption;
     UI.WMP.URL := 'file://' + GV.Files[GV.FileIx];
+    UnZoom;
     WMPplay;
   end;end;
 end;
@@ -498,12 +515,13 @@ begin
   case UIKey(Key, Shift) of TRUE: EXIT; end;  // Keys that can be pressed singly or held down for repeat action
 
   case Key of
-//    VK_ESCAPE: case UI.WMP.fullScreen of FALSE: UI.CLOSE; end; // eXit app  - needs work
-    VK_SPACE:  case UI.WMP.playState of                      // Pause / Play
-                                  wmppsPlaying:               UI.WMP.controls.pause;
-                                  wmppsPaused, wmppsStopped:  WMPplay; end;
-    VK_UP, 191:         SpeedIncrease; // Slash               // Speed up
-    VK_DOWN, 220:       SpeedDecrease; // Backslash           // Slow down
+//    VK_ESCAPE: case UI.WMP.fullScreen of FALSE: UI.CLOSE; end; // eXit app  - WMP doesn't allow this key to be re-used
+    VK_SPACE:  case UI.WMP.playState of wmppsPlaying:   UI.WMP.controls.pause;    // Pause / Play
+                                        wmppsPaused,
+                                        wmppsStopped:   WMPplay; end;
+
+    VK_UP, 191 {Slash}:         SpeedIncrease;                // Speed up
+    VK_DOWN, 220 {Backslash}:   SpeedDecrease;                // Slow down
 
 //    ord('#'), 222     :    // # = NightTime
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
@@ -513,13 +531,14 @@ begin
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): UI.Fullscreen;                        // F = Fullscreen
     ord('g'), ord('G'): ResizeWindow;                         // G = Greater window size            Mods: Ctrl-G
+    ord('j'), ord('J'): doAspectRation;                       // J = adJust aspect ratio
     ord('m'), ord('M'): WindowMaximizeRestore;                // M = Maximize/Restore
     ord('n'), ord('N'): application.Minimize;                 // N = miNimize
     ord('p'), ord('P'): PlayWithPotPlayer;                    // P = Play current video with Pot Player
     ord('q'), ord('Q'): PlayPrevFile;                         // Q = Play previous in folder
     ord('r'), ord('R'): RenameCurrentFile;                    // R = Rename
     ord('s'), ord('S'): UI.WMP.controls.currentPosition := 0; // S = Start-over
-    ord('t'), ord('T'): TabForwardsBackwards;                 // T = Tab forwards/backwards n%     Mods: SHIFT-T, ALT-T, CAPSLOCK, Ctrl-T,
+    ord('t'), ord('T'): TabForwardsBackwards;                 // T = Tab forwards/backwards n%      Mods: SHIFT-T, ALT-T, CAPSLOCK, Ctrl-T,
     ord('u'), ord('U'): UnZoom;                               // U = Unzoom
     ord('v'), ord('V'): WindowMaximizeRestore;                // V = View Maximize/Restore
     ord('w'), ord('W'): PlayNextFile;                         // W = Watch next in folder
@@ -535,10 +554,10 @@ function TFX.UnZoom: boolean;
 // If the size of WMP is much smaller than panel2, the re-align doesn't work
 // So we resize WMP first, then re-align it.
 begin
-  UI.WMP.Width  := UI.pnlBackground.Width -1;
-  UI.WMP.Height := UI.pnlBackground.Height -1;
-  UI.WMP.Top    := UI.pnlBackground.Top + 1;
-  UI.WMP.Left   := UI.pnlBackground.Left + 1;
+  UI.WMP.Width  := UI.pnlBackground.Width   - 1;
+  UI.WMP.Height := UI.pnlBackground.Height  - 1;
+  UI.WMP.Top    := UI.pnlBackground.Top     + 1;
+  UI.WMP.Left   := UI.pnlBackground.Left    + 1;
   UI.WMP.Align  := alClient;
 end;
 
@@ -557,7 +576,9 @@ end;
 
 function TFX.WindowCaption: boolean;
 begin
-  UI.caption := '[' + IntToStr(GV.FileIx + 1) + '/' + IntToStr(GV.Files.Count) + '] ' + ExtractFileName(GV.Files[GV.FileIx]);
+  UI.Caption := format('[%d/%d] %s   [%dx%d]', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx]), UI.Width, UI.Height]);
+
+//  UI.caption := '[' + IntToStr(GV.FileIx + 1) + '/' + IntToStr(GV.Files.Count) + '] ' + ExtractFileName(GV.Files[GV.FileIx]);
 end;
 
 function TFX.WindowMaximizeRestore: boolean;
@@ -571,7 +592,6 @@ begin
   try
     UI.tmrMetaData.Enabled := FALSE;
     ClearMediaMetaData;
-    Unzoom;
     UI.WMP.controls.play;
     UI.tmrMetaData.Enabled := TRUE;
   except begin
