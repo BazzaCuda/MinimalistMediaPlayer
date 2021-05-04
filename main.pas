@@ -46,7 +46,7 @@ type
     procedure setupProgressBar;
   public
     function  Fullscreen: boolean;
-    function  ToggleControls: boolean;
+    function  ToggleControls(Shift: TShiftState): boolean;
   end;
 
 var
@@ -508,7 +508,7 @@ begin
 //    ord('#'), 222     :    // # = NightTime
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
-    ord('c'), ord('C'): UI.ToggleControls;                // C = Control Panel show/hide
+    ord('c'), ord('C'): UI.ToggleControls(Shift);             // C = Control Panel show/hide        Mods: Ctrl-C
     ord('d'), ord('D'): DoNOFile;                             // D = Delete File
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): UI.Fullscreen;                        // F = Fullscreen
@@ -640,6 +640,8 @@ begin
   width   := trunc(780 * 1.5);
   height  := trunc(460 * 1.5);
 
+  pnlBackground.Color := clBlack;
+
   WMP.uiMode          := 'none';
   WMP.windowlessVideo := TRUE;
   WMP.settings.volume := 100;
@@ -768,17 +770,34 @@ begin
   FX.UpdateTimeDisplay;
 end;
 
-function TUI.ToggleControls: boolean;
+function TUI.ToggleControls(Shift: TShiftState): boolean;
+var vVisible: boolean;
 begin
-  lblMuteUnmute.Visible   := NOT lblMuteUnmute.Visible;
-  lblXY.Visible           := NOT lblXY.Visible;
-  lblFrameRate.Visible    := NOT lblFrameRate.Visible;
-  lblBitRate.Visible      := NOT lblBitRate.Visible;
-  lblAudioBitRate.Visible := NOT lblAudioBitRate.Visible;
-  lblVideoBitRate.Visible := NOT lblVideoBitRate.Visible;
-  lblXYRatio.Visible      := NOT lblXYRatio.Visible;
-  lblFileSize.Visible     := NOT lblFileSize.Visible;
-  lblTimeDisplay.Visible  := NOT lblTimeDisplay.Visible;
+  case (ssCtrl in Shift) AND lblTimeDisplay.Visible and NOT lblXY.Visible of TRUE: begin
+    lblXY.Visible           := TRUE;
+    lblFrameRate.Visible    := TRUE;
+    lblBitRate.Visible      := TRUE;
+    lblAudioBitRate.Visible := TRUE;
+    lblVideoBitRate.Visible := TRUE;
+    lblXYRatio.Visible      := TRUE;
+    lblFileSize.Visible     := TRUE;
+    EXIT;
+  end;end;
+
+  vVisible := NOT lblMuteUnmute.Visible;
+
+  lblMuteUnmute.Visible   := vVisible;
+  lblTimeDisplay.Visible  := vVisible;
+
+  case (ssCtrl in Shift) or NOT vVisible of TRUE: begin
+    lblXY.Visible           := vVisible;
+    lblFrameRate.Visible    := vVisible;
+    lblBitRate.Visible      := vVisible;
+    lblAudioBitRate.Visible := vVisible;
+    lblVideoBitRate.Visible := vVisible;
+    lblXYRatio.Visible      := vVisible;
+    lblFileSize.Visible     := vVisible;
+  end;end;
 end;
 
 procedure TUI.setupProgressBar;

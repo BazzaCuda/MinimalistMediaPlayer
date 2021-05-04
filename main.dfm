@@ -6963,7 +6963,7 @@ object UI: TUI
     BevelEdges = []
     BevelOuter = bvNone
     Caption = 'pnlBackground'
-    Color = clBlack
+    Color = clGray
     ParentBackground = False
     TabOrder = 0
     DesignSize = (
@@ -6984,6 +6984,7 @@ object UI: TUI
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      Transparent = True
       Visible = False
       OnClick = lblMuteUnmuteClick
     end
@@ -7002,6 +7003,7 @@ object UI: TUI
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      Transparent = True
       Visible = False
     end
     object lblTimeDisplay: TLabel
@@ -7019,6 +7021,7 @@ object UI: TUI
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      Transparent = True
       Visible = False
     end
     object lblXY: TLabel
@@ -7035,6 +7038,7 @@ object UI: TUI
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      Transparent = True
       Visible = False
     end
     object lblFrameRate: TLabel
@@ -7051,6 +7055,7 @@ object UI: TUI
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      Transparent = True
       Visible = False
     end
     object lblBitRate: TLabel
@@ -7067,6 +7072,7 @@ object UI: TUI
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      Transparent = True
       Visible = False
     end
     object lblAudioBitRate: TLabel
@@ -7083,6 +7089,7 @@ object UI: TUI
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      Transparent = True
       Visible = False
     end
     object lblVideoBitRate: TLabel
@@ -7099,6 +7106,7 @@ object UI: TUI
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      Transparent = True
       Visible = False
     end
     object lblXYRatio: TLabel
@@ -7115,6 +7123,7 @@ object UI: TUI
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      Transparent = True
       Visible = False
     end
     object lblFileSize: TLabel
@@ -7131,6 +7140,7 @@ object UI: TUI
       Font.Name = 'Tahoma'
       Font.Style = []
       ParentFont = False
+      Transparent = True
       Visible = False
     end
     object WMP: TWindowsMediaPlayer
