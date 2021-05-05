@@ -7027,7 +7027,7 @@ object UI: TUI
     end
     object lblXY: TLabel
       Left = 664
-      Top = 249
+      Top = 229
       Width = 86
       Height = 13
       Anchors = [akRight, akBottom]
@@ -7135,6 +7135,23 @@ object UI: TUI
       Anchors = [akRight, akBottom]
       AutoSize = False
       Caption = 'FS:'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWhite
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      Transparent = True
+      Visible = False
+    end
+    object lblXY2: TLabel
+      Left = 664
+      Top = 248
+      Width = 86
+      Height = 13
+      Anchors = [akRight, akBottom]
+      AutoSize = False
+      Caption = 'XY:'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWhite
       Font.Height = -11

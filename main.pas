@@ -26,6 +26,7 @@ type
     lblVideoBitRate: TLabel;
     lblXYRatio: TLabel;
     lblFileSize: TLabel;
+    lblXY2: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -137,6 +138,7 @@ var
 function TFX.ClearMediaMetaData: boolean;
 begin
   UI.lblXY.Caption            := format('XY:', []);
+  UI.lblXY2.Caption           := format('XY:', []);
   UI.lblFrameRate.Caption     := format('FR:', []);
   UI.lblBitRate.Caption       := format('BR:', []);
   UI.lblAudioBitRate.Caption  := format('AR:', []);
@@ -151,18 +153,21 @@ begin
 end;
 
 function TFX.doAspectRatio: boolean;
+// This attempts to resize the window height to match its width in the same proportion as the video dimensions,
+// in order to elimiate the black bars above and below the video.
+// Usage: size the window to the required width then press J to ad-J-ust the window's height to match the aspect ratio
 var
   vRatio: double;
   X, Y: integer;
 begin
-  X := StrToIntDef(UI.WMP.currentMedia.getItemInfo('WM/VideoWidth'), 0);
-  Y := StrToIntDef(UI.WMP.currentMedia.getItemInfo('WM/VideoHeight'), 0);
+//  X := StrToIntDef(UI.WMP.currentMedia.getItemInfo('WM/VideoWidth'), 0); // not reliable
+//  Y := StrToIntDef(UI.WMP.currentMedia.getItemInfo('WM/VideoHeight'), 0);
+  X := UI.WMP.currentMedia.imageSourceWidth;
+  Y := UI.WMP.currentMedia.imageSourceHeight;
 
   case (X = 0) OR (Y = 0) of TRUE: EXIT; end;
 
   vRatio := Y / X;
-
-//  case vRatio > 0.5 of TRUE: vRatio := vRatio - 0.1; end;
 
   UI.Height := trunc(UI.Width * vRatio) + UI.ProgressBar.Height + 33;
   WindowCaption;
@@ -244,6 +249,7 @@ end;
 function TFX.FetchMediaMetaData: boolean;
 begin
   UI.lblXY.Caption                := format('XY:  %s x %s', [UI.WMP.currentMedia.getItemInfo('WM/VideoWidth'), UI.WMP.currentMedia.getItemInfo('WM/VideoHeight')]);
+  UI.lblXY2.Caption               := format('XY:  %d x %d', [UI.WMP.currentMedia.imageSourceWidth, UI.WMP.currentMedia.imageSourceHeight]);
   try UI.lblFrameRate.Caption     := format('FR:  %f fps', [StrToFloat(UI.WMP.currentMedia.getItemInfo('FrameRate')) / 1000]); except end;
   try UI.lblBitRate.Caption       := format('BR:  %d Kb/s', [trunc(StrToFloat(UI.WMP.currentMedia.getItemInfo('BitRate')) / 1024)]); except end;
   try UI.lblAudioBitRate.Caption  := format('AR:  %d Kb/s', [trunc(StrToFloat(UI.WMP.currentMedia.getItemInfo('AudioBitRate')) / 1024)]); except end;
@@ -692,6 +698,7 @@ begin
 
   lblMuteUnmute.Parent    := WMP;
   lblXY.Parent            := WMP;
+  lblXY2.Parent           := WMP;
   lblFrameRate.Parent     := WMP;
   lblBitRate.Parent       := WMP;
   lblAudioBitRate.Parent  := WMP;
@@ -824,6 +831,7 @@ var vVisible: boolean;
 begin
   case (ssCtrl in Shift) AND lblTimeDisplay.Visible and NOT lblXY.Visible of TRUE: begin
     lblXY.Visible           := TRUE;
+    lblXY2.Visible          := TRUE;
     lblFrameRate.Visible    := TRUE;
     lblBitRate.Visible      := TRUE;
     lblAudioBitRate.Visible := TRUE;
@@ -840,6 +848,7 @@ begin
 
   case (ssCtrl in Shift) or NOT vVisible of TRUE: begin
     lblXY.Visible           := vVisible;
+    lblXY2.Visible          := vVisible;
     lblFrameRate.Visible    := vVisible;
     lblBitRate.Visible      := vVisible;
     lblAudioBitRate.Visible := vVisible;
