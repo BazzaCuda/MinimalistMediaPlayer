@@ -1,6 +1,7 @@
 object UI: TUI
   Left = 0
   Top = 0
+  BorderIcons = [biSystemMenu]
   Caption = 'MediaPlayer'
   ClientHeight = 417
   ClientWidth = 760
@@ -7174,6 +7175,8 @@ object UI: TUI
       TabOrder = 0
       OnPlayStateChange = WMPPlayStateChange
       OnClick = WMPClick
+      OnKeyDown = WMPKeyDown
+      OnKeyUp = WMPKeyUp
       OnMouseMove = WMPMouseMove
       ControlData = {
         0003000008000200000000000500000000000000F03F03000000000005000000

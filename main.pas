@@ -44,6 +44,8 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure tmrTabTimer(Sender: TObject);
     procedure FormResize(Sender: TObject);
+    procedure WMPKeyUp(ASender: TObject; nKeyCode, nShiftState: SmallInt);
+    procedure WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
   private
     procedure setupProgressBar;
   public
@@ -68,12 +70,14 @@ type
     FFiles:   TList<string>;
     FMute:    boolean;
     FBlankRate: boolean;
+    FBlackOut: boolean;
     function  GetExePath: string;
   private
     function getZoomed: boolean;
   public
     constructor Create;
     destructor  Destroy;  override;
+    property    BlackOut:     boolean       read FBlackOut  write FBlackOut;
     property    BlankRate:    boolean       read FBlankRate write FBlankRate;
     property    ExePath:      string        read GetExePath;
     property    FileIx:       integer       read FFileIx    write FFileIx;
@@ -84,6 +88,7 @@ type
 
   TFX = class
   private
+    function BlackOut: boolean;
     function ClearMediaMetaData: boolean;
     function DeleteThisFile(AFilePath: string): boolean;
     function doAspectRatio: boolean;
@@ -135,6 +140,17 @@ var
 
 { TFX }
 
+function TFX.BlackOut: boolean;
+begin
+  GV.BlackOut             := NOT GV.BlackOut;
+  UI.ProgressBar.Visible  := NOT GV.BlackOut;
+  case GV.BlackOut of
+     TRUE: UI.BorderIcons := [];
+    FALSE: UI.BorderIcons := [biSystemMenu];
+  end;
+  windowCaption;
+end;
+
 function TFX.ClearMediaMetaData: boolean;
 begin
   UI.lblXY.Caption            := format('XY:', []);
@@ -154,7 +170,7 @@ end;
 
 function TFX.doAspectRatio: boolean;
 // This attempts to resize the window height to match its width in the same proportion as the video dimensions,
-// in order to elimiate the black bars above and below the video.
+// in order to eliminate the black bars above and below the video.
 // Usage: size the window to the required width then press J to ad-J-ust the window's height to match the aspect ratio
 var
   vRatio: double;
@@ -405,6 +421,7 @@ end;
 function TFX.RateReset: boolean;
 begin
   UI.WMP.settings.rate    := 1;
+  FX.UpdateRateLabel;
   UI.tmrRateLabel.Enabled := TRUE;
 end;
 
@@ -446,12 +463,14 @@ end;
 function TFX.SpeedDecrease: boolean;
 begin
   UI.WMP.settings.rate    := UI.WMP.settings.rate - 0.1;
+  FX.UpdateRateLabel;
   UI.tmrRateLabel.Enabled := TRUE;
 end;
 
 function TFX.SpeedIncrease: boolean;
 begin
   UI.WMP.settings.rate    := UI.WMP.settings.rate + 0.1;
+  FX.UpdateRateLabel;
   UI.tmrRateLabel.Enabled := TRUE;
 end;
 
@@ -547,15 +566,20 @@ begin
 //    ord('#'), 222     :    // # = NightTime
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
+    ord('b'), ord('B'): BlackOut;                             // B = Blackout
     ord('c'), ord('C'): UI.ToggleControls(Shift);             // C = Control Panel show/hide        Mods: Ctrl-C
     ord('d'), ord('D'): DoNOFile;                             // D = Delete File
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): UI.Fullscreen;                        // F = Fullscreen
     ord('g'), ord('G'): ResizeWindow;                         // G = Greater window size            Mods: Ctrl-G
-    ord('j'), ord('J'): doAspectRatio;                        // J = adJust aspect ratio
     ord('h'), ord('H'): doCentreHorizontal;                   // H = centre window Horizontally
+                                                              // I = zoom In
+    ord('j'), ord('J'): doAspectRatio;                        // J = adJust aspect ratio
+                                                              // K =
+                                                              // L =
     ord('m'), ord('M'): WindowMaximizeRestore;                // M = Maximize/Restore
     ord('n'), ord('N'): application.Minimize;                 // N = miNimize
+                                                              // O = zoom Out
     ord('p'), ord('P'): PlayWithPotPlayer;                    // P = Play current video with Pot Player
     ord('q'), ord('Q'): PlayPrevFile;                         // Q = Play previous in folder
     ord('r'), ord('R'): RenameCurrentFile;                    // R = Rename
@@ -604,9 +628,12 @@ end;
 
 function TFX.WindowCaption: boolean;
 begin
-//  UI.Caption := format('[%d/%d] %s', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx])]);
   case GV.Files.Count = 0 of TRUE: EXIT; end;
-  UI.Caption := format('[%d/%d] %s   [%d x %d]', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx]), UI.WMP.Width, UI.WMP.Height]);
+  case GV.BlackOut of
+     TRUE:  UI.Caption := '';
+//    FALSE:  UI.Caption := format('[%d/%d] %s   [%d x %d]', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx]), UI.WMP.Width, UI.WMP.Height]);
+    FALSE:  UI.Caption := format('[%d/%d] %s', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx])]);
+  end;
 end;
 
 function TFX.WindowMaximizeRestore: boolean;
@@ -782,7 +809,6 @@ end;
 procedure TUI.tmrRateLabelTimer(Sender: TObject);
 begin
   tmrRateLabel.Enabled  := FALSE;
-  FX.UpdateRateLabel;
   case lblRate.Visible of FALSE:  begin
                                     lblRate.Visible       := TRUE;
                                     tmrRateLabel.Interval := 500; // delay showing to allow WMP time to adjust the rate internally
@@ -882,6 +908,20 @@ begin
     wmppsPlaying:               WMP.controls.pause;
     wmppsPaused, wmppsStopped:  main.FX.WMPplay;
   end;
+end;
+
+procedure TUI.WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
+var Key: WORD;
+begin
+  Key := nKeyCode;
+  UI.KeyDown(Key, TShiftState(nShiftState));
+end;
+
+procedure TUI.WMPKeyUp(ASender: TObject; nKeyCode, nShiftState: SmallInt);
+var Key: WORD;
+begin
+  Key := nKeyCode;
+  UI.KeyUp(Key, TShiftState(nShiftState));
 end;
 
 procedure TUI.WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
