@@ -6952,6 +6952,7 @@ object UI: TUI
   OnKeyDown = FormKeyDown
   OnKeyUp = FormKeyUp
   OnMouseMove = FormMouseMove
+  OnResize = FormResize
   PixelsPerInch = 96
   TextHeight = 13
   object pnlBackground: TPanel

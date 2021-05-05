@@ -42,6 +42,7 @@ type
     procedure WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure tmrTabTimer(Sender: TObject);
+    procedure FormResize(Sender: TObject);
   private
     procedure setupProgressBar;
   public
@@ -65,12 +66,14 @@ type
     FFileIx:  integer;
     FFiles:   TList<string>;
     FMute:    boolean;
+    FBlankRate: boolean;
     function  GetExePath: string;
   private
     function getZoomed: boolean;
   public
     constructor Create;
     destructor  Destroy;  override;
+    property    BlankRate:    boolean       read FBlankRate write FBlankRate;
     property    ExePath:      string        read GetExePath;
     property    FileIx:       integer       read FFileIx    write FFileIx;
     property    Files:        TList<string> read FFiles;
@@ -82,7 +85,8 @@ type
   private
     function ClearMediaMetaData: boolean;
     function DeleteThisFile(AFilePath: string): boolean;
-    function doAspectRation: boolean;
+    function doAspectRatio: boolean;
+    function doCentreHorizontal: boolean;
     function DoCommandLine(aCommandLIne: string): boolean;
     function DoMuteUnmute: boolean;
     function DoNOFile: boolean;
@@ -146,7 +150,7 @@ begin
   DoCommandLine('rot -nobanner -p 1 -r "' + AFilePath + '"');
 end;
 
-function TFX.doAspectRation: boolean;
+function TFX.doAspectRatio: boolean;
 var
   vRatio: double;
   X, Y: integer;
@@ -158,7 +162,20 @@ begin
 
   vRatio := Y / X;
 
+//  case vRatio > 0.5 of TRUE: vRatio := vRatio - 0.1; end;
+
   UI.Height := trunc(UI.Width * vRatio) + UI.ProgressBar.Height + 33;
+  WindowCaption;
+end;
+
+function TFX.doCentreHorizontal: boolean;
+var
+  vR: TRect;
+begin
+  GetWindowRect(UI.Handle, vR);
+
+  SetWindowPos(UI.Handle, 0,  (GetSystemMetrics(SM_CXVIRTUALSCREEN) - (vR.Right - vR.Left)) div 2,
+                              (GetSystemMetrics(SM_CYVIRTUALSCREEN) - (vR.Bottom - vR.Top)) div 2, 0, 0, SWP_NOZORDER + SWP_NOSIZE);
 end;
 
 function TFX.DoCommandLine(aCommandLIne: string): boolean;
@@ -333,6 +350,7 @@ begin
     WindowCaption;
     UI.WMP.URL := 'file://' + GV.Files[GV.FileIx];
     UnZoom;
+    GV.BlankRate := TRUE;
     WMPplay;
   end;end;
 end;
@@ -408,18 +426,15 @@ begin
 end;
 
 function TFX.ResizeWindow: boolean;
-var
-  vR: TRect;
 begin
   case isControlKeyDown of
      TRUE: SetWindowPos(UI.Handle, 0, 0, 0, UI.Width - 100, UI.Height - 60, SWP_NOZORDER + SWP_NOMOVE + SWP_NOREDRAW);
     FALSE: SetWindowPos(UI.Handle, 0, 0, 0, UI.Width + 100, UI.Height + 60, SWP_NOZORDER + SWP_NOMOVE + SWP_NOREDRAW);
   end;
 
-  GetWindowRect(UI.Handle, vR);
+  doCentreHorizontal;
 
-  SetWindowPos(UI.Handle, 0,  (GetSystemMetrics(SM_CXVIRTUALSCREEN) - (vR.Right - vR.Left)) div 2,
-                              (GetSystemMetrics(SM_CYVIRTUALSCREEN) - (vR.Bottom - vR.Top)) div 2, 0, 0, SWP_NOZORDER + SWP_NOSIZE);
+  windowCaption;
 end;
 
 function TFX.SpeedDecrease: boolean;
@@ -531,7 +546,8 @@ begin
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): UI.Fullscreen;                        // F = Fullscreen
     ord('g'), ord('G'): ResizeWindow;                         // G = Greater window size            Mods: Ctrl-G
-    ord('j'), ord('J'): doAspectRation;                       // J = adJust aspect ratio
+    ord('j'), ord('J'): doAspectRatio;                        // J = adJust aspect ratio
+    ord('h'), ord('H'): doCentreHorizontal;                   // H = centre window Horizontally
     ord('m'), ord('M'): WindowMaximizeRestore;                // M = Maximize/Restore
     ord('n'), ord('N'): application.Minimize;                 // N = miNimize
     ord('p'), ord('P'): PlayWithPotPlayer;                    // P = Play current video with Pot Player
@@ -547,6 +563,7 @@ begin
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
   end;
   UpdateTimeDisplay;
+  UI.tmrRateLabel.Enabled := TRUE;
   Key := 0;
 end;
 
@@ -563,7 +580,12 @@ end;
 
 function TFX.UpdateRateLabel: boolean;
 begin
-  UI.lblRate.Caption  := IntToStr(round(UI.WMP.settings.rate * 100)) + '%';
+  case GV.BlankRate of   TRUE:  begin
+                                  UI.lblRate.Caption  := '';
+                                  GV.BlankRate        := FALSE;
+                                end;
+                        FALSE:  UI.lblRate.Caption  := IntToStr(round(UI.WMP.settings.rate * 100)) + '%';
+  end;
 end;
 
 function TFX.UpdateTimeDisplay: boolean;
@@ -576,9 +598,9 @@ end;
 
 function TFX.WindowCaption: boolean;
 begin
-  UI.Caption := format('[%d/%d] %s   [%dx%d]', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx]), UI.Width, UI.Height]);
-
-//  UI.caption := '[' + IntToStr(GV.FileIx + 1) + '/' + IntToStr(GV.Files.Count) + '] ' + ExtractFileName(GV.Files[GV.FileIx]);
+//  UI.Caption := format('[%d/%d] %s', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx])]);
+  case GV.Files.Count = 0 of TRUE: EXIT; end;
+  UI.Caption := format('[%d/%d] %s   [%d x %d]', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx]), UI.WMP.Width, UI.WMP.Height]);
 end;
 
 function TFX.WindowMaximizeRestore: boolean;
@@ -664,6 +686,7 @@ begin
 
   WMP.uiMode          := 'none';
   WMP.windowlessVideo := TRUE;
+  WMP.stretchToFit    := TRUE;
   WMP.settings.volume := 100;
   WMP.Align           := alClient;
 
@@ -678,7 +701,8 @@ begin
   lblRate.Parent          := WMP;
   lblTimeDisplay.Parent   := WMP;
 
-  lblTimeDisplay.Caption := '';
+  lblRate.Caption         := '';
+  lblTimeDisplay.Caption  := '';
 
   setupProgressBar;
 
@@ -705,6 +729,11 @@ end;
 procedure TUI.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
   WMP.cursor := crDefault;
+end;
+
+procedure TUI.FormResize(Sender: TObject);
+begin
+  FX.WindowCaption;
 end;
 
 function TUI.Fullscreen: boolean;
