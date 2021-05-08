@@ -115,6 +115,7 @@ type
     function PlayPrevFile: boolean;
     function PlayWithPotPlayer: boolean;
     function RateReset: boolean;
+    function reloadMediaFiles: boolean;
     function RenameCurrentFile: boolean;
     function ResizeWindow: boolean;
     function ShowOKCancelMsgDlg(aMsg: string): TModalResult;
@@ -425,6 +426,15 @@ begin
   UI.tmrRateLabel.Enabled := TRUE;
 end;
 
+function TFX.reloadMediaFiles: boolean;
+var vCurrentFile: string;
+begin
+  vCurrentFile := GV.Files[GV.FileIx];
+  FindMediaFilesInFolder(vCurrentFile, GV.Files);
+  GV.FileIx     := GV.Files.IndexOf(vCurrentFile);
+  WindowCaption;
+end;
+
 function TFX.RenameCurrentFile: boolean;
 var
   vOldFileName: string;
@@ -576,7 +586,7 @@ begin
                                                               // I = zoom In
     ord('j'), ord('J'): doAspectRatio;                        // J = adJust aspect ratio
                                                               // K =
-                                                              // L =
+    ord('l'), ord('L'): reloadMediaFiles;                     // L = re-Load media files
     ord('m'), ord('M'): WindowMaximizeRestore;                // M = Maximize/Restore
     ord('n'), ord('N'): application.Minimize;                 // N = miNimize
                                                               // O = zoom Out
