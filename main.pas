@@ -493,6 +493,8 @@ function TFX.TabForwardsBackwards: boolean;
 var
   vFactor: integer;
 begin
+  UI.lblRate.Caption  := '';
+
   case isShiftKeyDown of
      TRUE:  vFactor := 20;
     FALSE:  case isAltKeyDown of
@@ -865,6 +867,8 @@ end;
 function TUI.ToggleControls(Shift: TShiftState): boolean;
 var vVisible: boolean;
 begin
+  lblRate.Caption := '';
+
   case (ssCtrl in Shift) AND lblTimeDisplay.Visible and NOT lblXY.Visible of TRUE: begin
     lblXY.Visible           := TRUE;
     lblXY2.Visible          := TRUE;
