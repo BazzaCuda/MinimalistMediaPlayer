@@ -108,6 +108,7 @@ type
     function isControlKeyDown: boolean;
     function isLastFile: boolean;
     function isShiftKeyDown: boolean;
+    function keepCurrentFile: boolean;
     function PlayCurrentFile: boolean;
     function PlayFirstFile: boolean;
     function PlayLastFile: boolean;
@@ -365,6 +366,22 @@ begin
   result := (GetKeyState(VK_SHIFT) AND $80) <> 0;
 end;
 
+function TFX.keepCurrentFile: boolean;
+var
+  vFileName: string;
+  vExt:         string;
+  vFilePath: string;
+begin
+  UI.WMP.controls.pause;
+  sleep(250);
+  vFileName  := '_' + ExtractFileName(GV.Files[GV.FileIx]);
+  vFilePath := ExtractFilePath(GV.Files[GV.FileIx]) + vFileName;
+  case RenameFile(GV.Files[GV.FileIx], vFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
+                                                      TRUE: GV.Files[GV.FileIx] := vFilePath; end;
+  WindowCaption;
+  UI.WMP.controls.play;
+end;
+
 function TFX.PlayCurrentFile: boolean;
 begin
   case (GV.FileIx < 0) OR (GV.FileIx > GV.Files.Count - 1) of TRUE: EXIT; end;
@@ -587,7 +604,7 @@ begin
     ord('h'), ord('H'): doCentreHorizontal;                   // H = centre window Horizontally
                                                               // I = zoom In
     ord('j'), ord('J'): doAspectRatio;                        // J = adJust aspect ratio
-                                                              // K =
+    ord('k'), ord('K'): keepCurrentFile;                      // K = Keep current file
     ord('l'), ord('L'): reloadMediaFiles;                     // L = re-Load media files
     ord('m'), ord('M'): WindowMaximizeRestore;                // M = Maximize/Restore
     ord('n'), ord('N'): application.Minimize;                 // N = miNimize
