@@ -27,6 +27,9 @@ type
     lblXYRatio: TLabel;
     lblFileSize: TLabel;
     lblXY2: TLabel;
+    lblTab: TLabel;
+    lblVol: TLabel;
+    tmrVol: TTimer;
     procedure FormCreate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -46,6 +49,7 @@ type
     procedure FormResize(Sender: TObject);
     procedure WMPKeyUp(ASender: TObject; nKeyCode, nShiftState: SmallInt);
     procedure WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
+    procedure tmrVolTimer(Sender: TObject);
   private
     procedure setupProgressBar;
   public
@@ -73,6 +77,7 @@ type
     FBlackOut: boolean;
     function  GetExePath: string;
   private
+    FStartUp: boolean;
     function getZoomed: boolean;
   public
     constructor Create;
@@ -83,6 +88,7 @@ type
     property    FileIx:       integer       read FFileIx    write FFileIx;
     property    Files:        TList<string> read FFiles;
     property    Mute:         boolean       read FMute      write FMute;
+    property    startup:      boolean       read FStartUp   write FStartUp;
     property    zoomed:       boolean       read getZoomed;
   end;
 
@@ -109,6 +115,7 @@ type
     function isLastFile: boolean;
     function isShiftKeyDown: boolean;
     function keepCurrentFile: boolean;
+    function openWithShotcut: boolean;
     function PlayCurrentFile: boolean;
     function PlayFirstFile: boolean;
     function PlayLastFile: boolean;
@@ -129,6 +136,7 @@ type
     function UnZoom: boolean;
     function UpdateRateLabel: boolean;
     function UpdateTimeDisplay: boolean;
+    function UpdateVolumeDisplay: boolean;
     function WindowCaption: boolean;
     function WindowMaximizeRestore: boolean;
     function WMPplay: boolean;
@@ -210,6 +218,8 @@ var
 begin
   result := FALSE;
   case trim(aCommandLIne) = ''  of TRUE: EXIT; end;
+
+//  ShowMessage(aCommandLine);
 
   FillChar(vStartInfo, SizeOf(TStartupInfo), #0);
   FillChar(vProcInfo, SizeOf(TProcessInformation), #0);
@@ -382,6 +392,12 @@ begin
   UI.WMP.controls.play;
 end;
 
+function TFX.openWithShotcut: boolean;
+begin
+  UI.WMP.controls.pause;
+  DoCommandLine('"B:\OS\Program Files\Shotcut\shotcut.exe" "' + GV.Files[GV.FileIx] + '"');
+end;
+
 function TFX.PlayCurrentFile: boolean;
 begin
   case (GV.FileIx < 0) OR (GV.FileIx > GV.Files.Count - 1) of TRUE: EXIT; end;
@@ -433,6 +449,7 @@ end;
 
 function TFX.PlayWithPotPlayer: boolean;
 begin
+  UI.WMP.controls.pause;
   DoCommandLine('B:\Tools\Pot\PotPlayerMini64.exe "' + GV.Files[GV.FileIx] + '"');
 end;
 
@@ -502,23 +519,23 @@ begin
 end;
 
 function TFX.TabForwardsBackwards: boolean;
-//  Default   = 10th
+//  Default   = 100th
 //  SHIFT     = 20th
 //  ALT       = 50th
-//  CAPS LOCK = 100th
+//  CAPS LOCK = 10th
 //  CTRL      = reverse
 var
   vFactor: integer;
 begin
-  UI.lblRate.Caption  := '';
+  UI.lblTab.Caption  := '';
 
   case isShiftKeyDown of
      TRUE:  vFactor := 20;
     FALSE:  case isAltKeyDown of
                TRUE:  vFactor := 50;
               FALSE:  case isCapsLockOn of
-                         TRUE: vFactor := 100;
-                        FALSE: vFactor := 10;
+                         TRUE: vFactor := 10;
+                        FALSE: vFactor := 100;
                       end;end;end;
 
   case isControlKeyDown of
@@ -526,7 +543,7 @@ begin
    FALSE: UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition + (UI.WMP.currentMedia.duration / vFactor);
   end;
 
-  UI.lblRate.Caption  := format('%dth', [vFactor]);
+  UI.lblTab.Caption  := format('%dth', [vFactor]);
   UI.tmrTab.Enabled   := TRUE;
 end;
 
@@ -552,9 +569,13 @@ begin
      TRUE:  case Key in [VK_UP, 191, VK_DOWN, 220] of
                TRUE:  begin
                         case Key of
-                          VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (g_mixer.Volume div 10);  // volume up 10%
-                          VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (g_mixer.Volume div 10);  // volume down 10%
+//                          VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (g_mixer.Volume div 10);  // volume up 10%
+//                          VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (g_mixer.Volume div 10);  // volume down 10%
+                          VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (65535 div 100);  // volume up 10%
+                          VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (65535 div 100);  // volume down 10%
                         end;
+                        UpdateVolumeDisplay;
+                        UI.tmrVol.Enabled := TRUE;
                         Key := 0;
                         EXIT;
                       end;end;end;
@@ -591,6 +612,8 @@ begin
 
     VK_UP, 191 {Slash}:         SpeedIncrease;                // Speed up
     VK_DOWN, 220 {Backslash}:   SpeedDecrease;                // Slow down
+
+    VK_F12: openWithShotcut;
 
 //    ord('#'), 222     :    // # = NightTime
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
@@ -653,6 +676,12 @@ begin
 
   UI.ProgressBar.Max        := trunc(UI.WMP.currentMedia.duration);
   UI.ProgressBar.Position   := trunc(UI.WMP.controls.currentPosition);
+end;
+
+function TFX.UpdateVolumeDisplay: boolean;
+begin
+  UI.lblVol.Caption := IntToStr(trunc(g_mixer.volume / 65535 * 100))  + '%';
+  UI.lblVol.Visible := TRUE;
 end;
 
 function TFX.WindowCaption: boolean;
@@ -741,8 +770,15 @@ end;
 
 procedure TUI.FormCreate(Sender: TObject);
 begin
-  width   := trunc(780 * 1.5);
-  height  := trunc(460 * 1.5);
+  case FX.isCapsLockOn of    TRUE:  begin
+                                      width   := 970;
+                                      height  := 640;
+                                    end;
+                            FALSE:  begin
+                                      width   := trunc(780 * 1.5);
+                                      height  := trunc(460 * 1.5);
+                                    end;end;
+
 
   pnlBackground.Color := clBlack;
 
@@ -762,21 +798,26 @@ begin
   lblXYRatio.Parent       := WMP;
   lblFileSize.Parent      := WMP;
   lblRate.Parent          := WMP;
+  lblTab.Parent           := WMP;
+  lblVol.Parent           := WMP;
   lblTimeDisplay.Parent   := WMP;
 
   lblRate.Caption         := '';
+  lblTab.Caption          := '';
   lblTimeDisplay.Caption  := '';
 
   setupProgressBar;
 
   case g_mixer.muted of TRUE: FX.DoMuteUnmute; end; // GV.Mute starts out FALSE; this brings it in line with the system
 
-  case FX.isCapsLockOn of
+  case {FX.isCapsLockOn} TRUE = FALSE of
      TRUE: GV.FileIx := FX.FindMediaFilesInFolder(ParamStr(1), GV.Files, 100000000);
     FALSE: GV.FileIx := FX.FindMediaFilesInFolder(ParamStr(1), GV.Files);
   end;
 
   FX.PlayCurrentFile;
+
+  GV.startup := TRUE;
 end;
 
 procedure TUI.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -797,6 +838,9 @@ end;
 procedure TUI.FormResize(Sender: TObject);
 begin
   FX.WindowCaption;
+
+  case GV.FStartUp AND FX.isCapsLockOn of  TRUE: SetWindowPos(self.Handle, 0, -6, 200, 0, 0, SWP_NOZORDER + SWP_NOSIZE); end;
+  GV.startup := FALSE;
 end;
 
 function TUI.Fullscreen: boolean;
@@ -865,13 +909,13 @@ end;
 procedure TUI.tmrTabTimer(Sender: TObject);
 begin
   tmrTab.Enabled := FALSE;
-  case lblRate.Visible of FALSE:  begin
-                                    lblRate.Visible := TRUE;
+  case lblTab.Visible of FALSE:  begin
+                                    lblTab.Visible := TRUE;
                                     tmrTab.Interval := 1000; // hide slow
                                     tmrTab.Enabled  := TRUE;
                                   end;
                            TRUE:  begin
-                                    lblRate.Visible := FALSE;
+                                    lblTab.Visible := FALSE;
                                     tmrTab.Interval := 100;  // show quick
                                   end;end;
 end;
@@ -881,10 +925,17 @@ begin
   FX.UpdateTimeDisplay;
 end;
 
+procedure TUI.tmrVolTimer(Sender: TObject);
+begin
+  tmrVol.Enabled := FALSE;
+  lblVol.Visible := FALSE;
+end;
+
 function TUI.ToggleControls(Shift: TShiftState): boolean;
 var vVisible: boolean;
 begin
   lblRate.Caption := '';
+  lblTab.Caption  := '';
 
   case (ssCtrl in Shift) AND lblTimeDisplay.Visible and NOT lblXY.Visible of TRUE: begin
     lblXY.Visible           := TRUE;

@@ -7162,6 +7162,42 @@ object UI: TUI
       Transparent = True
       Visible = False
     end
+    object lblTab: TLabel
+      Left = 678
+      Top = 375
+      Width = 59
+      Height = 13
+      Alignment = taCenter
+      Anchors = [akRight, akBottom]
+      AutoSize = False
+      Caption = '100%'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWhite
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      Transparent = True
+      Visible = False
+    end
+    object lblVol: TLabel
+      Left = 678
+      Top = 375
+      Width = 59
+      Height = 13
+      Alignment = taCenter
+      Anchors = [akRight, akBottom]
+      AutoSize = False
+      Caption = '100%'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWhite
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ParentFont = False
+      Transparent = True
+      Visible = False
+    end
     object WMP: TWindowsMediaPlayer
       Left = 193
       Top = 105
@@ -7202,34 +7238,41 @@ object UI: TUI
     Enabled = False
     Interval = 200
     OnTimer = tmrTimeDisplayTimer
-    Left = 392
-    Top = 208
+    Left = 400
+    Top = 256
   end
   object tmrPlayNext: TTimer
     Enabled = False
     Interval = 10
     OnTimer = tmrPlayNextTimer
-    Left = 360
-    Top = 208
+    Left = 400
+    Top = 304
   end
   object tmrRateLabel: TTimer
     Enabled = False
     Interval = 100
     OnTimer = tmrRateLabelTimer
-    Left = 328
+    Left = 400
     Top = 208
   end
   object tmrMetaData: TTimer
     Interval = 5000
     OnTimer = tmrMetaDataTimer
-    Left = 296
-    Top = 208
+    Left = 400
+    Top = 160
   end
   object tmrTab: TTimer
     Enabled = False
     Interval = 100
     OnTimer = tmrTabTimer
-    Left = 264
-    Top = 208
+    Left = 400
+    Top = 112
+  end
+  object tmrVol: TTimer
+    Enabled = False
+    Interval = 3000
+    OnTimer = tmrVolTimer
+    Left = 400
+    Top = 352
   end
 end
