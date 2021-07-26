@@ -96,12 +96,12 @@ type
   private
     function BlackOut: boolean;
     function ClearMediaMetaData: boolean;
-    function DeleteThisFile(AFilePath: string): boolean;
+    function DeleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
     function doAspectRatio: boolean;
     function doCentreHorizontal: boolean;
     function DoCommandLine(aCommandLIne: string): boolean;
     function DoMuteUnmute: boolean;
-    function DoNOFile: boolean;
+    function DoNOFile(Shift: TShiftState): boolean;
     function DoYESFile: boolean;
     function FetchMediaMetaData: boolean;
     function FindMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
@@ -173,9 +173,11 @@ begin
   UI.lblFileSize.Caption      := format('FS:', []);
 end;
 
-function TFX.DeleteThisFile(AFilePath: string): boolean;
+function TFX.DeleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
 begin
-  DoCommandLine('rot -nobanner -p 1 -r "' + AFilePath + '"');
+  case ssCtrl in Shift of  TRUE: DoCommandLine('rot -nobanner -p 1 -r "' + ExtractFilePath(AFilePath) + '*.* "');
+                          FALSE: DoCommandLine('rot -nobanner -p 1 -r "' + AFilePath + '"');
+  end;
 end;
 
 function TFX.doAspectRatio: boolean;
@@ -245,19 +247,20 @@ begin
   end;
 end;
 
-function TFX.DoNOFile: boolean;
+function TFX.DoNOFile(Shift: TShiftState): boolean;
 var
   vMsg: string;
 begin
   UI.WMP.controls.pause;
-  vMsg := 'DELETE '#13#10#13#10'Folder: ' + ExtractFilePath(GV.Files[GV.FileIx])
-        + #13#10#13#10'File: '            + ExtractFileName(GV.Files[GV.FileIx]);
+  vMsg := 'DELETE '#13#10#13#10'Folder: ' + ExtractFilePath(GV.Files[GV.FileIx]);
+  case ssCtrl in Shift of  TRUE: vMsg := vMsg + '*.*';
+                          FALSE: vMsg := vMsg + #13#10#13#10'File: '            + ExtractFileName(GV.Files[GV.FileIx]); end;
 
   case ShowOkCancelMsgDlg(vMsg) = IDOK of
     TRUE: begin
-            DeleteThisFile(GV.Files[GV.FileIx]);
+            DeleteThisFile(GV.Files[GV.FileIx], Shift);
 
-            case isLastFile of TRUE: begin UI.CLOSE; EXIT; end;end;  // close app after deleting final file
+            case isLastFile or (ssCtrl in Shift) of TRUE: begin UI.CLOSE; EXIT; end;end;  // close app after deleting final file or deleting folder contents
 
             GV.Files.Delete(GV.FileIx);
             GV.FileIx := GV.FileIx - 1;
@@ -393,9 +396,10 @@ begin
 end;
 
 function TFX.openWithShotcut: boolean;
+// mklink C:\ProgramFiles "C:\Program Files"
 begin
   UI.WMP.controls.pause;
-  DoCommandLine('"B:\OS\Program Files\Shotcut\shotcut.exe" "' + GV.Files[GV.FileIx] + '"');
+  DoCommandLine('C:\ProgramFiles\Shotcut\shotcut.exe "' + GV.Files[GV.FileIx] + '"');
 end;
 
 function TFX.PlayCurrentFile: boolean;
@@ -620,7 +624,7 @@ begin
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
     ord('b'), ord('B'): BlackOut;                             // B = Blackout
     ord('c'), ord('C'): UI.ToggleControls(Shift);             // C = Control Panel show/hide        Mods: Ctrl-C
-    ord('d'), ord('D'): DoNOFile;                             // D = Delete File
+    ord('d'), ord('D'): DoNOFile(Shift);                      // D = Delete File
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): UI.Fullscreen;                        // F = Fullscreen
     ord('g'), ord('G'): ResizeWindow;                         // G = Greater window size            Mods: Ctrl-G
