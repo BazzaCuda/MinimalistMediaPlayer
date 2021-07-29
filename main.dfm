@@ -6945,7 +6945,6 @@ object UI: TUI
     C1FF9EA8A8FFD6D8D7FFFBFBFB00FFFFFF00FFFFFF00FFFFFF00FFFFFF00FFE7
     0000FE070000F8030000F0030000E0070000C007000080030000800100000000
     0000000000000000000000000000E0070000E0070000F00F0000F81F0000}
-  KeyPreview = True
   OldCreateOrder = False
   Position = poScreenCenter
   OnCloseQuery = FormCloseQuery
@@ -7274,5 +7273,10 @@ object UI: TUI
     OnTimer = tmrVolTimer
     Left = 400
     Top = 352
+  end
+  object ApplicationEvents: TApplicationEvents
+    OnMessage = ApplicationEventsMessage
+    Left = 504
+    Top = 48
   end
 end

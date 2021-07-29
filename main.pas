@@ -4,7 +4,7 @@ interface
 
 uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.OleCtrls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.Buttons,
-  System.Classes, WMPLib_TLB;
+  System.Classes, WMPLib_TLB, Vcl.AppEvnts, WinApi.Messages, WinApi.Windows;
 
 type
   TUI = class(TForm)
@@ -30,6 +30,7 @@ type
     lblTab: TLabel;
     lblVol: TLabel;
     tmrVol: TTimer;
+    ApplicationEvents: TApplicationEvents;
     procedure FormCreate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -50,6 +51,7 @@ type
     procedure WMPKeyUp(ASender: TObject; nKeyCode, nShiftState: SmallInt);
     procedure WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
     procedure tmrVolTimer(Sender: TObject);
+    procedure ApplicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
   private
     procedure setupProgressBar;
   public
@@ -63,9 +65,9 @@ var
 implementation
 
 uses
-  WinApi.CommCtrl, WinApi.Windows, WinApi.Messages, WinApi.uxTheme,
+  WinApi.CommCtrl,  WinApi.uxTheme,
   System.SysUtils, System.Generics.Collections, System.Math, System.Variants,
-  FormInputBox, bzUtils, MMSystem, Mixer, VCL.Graphics;
+  FormInputBox, bzUtils, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils;
 
 type
   TGV = class
@@ -100,6 +102,7 @@ type
   private
     function BlackOut: boolean;
     function ClearMediaMetaData: boolean;
+    function clipboardCurrentFileName: boolean;
     function DeleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
     function doAspectRatio: boolean;
     function doCentreHorizontal: boolean;
@@ -575,11 +578,11 @@ begin
   GV.sampling := TRUE;
   try
     repeat
-      UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition + (UI.WMP.currentMedia.duration / 15);
+      UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition + (UI.WMP.currentMedia.duration / 10);
       delay(3000);
     until GV.Closing OR NOT GV.sampling OR (UI.WMP.controls.currentPosition >= (UI.wmp.currentMedia.duration * 0.90));
   finally
-    GV.sampling := FALSE;
+//    GV.sampling := FALSE;
   end;
 end;
 
@@ -653,6 +656,7 @@ begin
 
 //    ord('#'), 222     :    // # = NightTime
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
+    187               : clipboardCurrentFileName;             // =   copy current filename to clipboard
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
     ord('b'), ord('B'): BlackOut;                             // B = Blackout
     ord('c'), ord('C'): UI.ToggleControls(Shift);             // C = Control Panel show/hide        Mods: Ctrl-C
@@ -771,6 +775,11 @@ begin
   UI.WMP.Left     := UI.pnlBackground.Left - ((UI.WMP.Width - UI.pnlBackground.Width) div 2);
 end;
 
+function TFX.clipboardCurrentFileName: boolean;
+begin
+  clipboard.AsText := TPath.GetFileNameWithoutExtension(GV.Files[GV.FileIx]);
+end;
+
 function TFX.ShowOKCancelMsgDlg(aMsg: string): TModalResult;
 var
   i: Integer;
@@ -797,6 +806,25 @@ end;
 //===== UI Event Handlers =====
 
 {$R *.dfm}
+
+procedure TUI.ApplicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
+var
+  Key: word;
+  shiftState: TShiftState;
+begin
+  case MSG.message = WM_KEYDOWN of   TRUE:  begin
+                                              shiftState := KeyboardStateToShiftState;
+                                              Key := Msg.WParam;
+                                              FX.UIKeyDown(Key, shiftState);
+                                              Handled := TRUE;
+                                            end;end;
+  case MSG.message = WM_KEYUP   of   TRUE:  begin
+                                              shiftState := KeyboardStateToShiftState;
+                                              Key := Msg.WParam;
+                                              FX.UIKeyUp(Key, shiftState);
+                                              Handled := TRUE;
+                                            end;end;
+end;
 
 procedure TUI.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
@@ -883,7 +911,8 @@ end;
 
 function TUI.Fullscreen: boolean;
 begin
-  WMP.fullScreen := TRUE
+  case WMP.fullScreen of   TRUE: WMP.fullScreen := FALSE;
+                          FALSE: WMP.fullScreen := TRUE;  end;
 end;
 
 procedure TUI.lblMuteUnmuteClick(Sender: TObject);
@@ -1035,14 +1064,16 @@ procedure TUI.WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
 var Key: WORD;
 begin
   Key := nKeyCode;
-  UI.KeyDown(Key, TShiftState(nShiftState));
+  FX.UIKey(Key, TShiftState(nShiftState));
+//  UI.KeyDown(Key, TShiftState(nShiftState));
 end;
 
 procedure TUI.WMPKeyUp(ASender: TObject; nKeyCode, nShiftState: SmallInt);
 var Key: WORD;
 begin
   Key := nKeyCode;
-  UI.KeyUp(Key, TShiftState(nShiftState));
+  FX.UIKeyUp(Key, TShiftState(nShiftState));
+//  UI.KeyUp(Key, TShiftState(nShiftState));
 end;
 
 procedure TUI.WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
