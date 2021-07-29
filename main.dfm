@@ -6991,8 +6991,8 @@ object UI: TUI
       OnClick = lblMuteUnmuteClick
     end
     object lblRate: TLabel
-      Left = 677
-      Top = 377
+      Left = 678
+      Top = 375
       Width = 59
       Height = 13
       Alignment = taCenter
@@ -7236,7 +7236,7 @@ object UI: TUI
   end
   object tmrTimeDisplay: TTimer
     Enabled = False
-    Interval = 200
+    Interval = 999
     OnTimer = tmrTimeDisplayTimer
     Left = 400
     Top = 256

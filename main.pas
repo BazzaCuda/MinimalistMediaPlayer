@@ -75,19 +75,23 @@ type
     FMute:    boolean;
     FBlankRate: boolean;
     FBlackOut: boolean;
+    FStartUp: boolean;
+    FClosing: boolean;
+    FSampling: boolean;
     function  GetExePath: string;
   private
-    FStartUp: boolean;
     function getZoomed: boolean;
   public
     constructor Create;
     destructor  Destroy;  override;
     property    BlackOut:     boolean       read FBlackOut  write FBlackOut;
     property    BlankRate:    boolean       read FBlankRate write FBlankRate;
+    property    Closing:      boolean       read FClosing   write FClosing;
     property    ExePath:      string        read GetExePath;
     property    FileIx:       integer       read FFileIx    write FFileIx;
     property    Files:        TList<string> read FFiles;
     property    Mute:         boolean       read FMute      write FMute;
+    property    sampling:     boolean       read FSampling  write FSampling;
     property    startup:      boolean       read FStartUp   write FStartUp;
     property    zoomed:       boolean       read getZoomed;
   end;
@@ -130,6 +134,7 @@ type
     function SpeedDecrease: boolean;
     function SpeedIncrease: boolean;
     function TabForwardsBackwards: boolean;
+    function sampleVideo: boolean;
     function UIKey(var Key: Word; Shift: TShiftState): boolean;
     function UIKeyDown(var Key: Word; Shift: TShiftState): boolean;
     function UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
@@ -548,7 +553,34 @@ begin
   end;
 
   UI.lblTab.Caption  := format('%dth', [vFactor]);
+  case isControlKeyDown of TRUE: UI.lblTab.Caption := '<< ' + UI.lblTab.Caption; end;
   UI.tmrTab.Enabled   := TRUE;
+end;
+
+procedure Delay(dwMilliseconds:DWORD);//Longint
+var
+  iStart,iStop: DWORD;
+begin
+    iStart := GetTickCount;
+    repeat
+      iStop  := GetTickCount;
+      Application.ProcessMessages;
+    until (iStop  -  iStart) >= dwMilliseconds;
+end;
+
+function TFX.sampleVideo: boolean;
+begin
+  case GV.sampling of TRUE: begin GV.sampling := FALSE; EXIT; end;end;
+
+  GV.sampling := TRUE;
+  try
+    repeat
+      UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition + (UI.WMP.currentMedia.duration / 15);
+      delay(3000);
+    until GV.Closing OR NOT GV.sampling OR (UI.WMP.controls.currentPosition >= (UI.wmp.currentMedia.duration * 0.90));
+  finally
+    GV.sampling := FALSE;
+  end;
 end;
 
 function TFX.UIKey(var Key: Word; Shift: TShiftState): boolean;
@@ -575,8 +607,8 @@ begin
                         case Key of
 //                          VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (g_mixer.Volume div 10);  // volume up 10%
 //                          VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (g_mixer.Volume div 10);  // volume down 10%
-                          VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (65535 div 100);  // volume up 10%
-                          VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (65535 div 100);  // volume down 10%
+                          VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (65535 div 100);  // volume up 1%
+                          VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (65535 div 100);  // volume down 1%
                         end;
                         UpdateVolumeDisplay;
                         UI.tmrVol.Enabled := TRUE;
@@ -624,7 +656,7 @@ begin
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
     ord('b'), ord('B'): BlackOut;                             // B = Blackout
     ord('c'), ord('C'): UI.ToggleControls(Shift);             // C = Control Panel show/hide        Mods: Ctrl-C
-    ord('d'), ord('D'): DoNOFile(Shift);                      // D = Delete File
+    ord('d'), ord('D'), VK_DELETE: DoNOFile(Shift);           // D = Delete File                    Mods: Ctrl-C
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): UI.Fullscreen;                        // F = Fullscreen
     ord('g'), ord('G'): ResizeWindow;                         // G = Greater window size            Mods: Ctrl-G
@@ -645,7 +677,7 @@ begin
     ord('v'), ord('V'): WindowMaximizeRestore;                // V = View Maximize/Restore
     ord('w'), ord('W'): PlayNextFile;                         // W = Watch next in folder
     ord('x'), ord('X'): UI.CLOSE;                             // X = eXit app
-    ord('y'), ord('Y'): DoYESFile;                            // Y = Yes file
+    ord('y'), ord('Y'): sampleVideo;                          // Y = trYout video
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
   end;
   UpdateTimeDisplay;
@@ -770,6 +802,7 @@ procedure TUI.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   WMP.controls.stop;
   CanClose := TRUE;
+  GV.Closing := TRUE;
 end;
 
 procedure TUI.FormCreate(Sender: TObject);
@@ -808,6 +841,7 @@ begin
 
   lblRate.Caption         := '';
   lblTab.Caption          := '';
+  lblVol.Caption          := '';
   lblTimeDisplay.Caption  := '';
 
   setupProgressBar;
@@ -843,7 +877,7 @@ procedure TUI.FormResize(Sender: TObject);
 begin
   FX.WindowCaption;
 
-  case GV.FStartUp AND FX.isCapsLockOn of  TRUE: SetWindowPos(self.Handle, 0, -6, 200, 0, 0, SWP_NOZORDER + SWP_NOSIZE); end;
+  case GV.StartUp AND FX.isCapsLockOn of  TRUE: SetWindowPos(self.Handle, 0, -6, 200, 0, 0, SWP_NOZORDER + SWP_NOSIZE); end;
   GV.startup := FALSE;
 end;
 
@@ -940,6 +974,7 @@ var vVisible: boolean;
 begin
   lblRate.Caption := '';
   lblTab.Caption  := '';
+  lblVol.Caption  := '';
 
   case (ssCtrl in Shift) AND lblTimeDisplay.Visible and NOT lblXY.Visible of TRUE: begin
     lblXY.Visible           := TRUE;
