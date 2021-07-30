@@ -72,14 +72,15 @@ uses
 type
   TGV = class
   strict private
+    FBlackOut: boolean;
+    FBlankRate: boolean;
+    FClosing: boolean;
     FFileIx:  integer;
     FFiles:   TList<string>;
+    FInputBox: boolean;
     FMute:    boolean;
-    FBlankRate: boolean;
-    FBlackOut: boolean;
-    FStartUp: boolean;
-    FClosing: boolean;
     FSampling: boolean;
+    FStartUp: boolean;
     function  GetExePath: string;
   private
     function getZoomed: boolean;
@@ -92,6 +93,7 @@ type
     property    ExePath:      string        read GetExePath;
     property    FileIx:       integer       read FFileIx    write FFileIx;
     property    Files:        TList<string> read FFiles;
+    property    inputBox:     boolean       read FInputBox  write FInputBox;
     property    Mute:         boolean       read FMute      write FMute;
     property    sampling:     boolean       read FSampling  write FSampling;
     property    startup:      boolean       read FStartUp   write FStartUp;
@@ -493,7 +495,13 @@ begin
     vOldFileName  := ExtractFileName(GV.Files[GV.FileIx]);
     vExt          := ExtractFileExt(vOldFileName);
     vOldFileName  := copy(vOldFileName, 1, pos(vExt, vOldFileName) - 1);
-    s             := InputBoxForm(vOldFileName);
+
+    GV.inputBox   := TRUE;
+    try
+      s           := InputBoxForm(vOldFileName);
+    finally
+      GV.inputBox := FALSE;
+    end;
   except
     s := '';
   end;
@@ -812,6 +820,8 @@ var
   Key: word;
   shiftState: TShiftState;
 begin
+  case GV.inputBox of  TRUE: EXIT; end;
+
   case MSG.message = WM_KEYDOWN of   TRUE:  begin
                                               shiftState := KeyboardStateToShiftState;
                                               Key := Msg.WParam;
