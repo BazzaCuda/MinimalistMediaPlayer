@@ -198,8 +198,6 @@ var
   vRatio: double;
   X, Y: integer;
 begin
-//  X := StrToIntDef(UI.WMP.currentMedia.getItemInfo('WM/VideoWidth'), 0); // not reliable
-//  Y := StrToIntDef(UI.WMP.currentMedia.getItemInfo('WM/VideoHeight'), 0);
   X := UI.WMP.currentMedia.imageSourceWidth;
   Y := UI.WMP.currentMedia.imageSourceHeight;
 
@@ -369,6 +367,7 @@ begin
 end;
 
 function TFX.isControlKeyDown: boolean;
+// see VCL.Forms.KeyboardStateToShiftState and KeyDataToShiftState
 // If the high-order bit is 1, the key is down, otherwise it is up.
 // If the low-order bit is 1, the key is toggled.
 // A key, such as the CAPS LOCK key, is toggled if it is turned on.
@@ -396,7 +395,7 @@ var
   vFilePath: string;
 begin
   UI.WMP.controls.pause;
-  sleep(250);
+  delay(250);
   vFileName  := '_' + ExtractFileName(GV.Files[GV.FileIx]);
   vFilePath := ExtractFilePath(GV.Files[GV.FileIx]) + vFileName;
   case RenameFile(GV.Files[GV.FileIx], vFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
@@ -568,17 +567,6 @@ begin
   UI.tmrTab.Enabled   := TRUE;
 end;
 
-procedure Delay(dwMilliseconds:DWORD);//Longint
-var
-  iStart,iStop: DWORD;
-begin
-    iStart := GetTickCount;
-    repeat
-      iStop  := GetTickCount;
-      Application.ProcessMessages;
-    until (iStop  -  iStart) >= dwMilliseconds;
-end;
-
 function TFX.sampleVideo: boolean;
 begin
   case GV.sampling of TRUE: begin GV.sampling := FALSE; EXIT; end;end;
@@ -616,8 +604,6 @@ begin
      TRUE:  case Key in [VK_UP, 191, VK_DOWN, 220] of
                TRUE:  begin
                         case Key of
-//                          VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (g_mixer.Volume div 10);  // volume up 10%
-//                          VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (g_mixer.Volume div 10);  // volume down 10%
                           VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (65535 div 100);  // volume up 1%
                           VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (65535 div 100);  // volume down 1%
                         end;
@@ -684,7 +670,7 @@ begin
     ord('q'), ord('Q'): PlayPrevFile;                         // Q = Play previous in folder
     ord('r'), ord('R'): RenameCurrentFile;                    // R = Rename
     ord('s'), ord('S'): UI.WMP.controls.currentPosition := 0; // S = Start-over
-    ord('t'), ord('T'): TabForwardsBackwards;                 // T = Tab forwards/backwards n%      Mods: SHIFT-T, ALT-T, CAPSLOCK, Ctrl-T,
+    ord('t'), ord('T'): TabForwardsBackwards;                 // T = Tab forwards/backwards n%      Mods: SHIFT-T, ALT-T, CAPSLOCK, Ctrl-T
     ord('u'), ord('U'): UnZoom;                               // U = Unzoom
     ord('v'), ord('V'): WindowMaximizeRestore;                // V = View Maximize/Restore
     ord('w'), ord('W'): PlayNextFile;                         // W = Watch next in folder
@@ -737,7 +723,6 @@ begin
   case GV.Files.Count = 0 of TRUE: EXIT; end;
   case GV.BlackOut of
      TRUE:  UI.Caption := '';
-//    FALSE:  UI.Caption := format('[%d/%d] %s   [%d x %d]', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx]), UI.WMP.Width, UI.WMP.Height]);
     FALSE:  UI.Caption := format('[%d/%d] %s', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx])]);
   end;
 end;
@@ -823,16 +808,16 @@ begin
   case GV.inputBox of  TRUE: EXIT; end;
 
   case MSG.message = WM_KEYDOWN of   TRUE:  begin
-                                              shiftState := KeyboardStateToShiftState;
-                                              Key := Msg.WParam;
+                                              shiftState  := KeyboardStateToShiftState;
+                                              Key         := Msg.WParam;
                                               FX.UIKeyDown(Key, shiftState);
-                                              Handled := TRUE;
+                                              Handled     := TRUE;
                                             end;end;
   case MSG.message = WM_KEYUP   of   TRUE:  begin
-                                              shiftState := KeyboardStateToShiftState;
-                                              Key := Msg.WParam;
+                                              shiftState  := KeyboardStateToShiftState;
+                                              Key         := Msg.WParam;
                                               FX.UIKeyUp(Key, shiftState);
-                                              Handled := TRUE;
+                                              Handled     := TRUE;
                                             end;end;
 end;
 
@@ -897,11 +882,13 @@ begin
 end;
 
 procedure TUI.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+// superseded by ApplicationEventsMessage
 begin
   FX.UIKeyDown(Key, Shift);
 end;
 
 procedure TUI.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+// superseded by ApplicationEventsMessage
 begin
   FX.UIKeyUp(Key, Shift);
 end;
@@ -1075,7 +1062,6 @@ var Key: WORD;
 begin
   Key := nKeyCode;
   FX.UIKey(Key, TShiftState(nShiftState));
-//  UI.KeyDown(Key, TShiftState(nShiftState));
 end;
 
 procedure TUI.WMPKeyUp(ASender: TObject; nKeyCode, nShiftState: SmallInt);
@@ -1083,7 +1069,6 @@ var Key: WORD;
 begin
   Key := nKeyCode;
   FX.UIKeyUp(Key, TShiftState(nShiftState));
-//  UI.KeyUp(Key, TShiftState(nShiftState));
 end;
 
 procedure TUI.WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
