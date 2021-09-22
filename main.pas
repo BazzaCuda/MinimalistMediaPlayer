@@ -135,6 +135,7 @@ type
     function reloadMediaFiles: boolean;
     function RenameCurrentFile: boolean;
     function ResizeWindow: boolean;
+    function ShowHideTitleBar: boolean;
     function ShowOKCancelMsgDlg(aMsg: string): TModalResult;
     function SpeedDecrease: boolean;
     function SpeedIncrease: boolean;
@@ -197,6 +198,7 @@ function TFX.doAspectRatio: boolean;
 var
   vRatio: double;
   X, Y: integer;
+  Save: Longint;
 begin
   X := UI.WMP.currentMedia.imageSourceWidth;
   Y := UI.WMP.currentMedia.imageSourceHeight;
@@ -205,7 +207,11 @@ begin
 
   vRatio := Y / X;
 
-  UI.Height := trunc(UI.Width * vRatio) + UI.ProgressBar.Height + 33;
+  UI.Height := trunc(UI.Width * vRatio) + UI.ProgressBar.Height; // + 33;
+
+  Save := GetWindowLong(UI.Handle, GWL_STYLE);
+  case (Save and WS_CAPTION) = WS_CAPTION of TRUE: UI.Height := UI.Height + 33; end;
+
   WindowCaption;
 end;
 
@@ -677,6 +683,7 @@ begin
     ord('x'), ord('X'): UI.CLOSE;                             // X = eXit app
     ord('y'), ord('Y'): sampleVideo;                          // Y = trYout video
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
+    ord('0')          : ShowHideTitleBar;
   end;
   UpdateTimeDisplay;
   UI.tmrRateLabel.Enabled := TRUE;
@@ -773,6 +780,38 @@ begin
   clipboard.AsText := TPath.GetFileNameWithoutExtension(GV.Files[GV.FileIx]);
 end;
 
+function TFX.ShowHideTitleBar: boolean;
+var
+  Save: LongInt;
+begin
+  Save := GetWindowLong(UI.Handle, GWL_STYLE);
+
+  if (Save and WS_CAPTION) = WS_CAPTION then
+  begin
+    case UI.BorderStyle of
+      bsSingle, bsSizeable:
+        SetWindowLong(UI.Handle, GWL_STYLE, Save and (not (WS_CAPTION)) or WS_BORDER);
+      bsDialog:
+        SetWindowLong(UI.Handle, GWL_STYLE, Save and (not (WS_CAPTION)) or DS_MODALFRAME or WS_DLGFRAME);
+    end;
+    UI.Height := UI.Height - GetSystemMetrics(SM_CYCAPTION);
+    UI.Refresh;
+  end;
+
+  if (Save and WS_CAPTION) <> WS_CAPTION then
+  begin
+    case UI.BorderStyle of
+      bsSingle, bsSizeable:
+        SetWindowLong(UI.Handle, GWL_STYLE, Save or WS_CAPTION or WS_BORDER);
+      bsDialog:
+        SetWindowLong(UI.Handle, GWL_STYLE, Save or WS_CAPTION or DS_MODALFRAME or WS_DLGFRAME);
+    end;
+    UI.Height := UI.Height + GetSystemMetrics(SM_CYCAPTION);
+    UI.Refresh;
+  end;
+
+end;
+
 function TFX.ShowOKCancelMsgDlg(aMsg: string): TModalResult;
 var
   i: Integer;
@@ -830,7 +869,7 @@ end;
 
 procedure TUI.FormCreate(Sender: TObject);
 begin
-  case FX.isCapsLockOn of    TRUE:  begin
+  case FX.isCapsLockOn of    TRUE:  begin                         // size so that two videos can be positioned side-by-side horizontally by the user
                                       width   := 970;
                                       height  := 640;
                                     end;
