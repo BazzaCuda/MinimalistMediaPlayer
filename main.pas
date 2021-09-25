@@ -135,6 +135,7 @@ type
     function reloadMediaFiles: boolean;
     function RenameCurrentFile: boolean;
     function ResizeWindow: boolean;
+    function ResizeWindow2: boolean;
     function ShowHideTitleBar: boolean;
     function ShowOKCancelMsgDlg(aMsg: string): TModalResult;
     function SpeedDecrease: boolean;
@@ -529,6 +530,13 @@ begin
   windowCaption;
 end;
 
+function TFX.ResizeWindow2: boolean;
+// size so that two videos can be positioned side-by-side horizontally by the user
+begin
+  UI.width   := 970;
+  UI.height  := 640;
+end;
+
 function TFX.SpeedDecrease: boolean;
 begin
   UI.WMP.settings.rate    := UI.WMP.settings.rate - 0.1;
@@ -684,6 +692,7 @@ begin
     ord('y'), ord('Y'): sampleVideo;                          // Y = trYout video
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
     ord('0')          : ShowHideTitleBar;
+    ord('2')          : ResizeWindow2;                        // size so that two videos can be positioned side-by-side horizontally by the user
   end;
   UpdateTimeDisplay;
   UI.tmrRateLabel.Enabled := TRUE;
@@ -794,7 +803,7 @@ begin
       bsDialog:
         SetWindowLong(UI.Handle, GWL_STYLE, Save and (not (WS_CAPTION)) or DS_MODALFRAME or WS_DLGFRAME);
     end;
-    UI.Height := UI.Height - GetSystemMetrics(SM_CYCAPTION);
+//    UI.Height := UI.Height - GetSystemMetrics(SM_CYCAPTION);
     UI.Refresh;
   end;
 
@@ -806,7 +815,7 @@ begin
       bsDialog:
         SetWindowLong(UI.Handle, GWL_STYLE, Save or WS_CAPTION or DS_MODALFRAME or WS_DLGFRAME);
     end;
-    UI.Height := UI.Height + GetSystemMetrics(SM_CYCAPTION);
+//    UI.Height := UI.Height + GetSystemMetrics(SM_CYCAPTION);
     UI.Refresh;
   end;
 
@@ -869,10 +878,7 @@ end;
 
 procedure TUI.FormCreate(Sender: TObject);
 begin
-  case FX.isCapsLockOn of    TRUE:  begin                         // size so that two videos can be positioned side-by-side horizontally by the user
-                                      width   := 970;
-                                      height  := 640;
-                                    end;
+  case FX.isCapsLockOn of    TRUE:  FX.ResizeWindow2; // size so that two videos can be positioned side-by-side horizontally by the user
                             FALSE:  begin
                                       width   := trunc(780 * 1.5);
                                       height  := trunc(460 * 1.5);
