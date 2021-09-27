@@ -56,6 +56,7 @@ type
     procedure setupProgressBar;
   public
     function  Fullscreen: boolean;
+    function  repositionWMP: boolean;
     function  ToggleControls(Shift: TShiftState): boolean;
   end;
 
@@ -174,11 +175,11 @@ begin
 //     TRUE: UI.BorderIcons := [];
 //    FALSE: UI.BorderIcons := [biSystemMenu];
 //  end;
-  case GV.BlackOut of
-     TRUE: UI.Height := UI.Height - UI.ProgressBar.Height;
-    FALSE: UI.Height := UI.Height + UI.ProgressBar.Height;
-  end;
-  windowCaption;
+//  case GV.BlackOut of
+//     TRUE: UI.Height := UI.Height - UI.ProgressBar.Height;
+//    FALSE: UI.Height := UI.Height + UI.ProgressBar.Height;
+//  end;
+  UI.repositionWMP;
 
   case isControlKeyDown of TRUE:  begin
                                     ShowHideTitleBar;
@@ -214,7 +215,6 @@ var
   X, Y: integer;
   Save: Longint;
   htProgressBar: integer;
-  htTitleBar: integer;
 begin
   X := UI.WMP.currentMedia.imageSourceWidth;
   Y := UI.WMP.currentMedia.imageSourceHeight;
@@ -226,13 +226,9 @@ begin
   case UI.ProgressBar.Visible of  TRUE: htProgressBar := UI.ProgressBar.Height;
                                  FALSE: htProgressBar := 0; end;
 
-  Save := GetWindowLong(UI.Handle, GWL_STYLE);
-  case (Save and WS_CAPTION) = WS_CAPTION of  TRUE: htTitleBar := GetSystemMetrics(SM_CYCAPTION);
-                                             FALSE: htTitleBar := 0; end;
+  UI.Height := trunc(UI.Width * vRatio) + htProgressBar + 8;
 
-  UI.Height := trunc(UI.Width * vRatio) + htProgressBar + htTitleBar + 8;
-
-  WindowCaption;
+  UI.repositionWMP;
 end;
 
 function TFX.doCentreHorizontal: boolean;
@@ -793,10 +789,7 @@ end;
 function TFX.WindowCaption: boolean;
 begin
   case GV.Files.Count = 0 of TRUE: EXIT; end;
-  case GV.BlackOut of
-//     TRUE:  UI.Caption := '';
-    FALSE:  UI.Caption := format('[%d/%d] %s', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx])]);
-  end;
+  UI.Caption := format('[%d/%d] %s', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx])]);
 end;
 
 function TFX.WindowMaximizeRestore: boolean;
@@ -872,9 +865,12 @@ begin
         SetWindowLong(UI.Handle, GWL_STYLE, Save or WS_CAPTION or DS_MODALFRAME or WS_DLGFRAME);
     end;
 //    UI.Height := UI.Height - GetSystemMetrics(SM_CYCAPTION);
+    UI.Height := UI.Height + 1;  // fix Windows bug and force title bar to repaint properly
+    UI.Height := UI.Height - 1;  // fix Windows bug and force title bar to repaint properly
     UI.Refresh;
   end;
 
+  windowCaption;
 end;
 
 function TFX.ShowOKCancelMsgDlg(aMsg: string): TModalResult;
@@ -1006,10 +1002,7 @@ begin
   case GV.StartUp AND FX.isCapsLockOn of  TRUE: SetWindowPos(self.Handle, 0, -6, 200, 0, 0, SWP_NOZORDER + SWP_NOSIZE); end; // left justify
   GV.startup := FALSE;
 
-  WMP.Top     := pnlBackground.Top;
-  WMP.Left    := pnlBackground.Left;
-  WMP.Height  := pnlBackground.Height + 1;
-  WMP.Width   := pnlBackground.Width + 1;
+  repositionWMP;
 end;
 
 function TUI.Fullscreen: boolean;
@@ -1047,6 +1040,14 @@ begin
   ProgressBar.Position          := newPosition;
   WMP.controls.currentPosition  := newPosition;
   FX.UpdateTimeDisplay;
+end;
+
+function TUI.repositionWMP: boolean;
+begin
+  WMP.Left    := pnlBackground.Left;
+  WMP.Height  := pnlBackground.Height + 1;
+  WMP.Width   := pnlBackground.Width + 1;
+  WMP.Top     := pnlBackground.Top - 0;
 end;
 
 procedure TUI.tmrRateLabelTimer(Sender: TObject);
