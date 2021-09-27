@@ -114,6 +114,7 @@ type
     function DoYESFile: boolean;
     function FetchMediaMetaData: boolean;
     function FindMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
+    function getINIname: string;
     function GoLeft: boolean;
     function GoRight: boolean;
     function GoUp: boolean;
@@ -137,6 +138,8 @@ type
     function RenameCurrentFile: boolean;
     function ResizeWindow: boolean;
     function ResizeWindow2: boolean;
+    function resumePosition: boolean;
+    function saveCurrentPosition: boolean;
     function ShowHideTitleBar: boolean;
     function ShowOKCancelMsgDlg(aMsg: string): TModalResult;
     function SpeedDecrease: boolean;
@@ -227,7 +230,7 @@ begin
   case (Save and WS_CAPTION) = WS_CAPTION of  TRUE: htTitleBar := GetSystemMetrics(SM_CYCAPTION);
                                              FALSE: htTitleBar := 0; end;
 
-  UI.Height := trunc(UI.Width * vRatio) + htProgressBar + htTitleBar + 10;
+  UI.Height := trunc(UI.Width * vRatio) + htProgressBar + htTitleBar + 8;
 
   WindowCaption;
 end;
@@ -356,6 +359,13 @@ begin
 
   aFileList.Sort;
   result := aFileList.IndexOf(aFilePath);
+end;
+
+function TFX.getINIname: string;
+begin
+  result := ExtractFileName(GV.Files[GV.FileIx]);
+  result := ChangeFileExt(result, '.ini');
+  result := ExtractFilePath(GV.Files[GV.FileIx]) + result;
 end;
 
 const MOVE_PIXELS = 10;
@@ -562,6 +572,39 @@ begin
   UI.height  := 640;
 end;
 
+function TFX.resumePosition: boolean;
+begin
+  case FileExists(getINIname) of FALSE: EXIT; end;
+
+  var sl := TStringList.Create;
+  sl.LoadFromFile(getINIname);
+  UI.WMP.controls.currentPosition := StrToFloat(sl[0]);
+  sl.Free;
+end;
+
+function TFX.sampleVideo: boolean;
+begin
+  case GV.sampling of TRUE: begin GV.sampling := FALSE; EXIT; end;end;
+
+  GV.sampling := TRUE;
+  try
+    repeat
+      UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition + (UI.WMP.currentMedia.duration / 10);
+      delay(3000);
+    until GV.Closing OR NOT GV.sampling OR (UI.WMP.controls.currentPosition >= (UI.wmp.currentMedia.duration * 0.90));
+  finally
+//    GV.sampling := FALSE;
+  end;
+end;
+
+function TFX.saveCurrentPosition: boolean;
+begin
+  var sl := TStringList.Create;
+  sl.Add(FloatToStr(UI.WMP.controls.currentPosition));
+  sl.SaveToFile(getINIname);
+  sl.Free;
+end;
+
 function TFX.SpeedDecrease: boolean;
 begin
   UI.WMP.settings.rate    := UI.WMP.settings.rate - 0.1;
@@ -604,21 +647,6 @@ begin
   UI.lblTab.Caption  := format('%dth', [vFactor]);
   case isControlKeyDown of TRUE: UI.lblTab.Caption := '<< ' + UI.lblTab.Caption; end;
   UI.tmrTab.Enabled   := TRUE;
-end;
-
-function TFX.sampleVideo: boolean;
-begin
-  case GV.sampling of TRUE: begin GV.sampling := FALSE; EXIT; end;end;
-
-  GV.sampling := TRUE;
-  try
-    repeat
-      UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition + (UI.WMP.currentMedia.duration / 10);
-      delay(3000);
-    until GV.Closing OR NOT GV.sampling OR (UI.WMP.controls.currentPosition >= (UI.wmp.currentMedia.duration * 0.90));
-  finally
-//    GV.sampling := FALSE;
-  end;
 end;
 
 function TFX.UIKey(var Key: Word; Shift: TShiftState): boolean;
@@ -689,7 +717,7 @@ begin
 
 //    ord('#'), 222     :    // # = NightTime
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
-    187               : clipboardCurrentFileName;             // =   copy current filename to clipboard
+//    187               : clipboardCurrentFileName;             // =   copy current filename to clipboard
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
     ord('b'), ord('B'): BlackOut;                             // B = Blackout
     ord('c'), ord('C'): UI.ToggleControls(Shift);             // C = Control Panel show/hide        Mods: Ctrl-C
@@ -718,6 +746,8 @@ begin
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
     ord('0')          : ShowHideTitleBar;                     // 0 = Show/Hide window title bar
     ord('2')          : ResizeWindow2;                        // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
+    ord('5')          : saveCurrentPosition;                  // 7 = save current media position to an ini file
+    ord('6')          : resumePosition;                       // 8 = resume video from saved media position
     ord('9')          : matchVideoWidth;                      // 1 = match window width to video width
   end;
   UpdateTimeDisplay;
@@ -733,7 +763,7 @@ begin
   UI.WMP.Height := UI.pnlBackground.Height  - 1;
   UI.WMP.Top    := UI.pnlBackground.Top     + 1;
   UI.WMP.Left   := UI.pnlBackground.Left    + 1;
-  UI.WMP.Align  := alClient;
+//  UI.WMP.Align  := alClient;
 end;
 
 function TFX.UpdateRateLabel: boolean;
@@ -829,7 +859,7 @@ begin
       bsDialog:
         SetWindowLong(UI.Handle, GWL_STYLE, Save and (not (WS_CAPTION)) or DS_MODALFRAME or WS_DLGFRAME);
     end;
-    UI.Height := UI.Height + GetSystemMetrics(SM_CYCAPTION);
+//    UI.Height := UI.Height + GetSystemMetrics(SM_CYCAPTION);
     UI.Refresh;
   end;
 
@@ -841,7 +871,7 @@ begin
       bsDialog:
         SetWindowLong(UI.Handle, GWL_STYLE, Save or WS_CAPTION or DS_MODALFRAME or WS_DLGFRAME);
     end;
-    UI.Height := UI.Height - GetSystemMetrics(SM_CYCAPTION);
+//    UI.Height := UI.Height - GetSystemMetrics(SM_CYCAPTION);
     UI.Refresh;
   end;
 
@@ -917,7 +947,7 @@ begin
   WMP.windowlessVideo := TRUE;
   WMP.stretchToFit    := TRUE;
   WMP.settings.volume := 100;
-  WMP.Align           := alClient;
+  //WMP.Align           := alClient;
 
   lblMuteUnmute.Parent    := WMP;
   lblXY.Parent            := WMP;
@@ -975,6 +1005,11 @@ begin
 
   case GV.StartUp AND FX.isCapsLockOn of  TRUE: SetWindowPos(self.Handle, 0, -6, 200, 0, 0, SWP_NOZORDER + SWP_NOSIZE); end; // left justify
   GV.startup := FALSE;
+
+  WMP.Top     := pnlBackground.Top;
+  WMP.Left    := pnlBackground.Left;
+  WMP.Height  := pnlBackground.Height + 1;
+  WMP.Width   := pnlBackground.Width + 1;
 end;
 
 function TUI.Fullscreen: boolean;
