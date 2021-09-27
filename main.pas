@@ -124,6 +124,7 @@ type
     function isLastFile: boolean;
     function isShiftKeyDown: boolean;
     function keepCurrentFile: boolean;
+    function matchVideoWidth: boolean;
     function openWithShotcut: boolean;
     function PlayCurrentFile: boolean;
     function PlayFirstFile: boolean;
@@ -166,11 +167,20 @@ function TFX.BlackOut: boolean;
 begin
   GV.BlackOut             := NOT GV.BlackOut;
   UI.ProgressBar.Visible  := NOT GV.BlackOut;
+//  case GV.BlackOut of
+//     TRUE: UI.BorderIcons := [];
+//    FALSE: UI.BorderIcons := [biSystemMenu];
+//  end;
   case GV.BlackOut of
-     TRUE: UI.BorderIcons := [];
-    FALSE: UI.BorderIcons := [biSystemMenu];
+     TRUE: UI.Height := UI.Height - UI.ProgressBar.Height;
+    FALSE: UI.Height := UI.Height + UI.ProgressBar.Height;
   end;
   windowCaption;
+
+  case isControlKeyDown of TRUE:  begin
+                                    ShowHideTitleBar;
+                                    doAspectRatio;
+                                  end;end;
 end;
 
 function TFX.ClearMediaMetaData: boolean;
@@ -200,6 +210,8 @@ var
   vRatio: double;
   X, Y: integer;
   Save: Longint;
+  htProgressBar: integer;
+  htTitleBar: integer;
 begin
   X := UI.WMP.currentMedia.imageSourceWidth;
   Y := UI.WMP.currentMedia.imageSourceHeight;
@@ -208,10 +220,14 @@ begin
 
   vRatio := Y / X;
 
-  UI.Height := trunc(UI.Width * vRatio) + UI.ProgressBar.Height; // + 33;
+  case UI.ProgressBar.Visible of  TRUE: htProgressBar := UI.ProgressBar.Height;
+                                 FALSE: htProgressBar := 0; end;
 
   Save := GetWindowLong(UI.Handle, GWL_STYLE);
-  case (Save and WS_CAPTION) = WS_CAPTION of TRUE: UI.Height := UI.Height + 33; end;
+  case (Save and WS_CAPTION) = WS_CAPTION of  TRUE: htTitleBar := GetSystemMetrics(SM_CYCAPTION);
+                                             FALSE: htTitleBar := 0; end;
+
+  UI.Height := trunc(UI.Width * vRatio) + htProgressBar + htTitleBar + 10;
 
   WindowCaption;
 end;
@@ -409,6 +425,15 @@ begin
                                                       TRUE: GV.Files[GV.FileIx] := vFilePath; end;
   WindowCaption;
   UI.WMP.controls.play;
+end;
+
+function TFX.matchVideoWidth: boolean;
+var X,Y: integer;
+begin
+  X := UI.WMP.currentMedia.imageSourceWidth;
+  Y := UI.WMP.currentMedia.imageSourceHeight;
+
+  UI.Width := X + 10;
 end;
 
 function TFX.openWithShotcut: boolean;
@@ -691,8 +716,9 @@ begin
     ord('x'), ord('X'): UI.CLOSE;                             // X = eXit app
     ord('y'), ord('Y'): sampleVideo;                          // Y = trYout video
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
-    ord('0')          : ShowHideTitleBar;
-    ord('2')          : ResizeWindow2;                        // size so that two videos can be positioned side-by-side horizontally by the user
+    ord('0')          : ShowHideTitleBar;                     // 0 = Show/Hide window title bar
+    ord('2')          : ResizeWindow2;                        // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
+    ord('9')          : matchVideoWidth;                      // 1 = match window width to video width
   end;
   UpdateTimeDisplay;
   UI.tmrRateLabel.Enabled := TRUE;
@@ -738,7 +764,7 @@ function TFX.WindowCaption: boolean;
 begin
   case GV.Files.Count = 0 of TRUE: EXIT; end;
   case GV.BlackOut of
-     TRUE:  UI.Caption := '';
+//     TRUE:  UI.Caption := '';
     FALSE:  UI.Caption := format('[%d/%d] %s', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx])]);
   end;
 end;
@@ -803,7 +829,7 @@ begin
       bsDialog:
         SetWindowLong(UI.Handle, GWL_STYLE, Save and (not (WS_CAPTION)) or DS_MODALFRAME or WS_DLGFRAME);
     end;
-//    UI.Height := UI.Height - GetSystemMetrics(SM_CYCAPTION);
+    UI.Height := UI.Height + GetSystemMetrics(SM_CYCAPTION);
     UI.Refresh;
   end;
 
@@ -815,7 +841,7 @@ begin
       bsDialog:
         SetWindowLong(UI.Handle, GWL_STYLE, Save or WS_CAPTION or DS_MODALFRAME or WS_DLGFRAME);
     end;
-//    UI.Height := UI.Height + GetSystemMetrics(SM_CYCAPTION);
+    UI.Height := UI.Height - GetSystemMetrics(SM_CYCAPTION);
     UI.Refresh;
   end;
 
@@ -947,7 +973,7 @@ procedure TUI.FormResize(Sender: TObject);
 begin
   FX.WindowCaption;
 
-  case GV.StartUp AND FX.isCapsLockOn of  TRUE: SetWindowPos(self.Handle, 0, -6, 200, 0, 0, SWP_NOZORDER + SWP_NOSIZE); end;
+  case GV.StartUp AND FX.isCapsLockOn of  TRUE: SetWindowPos(self.Handle, 0, -6, 200, 0, 0, SWP_NOZORDER + SWP_NOSIZE); end; // left justify
   GV.startup := FALSE;
 end;
 
