@@ -54,6 +54,9 @@ type
     procedure ApplicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
   private
     procedure setupProgressBar;
+  protected
+//    procedure CreateWnd; override;
+//    procedure CreateParams(var Params: TCreateParams); override;
   public
     function  Fullscreen: boolean;
     function  repositionWMP: boolean;
@@ -82,9 +85,9 @@ type
     FMute:    boolean;
     FSampling: boolean;
     FStartUp: boolean;
+    FZoomed: boolean;
     function  GetExePath: string;
   private
-    function getZoomed: boolean;
   public
     constructor Create;
     destructor  Destroy;  override;
@@ -98,7 +101,7 @@ type
     property    Mute:         boolean       read FMute      write FMute;
     property    sampling:     boolean       read FSampling  write FSampling;
     property    startup:      boolean       read FStartUp   write FStartUp;
-    property    zoomed:       boolean       read getZoomed;
+    property    zoomed:       boolean       read FZoomed    write FZoomed;
   end;
 
   TFX = class
@@ -145,6 +148,7 @@ type
     function ShowOKCancelMsgDlg(aMsg: string): TModalResult;
     function SpeedDecrease: boolean;
     function SpeedIncrease: boolean;
+    function startOver: boolean;
     function TabForwardsBackwards: boolean;
     function sampleVideo: boolean;
     function UIKey(var Key: Word; Shift: TShiftState): boolean;
@@ -615,6 +619,12 @@ begin
   UI.tmrRateLabel.Enabled := TRUE;
 end;
 
+function TFX.startOver: boolean;
+begin
+  UI.WMP.controls.currentPosition := 0;
+  UI.WMP.controls.play;
+end;
+
 function TFX.TabForwardsBackwards: boolean;
 //  Default   = 100th
 //  SHIFT     = 20th
@@ -712,7 +722,6 @@ begin
     VK_F12: openWithShotcut;
 
 //    ord('#'), 222     :    // # = NightTime
-    ord('1')          : RateReset;                            // 1 = Rate 1[00%]
 //    187               : clipboardCurrentFileName;             // =   copy current filename to clipboard
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
     ord('b'), ord('B'): BlackOut;                             // B = Blackout
@@ -732,7 +741,7 @@ begin
     ord('p'), ord('P'): PlayWithPotPlayer;                    // P = Play current video with Pot Player
     ord('q'), ord('Q'): PlayPrevFile;                         // Q = Play previous in folder
     ord('r'), ord('R'): RenameCurrentFile;                    // R = Rename
-    ord('s'), ord('S'): UI.WMP.controls.currentPosition := 0; // S = Start-over
+    ord('s'), ord('S'): startOver;                            // S = Start-over
     ord('t'), ord('T'): TabForwardsBackwards;                 // T = Tab forwards/backwards n%      Mods: SHIFT-T, ALT-T, CAPSLOCK, Ctrl-T
     ord('u'), ord('U'): UnZoom;                               // U = Unzoom
     ord('v'), ord('V'): WindowMaximizeRestore;                // V = View Maximize/Restore
@@ -741,10 +750,11 @@ begin
     ord('y'), ord('Y'): sampleVideo;                          // Y = trYout video
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
     ord('0')          : ShowHideTitleBar;                     // 0 = Show/Hide window title bar
+    ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('2')          : ResizeWindow2;                        // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
-    ord('5')          : saveCurrentPosition;                  // 7 = save current media position to an ini file
-    ord('6')          : resumePosition;                       // 8 = resume video from saved media position
-    ord('9')          : matchVideoWidth;                      // 1 = match window width to video width
+    ord('5')          : saveCurrentPosition;                  // 5 = save current media position to an ini file
+    ord('6')          : resumePosition;                       // 6 = resume video from saved media position
+    ord('9')          : matchVideoWidth;                      // 9 = match window width to video width
   end;
   UpdateTimeDisplay;
   UI.tmrRateLabel.Enabled := TRUE;
@@ -752,14 +762,10 @@ begin
 end;
 
 function TFX.UnZoom: boolean;
-// If the size of WMP is much smaller than panel2, the re-align doesn't work
-// So we resize WMP first, then re-align it.
 begin
-  UI.WMP.Width  := UI.pnlBackground.Width   - 1;
-  UI.WMP.Height := UI.pnlBackground.Height  - 1;
-  UI.WMP.Top    := UI.pnlBackground.Top     + 1;
-  UI.WMP.Left   := UI.pnlBackground.Left    + 1;
-//  UI.WMP.Align  := alClient;
+  GV.zoomed := FALSE;
+  UI.repositionWMP;
+  UI.Width := UI.Width + 1; // fix bizarre problem of WMP not repositioning after zooming
 end;
 
 function TFX.UpdateRateLabel: boolean;
@@ -813,11 +819,7 @@ end;
 
 function TFX.ZoomIn: boolean;
 begin
-  case UI.WMP.Align = alClient of TRUE: begin
-                                          UI.WMP.Align    := alNone;
-                                          UI.WMP.Height   := UI.pnlBackground.Height;
-                                          UI.WMP.Width    := UI.pnlBackground.Width;
-  end;end;
+  GV.zoomed := TRUE;
 
   UI.WMP.Width    := trunc(UI.WMP.Width * 1.1);
   UI.WMP.Height   := trunc(UI.WMP.Height * 1.1);
@@ -827,10 +829,12 @@ end;
 
 function TFX.ZoomOut: boolean;
 begin
+  GV.zoomed := TRUE;
+
   UI.WMP.Width    := trunc(UI.WMP.Width * 0.9);
   UI.WMP.Height   := trunc(UI.WMP.Height * 0.9);
-  UI.WMP.Top      := UI.pnlBackground.Top - ((UI.WMP.Height - UI.pnlBackground.Height) div 2);
-  UI.WMP.Left     := UI.pnlBackground.Left - ((UI.WMP.Width - UI.pnlBackground.Width) div 2);
+  UI.WMP.Top      := UI.pnlBackground.Top - ((UI.WMP.Height - UI.pnlBackground.Height) div 2);   // zero minus a negative = a positive
+  UI.WMP.Left     := UI.pnlBackground.Left - ((UI.WMP.Width - UI.pnlBackground.Width) div 2);    // zero minus a negative = a positive
 end;
 
 function TFX.clipboardCurrentFileName: boolean;
@@ -921,6 +925,18 @@ begin
                                             end;end;
 end;
 
+//procedure TUI.CreateParams(var Params: TCreateParams);
+//begin
+//  inherited CreateParams(Params);
+//  Params.ExStyle := Params.ExStyle or WS_EX_DLGMODALFRAME or WS_EX_WINDOWEDGE;
+//end;
+//
+//procedure TUI.CreateWnd;
+//begin
+//  inherited;
+//  SendMessage(Handle, WM_SETICON, 1, 0);
+//end;
+
 procedure TUI.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   WMP.controls.stop;
@@ -943,7 +959,6 @@ begin
   WMP.windowlessVideo := TRUE;
   WMP.stretchToFit    := TRUE;
   WMP.settings.volume := 100;
-  //WMP.Align           := alClient;
 
   lblMuteUnmute.Parent    := WMP;
   lblXY.Parent            := WMP;
@@ -1226,11 +1241,6 @@ end;
 function TGV.GetExePath: string;
 begin
   result := IncludeTrailingBackslash(ExtractFilePath(ParamStr(0)));
-end;
-
-function TGV.getZoomed: boolean;
-begin
-  result := UI.WMP.Align = alNone;
 end;
 
 initialization
