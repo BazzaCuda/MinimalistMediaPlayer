@@ -140,8 +140,9 @@ type
     function RateReset: boolean;
     function reloadMediaFiles: boolean;
     function RenameCurrentFile: boolean;
-    function ResizeWindow: boolean;
+    function ResizeWindow1: boolean;
     function ResizeWindow2: boolean;
+    function ResizeWindow3: boolean;
     function resumePosition: boolean;
     function saveCurrentPosition: boolean;
     function ShowHideTitleBar: boolean;
@@ -175,14 +176,6 @@ function TFX.BlackOut: boolean;
 begin
   GV.BlackOut             := NOT GV.BlackOut;
   UI.ProgressBar.Visible  := NOT GV.BlackOut;
-//  case GV.BlackOut of
-//     TRUE: UI.BorderIcons := [];
-//    FALSE: UI.BorderIcons := [biSystemMenu];
-//  end;
-//  case GV.BlackOut of
-//     TRUE: UI.Height := UI.Height - UI.ProgressBar.Height;
-//    FALSE: UI.Height := UI.Height + UI.ProgressBar.Height;
-//  end;
   UI.repositionWMP;
 
   case isControlKeyDown of TRUE:  begin
@@ -217,8 +210,9 @@ function TFX.doAspectRatio: boolean;
 var
   vRatio: double;
   X, Y: integer;
-  Save: Longint;
-  htProgressBar: integer;
+  style: longint;
+  htTitle: integer;
+  delta: integer;
 begin
   X := UI.WMP.currentMedia.imageSourceWidth;
   Y := UI.WMP.currentMedia.imageSourceHeight;
@@ -227,10 +221,13 @@ begin
 
   vRatio := Y / X;
 
-  case UI.ProgressBar.Visible of  TRUE: htProgressBar := UI.ProgressBar.Height;
-                                 FALSE: htProgressBar := 0; end;
+  htTitle := GetSystemMetrics(SM_CYCAPTION);
+  style := GetWindowLong(UI.Handle, GWL_STYLE);
+  case (style and WS_CAPTION) = WS_CAPTION of  TRUE: delta := htTitle + 7;
+                                              FALSE: delta := 8; end;
 
-  UI.Height := trunc(UI.Width * vRatio) + htProgressBar + 8;
+
+  UI.Height := trunc(UI.Width * vRatio) + delta;
 
   UI.repositionWMP;
 end;
@@ -306,7 +303,7 @@ end;
 
 function TFX.DoYESFile: boolean;
 begin
-  case isLastFile of TRUE: begin UI.CLOSE; EXIT; end;end;  // Close app after approving final file
+  case isLastFile of TRUE: begin UI.CLOSE; EXIT; end;end;
 
   PlayNextFile;
 end;
@@ -443,7 +440,7 @@ begin
   X := UI.WMP.currentMedia.imageSourceWidth;
   Y := UI.WMP.currentMedia.imageSourceHeight;
 
-  UI.Width := X + 10;
+  UI.Width := X; // + 10;
 end;
 
 function TFX.openWithShotcut: boolean;
@@ -553,7 +550,20 @@ begin
   WindowCaption;
 end;
 
-function TFX.ResizeWindow: boolean;
+function TFX.ResizeWindow1: boolean;
+begin
+  UI.Width   := trunc(780 * 1.5);
+  UI.Height  := trunc(460 * 1.5);
+end;
+
+function TFX.ResizeWindow2: boolean;
+// size so that two videos can be positioned side-by-side horizontally by the user
+begin
+  UI.width   := 970;
+  UI.height  := 640;
+end;
+
+function TFX.ResizeWindow3: boolean;
 begin
   case isControlKeyDown of
      TRUE: SetWindowPos(UI.Handle, 0, 0, 0, UI.Width - 100, UI.Height - 60, SWP_NOZORDER + SWP_NOMOVE + SWP_NOREDRAW);
@@ -563,13 +573,6 @@ begin
   doCentreHorizontal;
 
   windowCaption;
-end;
-
-function TFX.ResizeWindow2: boolean;
-// size so that two videos can be positioned side-by-side horizontally by the user
-begin
-  UI.width   := 970;
-  UI.height  := 640;
 end;
 
 function TFX.resumePosition: boolean;
@@ -724,12 +727,12 @@ begin
 //    ord('#'), 222     :    // # = NightTime
 //    187               : clipboardCurrentFileName;             // =   copy current filename to clipboard
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
-    ord('b'), ord('B'): BlackOut;                             // B = Blackout
+    ord('b'), ord('B'): BlackOut;                             // B = Blackout                       Mods: Ctrl-B
     ord('c'), ord('C'): UI.ToggleControls(Shift);             // C = Control Panel show/hide        Mods: Ctrl-C
     ord('d'), ord('D'), VK_DELETE: DoNOFile(Shift);           // D = Delete File                    Mods: Ctrl-C
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): UI.Fullscreen;                        // F = Fullscreen
-    ord('g'), ord('G'): ResizeWindow;                         // G = Greater window size            Mods: Ctrl-G
+    ord('g'), ord('G'): ResizeWindow3;                        // G = Greater window size            Mods: Ctrl-G
     ord('h'), ord('H'): doCentreHorizontal;                   // H = centre window Horizontally
                                                               // I = zoom In
     ord('j'), ord('J'): doAspectRatio;                        // J = adJust aspect ratio
@@ -766,6 +769,7 @@ begin
   GV.zoomed := FALSE;
   UI.repositionWMP;
   UI.Width := UI.Width + 1; // fix bizarre problem of WMP not repositioning after zooming
+  UI.Width := UI.Width - 1; // fix bizarre problem of WMP not repositioning after zooming
 end;
 
 function TFX.UpdateRateLabel: boolean;
@@ -844,36 +848,33 @@ end;
 
 function TFX.ShowHideTitleBar: boolean;
 var
-  Save: LongInt;
+  style: longint;
 begin
-  Save := GetWindowLong(UI.Handle, GWL_STYLE);
+  style := GetWindowLong(UI.Handle, GWL_STYLE);
 
-  if (Save and WS_CAPTION) = WS_CAPTION then
-  begin
+  case (style and WS_CAPTION) = WS_CAPTION of TRUE: begin
     case UI.BorderStyle of
       bsSingle, bsSizeable:
-        SetWindowLong(UI.Handle, GWL_STYLE, Save and (not (WS_CAPTION)) or WS_BORDER);
+        SetWindowLong(UI.Handle, GWL_STYLE, style and (not (WS_CAPTION)) or WS_BORDER);
       bsDialog:
-        SetWindowLong(UI.Handle, GWL_STYLE, Save and (not (WS_CAPTION)) or DS_MODALFRAME or WS_DLGFRAME);
+        SetWindowLong(UI.Handle, GWL_STYLE, style and (not (WS_CAPTION)) or DS_MODALFRAME or WS_DLGFRAME);
     end;
-//    UI.Height := UI.Height + GetSystemMetrics(SM_CYCAPTION);
     UI.Refresh;
-  end;
+  end;end;
 
-  if (Save and WS_CAPTION) <> WS_CAPTION then
-  begin
+  case (style and WS_CAPTION) = WS_CAPTION of FALSE: begin
     case UI.BorderStyle of
       bsSingle, bsSizeable:
-        SetWindowLong(UI.Handle, GWL_STYLE, Save or WS_CAPTION or WS_BORDER);
+        SetWindowLong(UI.Handle, GWL_STYLE, style or WS_CAPTION or WS_BORDER);
       bsDialog:
-        SetWindowLong(UI.Handle, GWL_STYLE, Save or WS_CAPTION or DS_MODALFRAME or WS_DLGFRAME);
+        SetWindowLong(UI.Handle, GWL_STYLE, style or WS_CAPTION or DS_MODALFRAME or WS_DLGFRAME);
     end;
-//    UI.Height := UI.Height - GetSystemMetrics(SM_CYCAPTION);
     UI.Height := UI.Height + 1;  // fix Windows bug and force title bar to repaint properly
     UI.Height := UI.Height - 1;  // fix Windows bug and force title bar to repaint properly
     UI.Refresh;
-  end;
+  end;end;
 
+  doAspectRatio;
   windowCaption;
 end;
 
@@ -947,10 +948,7 @@ end;
 procedure TUI.FormCreate(Sender: TObject);
 begin
   case FX.isCapsLockOn of    TRUE:  FX.ResizeWindow2; // size so that two videos can be positioned side-by-side horizontally by the user
-                            FALSE:  begin
-                                      width   := trunc(780 * 1.5);
-                                      height  := trunc(460 * 1.5);
-                                    end;end;
+                            FALSE:  FX.ResizeWindow1; end;
 
 
   pnlBackground.Color := clBlack;
@@ -1059,10 +1057,10 @@ end;
 
 function TUI.repositionWMP: boolean;
 begin
-  WMP.Left    := pnlBackground.Left;
-  WMP.Height  := pnlBackground.Height + 1;
-  WMP.Width   := pnlBackground.Width + 1;
-  WMP.Top     := pnlBackground.Top - 0;
+  WMP.Left    := pnlBackground.Left - 1;
+  WMP.Height  := pnlBackground.Height + 2;
+  WMP.Width   := pnlBackground.Width + 2;
+  WMP.Top     := pnlBackground.Top - 1;
 end;
 
 procedure TUI.tmrRateLabelTimer(Sender: TObject);
