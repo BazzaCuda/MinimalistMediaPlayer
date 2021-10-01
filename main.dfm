@@ -7221,7 +7221,7 @@ object UI: TUI
         0800020000000000080002000000000008000200000000000B000000AC140000
         FC110000}
     end
-    object ProgressBar: TProgressBar
+    object progressBar: TProgressBar
       Left = 0
       Top = 407
       Width = 760
@@ -7229,8 +7229,8 @@ object UI: TUI
       Align = alBottom
       BackgroundColor = clBlack
       TabOrder = 1
-      OnMouseMove = ProgressBarMouseMove
-      OnMouseUp = ProgressBarMouseUp
+      OnMouseMove = progressBarMouseMove
+      OnMouseUp = progressBarMouseUp
     end
   end
   object tmrTimeDisplay: TTimer
@@ -7274,8 +7274,8 @@ object UI: TUI
     Left = 400
     Top = 352
   end
-  object ApplicationEvents: TApplicationEvents
-    OnMessage = ApplicationEventsMessage
+  object applicationEvents: TApplicationEvents
+    OnMessage = applicationEventsMessage
     Left = 504
     Top = 48
   end

@@ -9,7 +9,7 @@ uses
 type
   TUI = class(TForm)
     pnlBackground: TPanel;
-    ProgressBar: TProgressBar;
+    progressBar: TProgressBar;
     tmrPlayNext: TTimer;
     tmrTimeDisplay: TTimer;
     WMP: TWindowsMediaPlayer;
@@ -30,12 +30,12 @@ type
     lblTab: TLabel;
     lblVol: TLabel;
     tmrVol: TTimer;
-    ApplicationEvents: TApplicationEvents;
+    applicationEvents: TApplicationEvents;
     procedure FormCreate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure ProgressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-    procedure ProgressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure progressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure tmrPlayNextTimer(Sender: TObject);
     procedure tmrTimeDisplayTimer(Sender: TObject);
     procedure WMPClick(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
@@ -51,16 +51,14 @@ type
     procedure WMPKeyUp(ASender: TObject; nKeyCode, nShiftState: SmallInt);
     procedure WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
     procedure tmrVolTimer(Sender: TObject);
-    procedure ApplicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
+    procedure applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
   private
     procedure setupProgressBar;
   protected
-//    procedure CreateWnd; override;
-//    procedure CreateParams(var Params: TCreateParams); override;
   public
-    function  Fullscreen: boolean;
+    function  fullScreen: boolean;
     function  repositionWMP: boolean;
-    function  ToggleControls(Shift: TShiftState): boolean;
+    function  toggleControls(Shift: TShiftState): boolean;
   end;
 
 var
@@ -89,16 +87,16 @@ type
     function  GetExePath: string;
   private
   public
-    constructor Create;
-    destructor  Destroy;  override;
-    property    BlackOut:     boolean       read FBlackOut  write FBlackOut;
-    property    BlankRate:    boolean       read FBlankRate write FBlankRate;
-    property    Closing:      boolean       read FClosing   write FClosing;
-    property    ExePath:      string        read GetExePath;
-    property    FileIx:       integer       read FFileIx    write FFileIx;
-    property    Files:        TList<string> read FFiles;
+    constructor create;
+    destructor  destroy;  override;
+    property    blackOut:     boolean       read FBlackOut  write FBlackOut;
+    property    blankRate:    boolean       read FBlankRate write FBlankRate;
+    property    closing:      boolean       read FClosing   write FClosing;
+    property    exePath:      string        read GetExePath;
+    property    fileIx:       integer       read FFileIx    write FFileIx;
+    property    files:        TList<string> read FFiles;
     property    inputBox:     boolean       read FInputBox  write FInputBox;
-    property    Mute:         boolean       read FMute      write FMute;
+    property    mute:         boolean       read FMute      write FMute;
     property    sampling:     boolean       read FSampling  write FSampling;
     property    startup:      boolean       read FStartUp   write FStartUp;
     property    zoomed:       boolean       read FZoomed    write FZoomed;
@@ -106,23 +104,22 @@ type
 
   TFX = class
   private
-    function BlackOut: boolean;
-    function ClearMediaMetaData: boolean;
+    function adjustAspectRatio: boolean;
+    function blackOut: boolean;
+    function clearMediaMetaData: boolean;
     function clipboardCurrentFileName: boolean;
-    function DeleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
-    function doAspectRatio: boolean;
+    function deleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
     function doCentreHorizontal: boolean;
-    function DoCommandLine(aCommandLIne: string): boolean;
-    function DoMuteUnmute: boolean;
-    function DoNOFile(Shift: TShiftState): boolean;
-    function DoYESFile: boolean;
-    function FetchMediaMetaData: boolean;
-    function FindMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
+    function doCommandLine(aCommandLIne: string): boolean;
+    function doMuteUnmute: boolean;
+    function deleteCurrentFile(Shift: TShiftState): boolean;
+    function fetchMediaMetaData: boolean;
+    function findMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
     function getINIname: string;
-    function GoLeft: boolean;
-    function GoRight: boolean;
-    function GoUp: boolean;
-    function GoDown: boolean;
+    function goDown: boolean;
+    function goLeft: boolean;
+    function goRight: boolean;
+    function goUp: boolean;
     function isAltKeyDown: boolean;
     function isCapsLockOn: boolean;
     function isControlKeyDown: boolean;
@@ -131,39 +128,39 @@ type
     function keepCurrentFile: boolean;
     function matchVideoWidth: boolean;
     function openWithShotcut: boolean;
-    function PlayCurrentFile: boolean;
-    function PlayFirstFile: boolean;
-    function PlayLastFile: boolean;
-    function PlayNextFile: boolean;
-    function PlayPrevFile: boolean;
-    function PlayWithPotPlayer: boolean;
-    function RateReset: boolean;
+    function playCurrentFile: boolean;
+    function playFirstFile: boolean;
+    function playLastFile: boolean;
+    function playNextFile: boolean;
+    function playPrevFile: boolean;
+    function playWithPotPlayer: boolean;
+    function rateReset: boolean;
     function reloadMediaFiles: boolean;
-    function RenameCurrentFile: boolean;
-    function ResizeWindow1: boolean;
-    function ResizeWindow2: boolean;
-    function ResizeWindow3: boolean;
+    function renameCurrentFile: boolean;
+    function resizeWindow1: boolean;
+    function resizeWindow2: boolean;
+    function resizeWindow3: boolean;
     function resumePosition: boolean;
-    function saveCurrentPosition: boolean;
-    function ShowHideTitleBar: boolean;
-    function ShowOKCancelMsgDlg(aMsg: string): TModalResult;
-    function SpeedDecrease: boolean;
-    function SpeedIncrease: boolean;
-    function startOver: boolean;
-    function TabForwardsBackwards: boolean;
     function sampleVideo: boolean;
+    function saveCurrentPosition: boolean;
+    function showHideTitleBar: boolean;
+    function ShowOKCancelMsgDlg(aMsg: string): TModalResult;
+    function speedDecrease: boolean;
+    function speedIncrease: boolean;
+    function startOver: boolean;
+    function tabForwardsBackwards: boolean;
     function UIKey(var Key: Word; Shift: TShiftState): boolean;
     function UIKeyDown(var Key: Word; Shift: TShiftState): boolean;
     function UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
-    function UnZoom: boolean;
-    function UpdateRateLabel: boolean;
-    function UpdateTimeDisplay: boolean;
-    function UpdateVolumeDisplay: boolean;
-    function WindowCaption: boolean;
-    function WindowMaximizeRestore: boolean;
+    function unZoom: boolean;
+    function updateRateLabel: boolean;
+    function updateTimeDisplay: boolean;
+    function updateVolumeDisplay: boolean;
+    function windowCaption: boolean;
+    function windowMaximizeRestore: boolean;
     function WMPplay: boolean;
-    function ZoomIn: boolean;
-    function ZoomOut: boolean;
+    function zoomIn: boolean;
+    function zoomOut: boolean;
   end;
 
 var
@@ -172,47 +169,16 @@ var
 
 { TFX }
 
-function TFX.BlackOut: boolean;
-begin
-  GV.BlackOut             := NOT GV.BlackOut;
-  UI.ProgressBar.Visible  := NOT GV.BlackOut;
-  UI.repositionWMP;
-
-  case isControlKeyDown of TRUE:  begin
-                                    ShowHideTitleBar;
-                                    doAspectRatio;
-                                  end;end;
-end;
-
-function TFX.ClearMediaMetaData: boolean;
-begin
-  UI.lblXY.Caption            := format('XY:', []);
-  UI.lblXY2.Caption           := format('XY:', []);
-  UI.lblFrameRate.Caption     := format('FR:', []);
-  UI.lblBitRate.Caption       := format('BR:', []);
-  UI.lblAudioBitRate.Caption  := format('AR:', []);
-  UI.lblVideoBitRate.Caption  := format('VR:', []);
-  UI.lblXYRatio.Caption       := format('XY:', []);
-  UI.lblFileSize.Caption      := format('FS:', []);
-end;
-
-function TFX.DeleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
-begin
-  case ssCtrl in Shift of  TRUE: DoCommandLine('rot -nobanner -p 1 -r "' + ExtractFilePath(AFilePath) + '*.* "');
-                          FALSE: DoCommandLine('rot -nobanner -p 1 -r "' + AFilePath + '"');
-  end;
-end;
-
-function TFX.doAspectRatio: boolean;
+function TFX.adjustAspectRatio: boolean;
 // This attempts to resize the window height to match its width in the same proportion as the video dimensions,
 // in order to eliminate the black bars above and below the video.
 // Usage: size the window to the required width then press J to ad-J-ust the window's height to match the aspect ratio
 var
-  vRatio: double;
-  X, Y: integer;
-  style: longint;
-  htTitle: integer;
-  delta: integer;
+  vRatio:   double;
+  X, Y:     integer;
+  style:    longint;
+  htTitle:  integer;
+  delta:    integer;
 begin
   X := UI.WMP.currentMedia.imageSourceWidth;
   Y := UI.WMP.currentMedia.imageSourceHeight;
@@ -226,10 +192,63 @@ begin
   case (style and WS_CAPTION) = WS_CAPTION of  TRUE: delta := htTitle + 7;
                                               FALSE: delta := 8; end;
 
-
   UI.Height := trunc(UI.Width * vRatio) + delta;
 
   UI.repositionWMP;
+end;
+
+function TFX.blackOut: boolean;
+begin
+  GV.blackOut             := NOT GV.blackOut;
+  UI.progressBar.Visible  := NOT GV.blackOut;
+  UI.repositionWMP;
+
+  case isControlKeyDown of TRUE:  begin
+                                    showHideTitleBar;
+                                    adjustAspectRatio;
+                                  end;end;
+end;
+
+function TFX.clearMediaMetaData: boolean;
+begin
+  UI.lblXY.Caption            := format('XY:', []);
+  UI.lblXY2.Caption           := format('XY:', []);
+  UI.lblFrameRate.Caption     := format('FR:', []);
+  UI.lblBitRate.Caption       := format('BR:', []);
+  UI.lblAudioBitRate.Caption  := format('AR:', []);
+  UI.lblVideoBitRate.Caption  := format('VR:', []);
+  UI.lblXYRatio.Caption       := format('XY:', []);
+  UI.lblFileSize.Caption      := format('FS:', []);
+end;
+
+function TFX.deleteCurrentFile(Shift: TShiftState): boolean;
+var
+  vMsg: string;
+begin
+  UI.WMP.controls.pause;
+  vMsg := 'DELETE '#13#10#13#10'Folder: ' + ExtractFilePath(GV.files[GV.fileIx]);
+  case ssCtrl in Shift of  TRUE: vMsg := vMsg + '*.*';
+                          FALSE: vMsg := vMsg + #13#10#13#10'File: '            + ExtractFileName(GV.files[GV.fileIx]); end;
+
+  case ShowOkCancelMsgDlg(vMsg) = IDOK of
+    TRUE: begin
+            deleteThisFile(GV.files[GV.fileIx], Shift);
+
+            case isLastFile or (ssCtrl in Shift) of TRUE: begin UI.CLOSE; EXIT; end;end;  // close app after deleting final file or deleting folder contents
+
+            GV.files.Delete(GV.fileIx);
+            GV.fileIx := GV.fileIx - 1;
+
+            playNextFile;
+          end;
+  end;
+end;
+
+function TFX.deleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
+begin
+  case ssCtrl in Shift of  TRUE: doCommandLine('rot -nobanner -p 1 -r "' + ExtractFilePath(AFilePath) + '*.* "');
+                          FALSE: doCommandLine('rot -nobanner -p 1 -r "' + AFilePath + '"');
+  end;
 end;
 
 function TFX.doCentreHorizontal: boolean;
@@ -242,7 +261,7 @@ begin
                               (GetSystemMetrics(SM_CYVIRTUALSCREEN) - (vR.Bottom - vR.Top)) div 2, 0, 0, SWP_NOZORDER + SWP_NOSIZE);
 end;
 
-function TFX.DoCommandLine(aCommandLIne: string): boolean;
+function TFX.doCommandLine(aCommandLIne: string): boolean;
 var
   vStartInfo:  TStartupInfo;
   vProcInfo:   TProcessInformation;
@@ -268,47 +287,17 @@ begin
                           vStartInfo, vProcInfo);
 end;
 
-function TFX.DoMuteUnmute: boolean;
+function TFX.doMuteUnmute: boolean;
 begin
-  GV.Mute := NOT GV.Mute;
-  g_mixer.muted := GV.Mute;
-  case GV.Mute of
+  GV.mute := NOT GV.mute;
+  g_mixer.muted := GV.mute;
+  case GV.mute of
      TRUE:  UI.lblMuteUnmute.Caption  := 'Unmute';
     FALSE:  UI.lblMuteUnmute.Caption  := 'Mute';
   end;
 end;
 
-function TFX.DoNOFile(Shift: TShiftState): boolean;
-var
-  vMsg: string;
-begin
-  UI.WMP.controls.pause;
-  vMsg := 'DELETE '#13#10#13#10'Folder: ' + ExtractFilePath(GV.Files[GV.FileIx]);
-  case ssCtrl in Shift of  TRUE: vMsg := vMsg + '*.*';
-                          FALSE: vMsg := vMsg + #13#10#13#10'File: '            + ExtractFileName(GV.Files[GV.FileIx]); end;
-
-  case ShowOkCancelMsgDlg(vMsg) = IDOK of
-    TRUE: begin
-            DeleteThisFile(GV.Files[GV.FileIx], Shift);
-
-            case isLastFile or (ssCtrl in Shift) of TRUE: begin UI.CLOSE; EXIT; end;end;  // close app after deleting final file or deleting folder contents
-
-            GV.Files.Delete(GV.FileIx);
-            GV.FileIx := GV.FileIx - 1;
-
-            PlayNextFile;
-          end;
-  end;
-end;
-
-function TFX.DoYESFile: boolean;
-begin
-  case isLastFile of TRUE: begin UI.CLOSE; EXIT; end;end;
-
-  PlayNextFile;
-end;
-
-function TFX.FetchMediaMetaData: boolean;
+function TFX.fetchMediaMetaData: boolean;
 begin
   UI.lblXY.Caption                := format('XY:  %s x %s', [UI.WMP.currentMedia.getItemInfo('WM/VideoWidth'), UI.WMP.currentMedia.getItemInfo('WM/VideoHeight')]);
   UI.lblXY2.Caption               := format('XY:  %d x %d', [UI.WMP.currentMedia.imageSourceWidth, UI.WMP.currentMedia.imageSourceHeight]);
@@ -321,7 +310,7 @@ begin
   case trim(UI.lblXY.Caption) = 'XY:   x' of TRUE: UI.lblXY.Caption := 'XY:'; end;
 end;
 
-function TFX.FindMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
+function TFX.findMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
 const EXTS_FILTER = '.wmv.mp4.avi.flv.mpg.mpeg.mkv.3gp.mov.m4v.vob.ts.webm.divx.m4a.mp3.wav.aac.m2ts.flac.mts.rm.asf';
 var
   sr:           TSearchRec;
@@ -360,28 +349,28 @@ end;
 
 function TFX.getINIname: string;
 begin
-  result := ExtractFileName(GV.Files[GV.FileIx]);
+  result := ExtractFileName(GV.files[GV.fileIx]);
   result := ChangeFileExt(result, '.ini');
-  result := ExtractFilePath(GV.Files[GV.FileIx]) + result;
+  result := ExtractFilePath(GV.files[GV.fileIx]) + result;
 end;
 
 const MOVE_PIXELS = 10;
-function TFX.GoDown: boolean;
+function TFX.goDown: boolean;
 begin
   UI.WMP.Top := UI.WMP.Top + MOVE_PIXELS;
 end;
 
-function TFX.GoLeft: boolean;
+function TFX.goLeft: boolean;
 begin
   UI.WMP.Left := UI.WMP.Left - MOVE_PIXELS;
 end;
 
-function TFX.GoRight: boolean;
+function TFX.goRight: boolean;
 begin
   UI.WMP.Left := UI.WMP.left + MOVE_PIXELS;
 end;
 
-function TFX.GoUp: boolean;
+function TFX.goUp: boolean;
 begin
   UI.WMP.Top := UI.WMP.Top - MOVE_PIXELS;
 end;
@@ -410,7 +399,7 @@ end;
 
 function TFX.isLastFile: boolean;
 begin
-  result := GV.FileIx = GV.Files.Count - 1;
+  result := GV.fileIx = GV.files.Count - 1;
 end;
 
 function TFX.isShiftKeyDown: boolean;
@@ -421,16 +410,16 @@ end;
 function TFX.keepCurrentFile: boolean;
 var
   vFileName: string;
-  vExt:         string;
+  vExt:      string;
   vFilePath: string;
 begin
   UI.WMP.controls.pause;
   delay(250);
-  vFileName  := '_' + ExtractFileName(GV.Files[GV.FileIx]);
-  vFilePath := ExtractFilePath(GV.Files[GV.FileIx]) + vFileName;
-  case RenameFile(GV.Files[GV.FileIx], vFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
-                                                      TRUE: GV.Files[GV.FileIx] := vFilePath; end;
-  WindowCaption;
+  vFileName  := '_' + ExtractFileName(GV.files[GV.fileIx]);
+  vFilePath := ExtractFilePath(GV.files[GV.fileIx]) + vFileName;
+  case RenameFile(GV.files[GV.fileIx], vFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
+                                                      TRUE: GV.files[GV.fileIx] := vFilePath; end;
+  windowCaption;
   UI.WMP.controls.play;
 end;
 
@@ -447,81 +436,83 @@ function TFX.openWithShotcut: boolean;
 // mklink C:\ProgramFiles "C:\Program Files"
 begin
   UI.WMP.controls.pause;
-  DoCommandLine('C:\ProgramFiles\Shotcut\shotcut.exe "' + GV.Files[GV.FileIx] + '"');
+  doCommandLine('C:\ProgramFiles\Shotcut\shotcut.exe "' + GV.files[GV.fileIx] + '"');
 end;
 
-function TFX.PlayCurrentFile: boolean;
+function TFX.playCurrentFile: boolean;
 begin
-  case (GV.FileIx < 0) OR (GV.FileIx > GV.Files.Count - 1) of TRUE: EXIT; end;
+  case (GV.fileIx < 0) OR (GV.fileIx > GV.files.Count - 1) of TRUE: EXIT; end;
 
-  case FileExists(GV.Files[GV.FileIx]) of TRUE: begin
-    WindowCaption;
-    UI.WMP.URL := 'file://' + GV.Files[GV.FileIx];
-    UnZoom;
-    GV.BlankRate := TRUE;
+  case FileExists(GV.files[GV.fileIx]) of TRUE: begin
+    windowCaption;
+    UI.WMP.URL := 'file://' + GV.files[GV.fileIx];
+    unZoom;
+    GV.blankRate := TRUE;
     WMPplay;
   end;end;
 end;
 
-function TFX.PlayFirstFile: boolean;
+function TFX.playFirstFile: boolean;
 begin
-  case GV.Files.Count > 0 of TRUE:  begin
-                                      GV.FileIx := 0;
-                                      PlayCurrentFile;
+  case GV.files.Count > 0 of TRUE:  begin
+                                      GV.fileIx := 0;
+                                      playCurrentFile;
                                     end;
   end;
 end;
 
-function TFX.PlayLastFile: boolean;
+function TFX.playLastFile: boolean;
 begin
-  case GV.Files.Count > 0 of TRUE:  begin
-                                      GV.FileIx := GV.Files.Count - 1;
-                                      PlayCurrentFile;
+  case GV.files.Count > 0 of TRUE:  begin
+                                      GV.fileIx := GV.files.Count - 1;
+                                      playCurrentFile;
                                     end;
   end;
 end;
 
-function TFX.PlayNextFile: boolean;
+function TFX.playNextFile: boolean;
 begin
-  case GV.FileIx < GV.Files.Count - 1 of TRUE:  begin
-                                                  GV.FileIx := GV.FileIx + 1;
-                                                  PlayCurrentFile;
+  case isLastFile of TRUE: begin UI.CLOSE; EXIT; end;end;
+
+  case GV.fileIx < GV.files.Count - 1 of TRUE:  begin
+                                                  GV.fileIx := GV.fileIx + 1;
+                                                  playCurrentFile;
                                                 end;
   end;
 end;
 
-function TFX.PlayPrevFile: boolean;
+function TFX.playPrevFile: boolean;
 begin
-  case GV.FileIx > 0 of TRUE:   begin
-                                  GV.FileIx := GV.FileIx - 1;
-                                  PlayCurrentFile;
+  case GV.fileIx > 0 of TRUE:   begin
+                                  GV.fileIx := GV.fileIx - 1;
+                                  playCurrentFile;
                                 end;
   end;
 end;
 
-function TFX.PlayWithPotPlayer: boolean;
+function TFX.playWithPotPlayer: boolean;
 begin
   UI.WMP.controls.pause;
-  DoCommandLine('B:\Tools\Pot\PotPlayerMini64.exe "' + GV.Files[GV.FileIx] + '"');
+  doCommandLine('B:\Tools\Pot\PotPlayerMini64.exe "' + GV.files[GV.fileIx] + '"');
 end;
 
-function TFX.RateReset: boolean;
+function TFX.rateReset: boolean;
 begin
   UI.WMP.settings.rate    := 1;
-  FX.UpdateRateLabel;
+  FX.updateRateLabel;
   UI.tmrRateLabel.Enabled := TRUE;
 end;
 
 function TFX.reloadMediaFiles: boolean;
 var vCurrentFile: string;
 begin
-  vCurrentFile := GV.Files[GV.FileIx];
-  FindMediaFilesInFolder(vCurrentFile, GV.Files);
-  GV.FileIx     := GV.Files.IndexOf(vCurrentFile);
-  WindowCaption;
+  vCurrentFile := GV.files[GV.fileIx];
+  findMediaFilesInFolder(vCurrentFile, GV.files);
+  GV.fileIx    := GV.files.IndexOf(vCurrentFile);
+  windowCaption;
 end;
 
-function TFX.RenameCurrentFile: boolean;
+function TFX.renameCurrentFile: boolean;
 var
   vOldFileName: string;
   vExt:         string;
@@ -530,7 +521,7 @@ var
 begin
   UI.WMP.controls.pause;
   try
-    vOldFileName  := ExtractFileName(GV.Files[GV.FileIx]);
+    vOldFileName  := ExtractFileName(GV.files[GV.fileIx]);
     vExt          := ExtractFileExt(vOldFileName);
     vOldFileName  := copy(vOldFileName, 1, pos(vExt, vOldFileName) - 1);
 
@@ -544,26 +535,26 @@ begin
     s := '';
   end;
   case (s = '') OR (s = vOldFileName) of TRUE: EXIT; end;
-  vNewFilePath := ExtractFilePath(GV.Files[GV.FileIx]) + s + vExt;
-  case RenameFile(GV.Files[GV.FileIx], vNewFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
-                                                         TRUE: GV.Files[GV.FileIx] := vNewFilePath; end;
-  WindowCaption;
+  vNewFilePath := ExtractFilePath(GV.files[GV.fileIx]) + s + vExt;
+  case RenameFile(GV.files[GV.fileIx], vNewFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
+                                                         TRUE: GV.files[GV.fileIx] := vNewFilePath; end;
+  windowCaption;
 end;
 
-function TFX.ResizeWindow1: boolean;
+function TFX.resizeWindow1: boolean;
 begin
   UI.Width   := trunc(780 * 1.5);
   UI.Height  := trunc(460 * 1.5);
 end;
 
-function TFX.ResizeWindow2: boolean;
+function TFX.resizeWindow2: boolean;
 // size so that two videos can be positioned side-by-side horizontally by the user
 begin
   UI.width   := 970;
   UI.height  := 640;
 end;
 
-function TFX.ResizeWindow3: boolean;
+function TFX.resizeWindow3: boolean;
 begin
   case isControlKeyDown of
      TRUE: SetWindowPos(UI.Handle, 0, 0, 0, UI.Width - 100, UI.Height - 60, SWP_NOZORDER + SWP_NOMOVE + SWP_NOREDRAW);
@@ -724,12 +715,11 @@ begin
 
     VK_F12: openWithShotcut;
 
-//    ord('#'), 222     :    // # = NightTime
 //    187               : clipboardCurrentFileName;             // =   copy current filename to clipboard
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
     ord('b'), ord('B'): BlackOut;                             // B = Blackout                       Mods: Ctrl-B
     ord('c'), ord('C'): UI.ToggleControls(Shift);             // C = Control Panel show/hide        Mods: Ctrl-C
-    ord('d'), ord('D'), VK_DELETE: DoNOFile(Shift);           // D = Delete File                    Mods: Ctrl-C
+    ord('d'), ord('D'), VK_DELETE: deleteCurrentFile(Shift);  // D = Delete File                    Mods: Ctrl-C
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): UI.Fullscreen;                        // F = Fullscreen
     ord('g'), ord('G'): ResizeWindow3;                        // G = Greater window size            Mods: Ctrl-G
@@ -905,7 +895,7 @@ end;
 
 {$R *.dfm}
 
-procedure TUI.ApplicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
+procedure TUI.applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
 var
   Key: word;
   shiftState: TShiftState;
@@ -925,18 +915,6 @@ begin
                                               Handled     := TRUE;
                                             end;end;
 end;
-
-//procedure TUI.CreateParams(var Params: TCreateParams);
-//begin
-//  inherited CreateParams(Params);
-//  Params.ExStyle := Params.ExStyle or WS_EX_DLGMODALFRAME or WS_EX_WINDOWEDGE;
-//end;
-//
-//procedure TUI.CreateWnd;
-//begin
-//  inherited;
-//  SendMessage(Handle, WM_SETICON, 1, 0);
-//end;
 
 procedure TUI.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
@@ -1029,7 +1007,7 @@ begin
   FX.DoMuteUnmute;
 end;
 
-procedure TUI.ProgressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+procedure TUI.progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 var
   newPosition: integer;
 begin
@@ -1044,7 +1022,7 @@ begin
   FX.UpdateTimeDisplay;
 end;
 
-procedure TUI.ProgressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TUI.progressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   newPosition : integer;
 begin
