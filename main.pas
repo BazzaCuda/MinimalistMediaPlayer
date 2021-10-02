@@ -271,8 +271,6 @@ begin
   result := FALSE;
   case trim(aCommandLIne) = ''  of TRUE: EXIT; end;
 
-//  ShowMessage(aCommandLine);
-
   FillChar(vStartInfo, SizeOf(TStartupInfo), #0);
   FillChar(vProcInfo, SizeOf(TProcessInformation), #0);
   vStartInfo.cb          := SizeOf(TStartupInfo);
@@ -390,8 +388,8 @@ function TFX.isControlKeyDown: boolean;
 // If the high-order bit is 1, the key is down, otherwise it is up.
 // If the low-order bit is 1, the key is toggled.
 // A key, such as the CAPS LOCK key, is toggled if it is turned on.
-// The key is off and untoggled if the low-order bit is 0. A toggled key's indicator light (if any)
-// on the keyboard will be on when the key is toggled, and off when the key is untoggled.
+// The key is off and untoggled if the low-order bit is 0.
+// A toggled key's indicator light (if any) on the keyboard will be on when the key is toggled, and off when the key is untoggled.
 // Check high-order bit of state...
 begin
   result := (GetKeyState(VK_CONTROL) AND $80) <> 0;
@@ -725,7 +723,7 @@ begin
     ord('g'), ord('G'): ResizeWindow3;                        // G = Greater window size            Mods: Ctrl-G
     ord('h'), ord('H'): doCentreHorizontal;                   // H = centre window Horizontally
                                                               // I = zoom In
-    ord('j'), ord('J'): doAspectRatio;                        // J = adJust aspect ratio
+    ord('j'), ord('J'): adjustAspectRatio;                    // J = adJust aspect ratio
     ord('k'), ord('K'): keepCurrentFile;                      // K = Keep current file
     ord('l'), ord('L'): reloadMediaFiles;                     // L = re-Load media files
     ord('m'), ord('M'): WindowMaximizeRestore;                // M = Maximize/Restore
@@ -864,7 +862,7 @@ begin
     UI.Refresh;
   end;end;
 
-  doAspectRatio;
+  adjustAspectRatio;
   windowCaption;
 end;
 
@@ -879,11 +877,11 @@ begin
     Height    := Height + 50;
     Width     := width + 200;
     for i := 0 to ControlCount - 1 do begin
-      case Controls[i] is TLabel  of   TRUE: with Controls[i] as TLabel do Width := Width + 200; end;
-      case Controls[i] is TButton of   TRUE: with Controls[i] as TButton do begin
-                                                                              Top   := Top + 60;
-                                                                              Left  := Left + 100;
-                                                                            end;end;
+      case Controls[i] is TLabel  of   TRUE: with Controls[i] as TLabel   do    Width := Width + 200; end;
+      case Controls[i] is TButton of   TRUE: with Controls[i] as TButton  do  begin
+                                                                                Top   := Top + 60;
+                                                                                Left  := Left + 100;
+                                                                              end;end;
     end;
     result := ShowModal;
   finally
