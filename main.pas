@@ -170,15 +170,15 @@ var
 { TFX }
 
 function TFX.adjustAspectRatio: boolean;
-// This attempts to resize the window height to match its width in the same proportion as the video dimensions,
+// This attempts to resize the window height to match its width in the same ratio as the video dimensions,
 // in order to eliminate the black bars above and below the video.
 // Usage: size the window to the required width then press J to ad-J-ust the window's height to match the aspect ratio
 var
-  vRatio:   double;
-  X, Y:     integer;
-  style:    longint;
-  htTitle:  integer;
-  delta:    integer;
+  X, Y:         integer;
+  vRatio:       double;
+  vStyle:       longint;
+  vHeightTitle: integer;
+  vDelta:       integer;
 begin
   X := UI.WMP.currentMedia.imageSourceWidth;
   Y := UI.WMP.currentMedia.imageSourceHeight;
@@ -187,17 +187,18 @@ begin
 
   vRatio := Y / X;
 
-  htTitle := GetSystemMetrics(SM_CYCAPTION);
-  style := GetWindowLong(UI.Handle, GWL_STYLE);
-  case (style and WS_CAPTION) = WS_CAPTION of  TRUE: delta := htTitle + 7;
-                                              FALSE: delta := 8; end;
+  vHeightTitle := GetSystemMetrics(SM_CYCAPTION);
+  vStyle := GetWindowLong(UI.Handle, GWL_STYLE);
+  case (vStyle and WS_CAPTION) = WS_CAPTION of  TRUE: vDelta := vHeightTitle + 7;
+                                               FALSE: vDelta := 8; end;
 
-  UI.Height := trunc(UI.Width * vRatio) + delta;
+  UI.Height := trunc(UI.Width * vRatio) + vDelta;
 
   UI.repositionWMP;
 end;
 
 function TFX.blackOut: boolean;
+// Show/Hide ProgressBar
 begin
   GV.blackOut             := NOT GV.blackOut;
   UI.progressBar.Visible  := NOT GV.blackOut;
@@ -230,7 +231,7 @@ begin
   case ssCtrl in Shift of  TRUE: vMsg := vMsg + '*.*';
                           FALSE: vMsg := vMsg + #13#10#13#10'File: '            + ExtractFileName(GV.files[GV.fileIx]); end;
 
-  case ShowOkCancelMsgDlg(vMsg) = IDOK of
+  case showOkCancelMsgDlg(vMsg) = IDOK of
     TRUE: begin
             deleteThisFile(GV.files[GV.fileIx], Shift);
 
@@ -247,8 +248,7 @@ end;
 function TFX.deleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
 begin
   case ssCtrl in Shift of  TRUE: doCommandLine('rot -nobanner -p 1 -r "' + ExtractFilePath(AFilePath) + '*.* "');
-                          FALSE: doCommandLine('rot -nobanner -p 1 -r "' + AFilePath + '"');
-  end;
+                          FALSE: doCommandLine('rot -nobanner -p 1 -r "' + AFilePath + '"'); end;
 end;
 
 function TFX.doCentreHorizontal: boolean;
@@ -540,6 +540,7 @@ begin
 end;
 
 function TFX.resizeWindow1: boolean;
+// default window size
 begin
   UI.Width   := trunc(780 * 1.5);
   UI.Height  := trunc(460 * 1.5);
@@ -553,6 +554,7 @@ begin
 end;
 
 function TFX.resizeWindow3: boolean;
+// increase or decrease size of window
 begin
   case isControlKeyDown of
      TRUE: SetWindowPos(UI.Handle, 0, 0, 0, UI.Width - 100, UI.Height - 60, SWP_NOZORDER + SWP_NOMOVE + SWP_NOREDRAW);
@@ -565,6 +567,7 @@ begin
 end;
 
 function TFX.resumePosition: boolean;
+// read the saved video position from the ini file and continue playing from that position
 begin
   case FileExists(getINIname) of FALSE: EXIT; end;
 
@@ -597,17 +600,17 @@ begin
   sl.Free;
 end;
 
-function TFX.SpeedDecrease: boolean;
+function TFX.speedDecrease: boolean;
 begin
   UI.WMP.settings.rate    := UI.WMP.settings.rate - 0.1;
-  FX.UpdateRateLabel;
+  FX.updateRateLabel;
   UI.tmrRateLabel.Enabled := TRUE;
 end;
 
-function TFX.SpeedIncrease: boolean;
+function TFX.speedIncrease: boolean;
 begin
   UI.WMP.settings.rate    := UI.WMP.settings.rate + 0.1;
-  FX.UpdateRateLabel;
+  FX.updateRateLabel;
   UI.tmrRateLabel.Enabled := TRUE;
 end;
 
@@ -617,7 +620,7 @@ begin
   UI.WMP.controls.play;
 end;
 
-function TFX.TabForwardsBackwards: boolean;
+function TFX.tabForwardsBackwards: boolean;
 //  Default   = 100th
 //  SHIFT     = 20th
 //  ALT       = 50th
@@ -752,7 +755,7 @@ begin
   Key := 0;
 end;
 
-function TFX.UnZoom: boolean;
+function TFX.unZoom: boolean;
 begin
   GV.zoomed := FALSE;
   UI.repositionWMP;
@@ -760,7 +763,7 @@ begin
   UI.Width := UI.Width - 1; // fix bizarre problem of WMP not repositioning after zooming
 end;
 
-function TFX.UpdateRateLabel: boolean;
+function TFX.updateRateLabel: boolean;
 begin
   case GV.BlankRate of   TRUE:  begin
                                   UI.lblRate.Caption  := '';
@@ -770,7 +773,7 @@ begin
   end;
 end;
 
-function TFX.UpdateTimeDisplay: boolean;
+function TFX.updateTimeDisplay: boolean;
 begin
   UI.lblTimeDisplay.Caption := UI.WMP.controls.currentPositionString + ' / ' + UI.WMP.currentMedia.durationString;
 
@@ -778,19 +781,19 @@ begin
   UI.ProgressBar.Position   := trunc(UI.WMP.controls.currentPosition);
 end;
 
-function TFX.UpdateVolumeDisplay: boolean;
+function TFX.updateVolumeDisplay: boolean;
 begin
   UI.lblVol.Caption := IntToStr(trunc(g_mixer.volume / 65535 * 100))  + '%';
   UI.lblVol.Visible := TRUE;
 end;
 
-function TFX.WindowCaption: boolean;
+function TFX.windowCaption: boolean;
 begin
   case GV.Files.Count = 0 of TRUE: EXIT; end;
   UI.Caption := format('[%d/%d] %s', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx])]);
 end;
 
-function TFX.WindowMaximizeRestore: boolean;
+function TFX.windowMaximizeRestore: boolean;
 begin
   case UI.WindowState = wsMaximized of TRUE: UI.WindowState := wsNormal;
                                       FALSE: UI.WindowState := wsMaximized; end;
@@ -800,7 +803,7 @@ function TFX.WMPplay: boolean;
 begin
   try
     UI.tmrMetaData.Enabled := FALSE;
-    ClearMediaMetaData;
+    clearMediaMetaData;
     UI.WMP.controls.play;
     UI.tmrMetaData.Enabled := TRUE;
   except begin
@@ -809,7 +812,7 @@ begin
   end;end;
 end;
 
-function TFX.ZoomIn: boolean;
+function TFX.zoomIn: boolean;
 begin
   GV.zoomed := TRUE;
 
@@ -819,7 +822,7 @@ begin
   UI.WMP.Left     := UI.pnlBackground.Left - ((UI.WMP.Width - UI.pnlBackground.Width) div 2);
 end;
 
-function TFX.ZoomOut: boolean;
+function TFX.zoomOut: boolean;
 begin
   GV.zoomed := TRUE;
 
@@ -834,28 +837,28 @@ begin
   clipboard.AsText := TPath.GetFileNameWithoutExtension(GV.Files[GV.FileIx]);
 end;
 
-function TFX.ShowHideTitleBar: boolean;
+function TFX.showHideTitleBar: boolean;
 var
-  style: longint;
+  vStyle: longint;
 begin
-  style := GetWindowLong(UI.Handle, GWL_STYLE);
+  vStyle := GetWindowLong(UI.Handle, GWL_STYLE);
 
-  case (style and WS_CAPTION) = WS_CAPTION of TRUE: begin
+  case (vStyle and WS_CAPTION) = WS_CAPTION of TRUE: begin
     case UI.BorderStyle of
       bsSingle, bsSizeable:
-        SetWindowLong(UI.Handle, GWL_STYLE, style and (not (WS_CAPTION)) or WS_BORDER);
+        SetWindowLong(UI.Handle, GWL_STYLE, vStyle and (not (WS_CAPTION)) or WS_BORDER);
       bsDialog:
-        SetWindowLong(UI.Handle, GWL_STYLE, style and (not (WS_CAPTION)) or DS_MODALFRAME or WS_DLGFRAME);
+        SetWindowLong(UI.Handle, GWL_STYLE, vStyle and (not (WS_CAPTION)) or DS_MODALFRAME or WS_DLGFRAME);
     end;
     UI.Refresh;
   end;end;
 
-  case (style and WS_CAPTION) = WS_CAPTION of FALSE: begin
+  case (vStyle and WS_CAPTION) = WS_CAPTION of FALSE: begin
     case UI.BorderStyle of
       bsSingle, bsSizeable:
-        SetWindowLong(UI.Handle, GWL_STYLE, style or WS_CAPTION or WS_BORDER);
+        SetWindowLong(UI.Handle, GWL_STYLE, vStyle or WS_CAPTION or WS_BORDER);
       bsDialog:
-        SetWindowLong(UI.Handle, GWL_STYLE, style or WS_CAPTION or DS_MODALFRAME or WS_DLGFRAME);
+        SetWindowLong(UI.Handle, GWL_STYLE, vStyle or WS_CAPTION or DS_MODALFRAME or WS_DLGFRAME);
     end;
     UI.Height := UI.Height + 1;  // fix Windows bug and force title bar to repaint properly
     UI.Height := UI.Height - 1;  // fix Windows bug and force title bar to repaint properly
@@ -866,7 +869,7 @@ begin
   windowCaption;
 end;
 
-function TFX.ShowOKCancelMsgDlg(aMsg: string): TModalResult;
+function TFX.showOKCancelMsgDlg(aMsg: string): TModalResult;
 var
   i: Integer;
 begin
@@ -923,8 +926,8 @@ end;
 
 procedure TUI.FormCreate(Sender: TObject);
 begin
-  case FX.isCapsLockOn of    TRUE:  FX.ResizeWindow2; // size so that two videos can be positioned side-by-side horizontally by the user
-                            FALSE:  FX.ResizeWindow1; end;
+  case FX.isCapsLockOn of    TRUE:  FX.resizeWindow2; // size so that two videos can be positioned side-by-side horizontally by the user
+                            FALSE:  FX.resizeWindow1; end;
 
 
   pnlBackground.Color := clBlack;
@@ -958,11 +961,11 @@ begin
   case g_mixer.muted of TRUE: FX.DoMuteUnmute; end; // GV.Mute starts out FALSE; this brings it in line with the system
 
   case {FX.isCapsLockOn} TRUE = FALSE of
-     TRUE: GV.FileIx := FX.FindMediaFilesInFolder(ParamStr(1), GV.Files, 100000000);
-    FALSE: GV.FileIx := FX.FindMediaFilesInFolder(ParamStr(1), GV.Files);
+     TRUE: GV.FileIx := FX.findMediaFilesInFolder(ParamStr(1), GV.Files, 100000000);
+    FALSE: GV.FileIx := FX.findMediaFilesInFolder(ParamStr(1), GV.Files);
   end;
 
-  FX.PlayCurrentFile;
+  FX.playCurrentFile;
 
   GV.startup := TRUE;
 end;
@@ -986,9 +989,9 @@ end;
 
 procedure TUI.FormResize(Sender: TObject);
 begin
-  FX.WindowCaption;
+  FX.windowCaption;
 
-  case GV.StartUp AND FX.isCapsLockOn of  TRUE: SetWindowPos(self.Handle, 0, -6, 200, 0, 0, SWP_NOZORDER + SWP_NOSIZE); end; // left justify
+  case GV.startup AND FX.isCapsLockOn of  TRUE: SetWindowPos(self.Handle, 0, -6, 200, 0, 0, SWP_NOZORDER + SWP_NOSIZE); end; // left justify on screen
   GV.startup := FALSE;
 
   repositionWMP;
@@ -1002,33 +1005,31 @@ end;
 
 procedure TUI.lblMuteUnmuteClick(Sender: TObject);
 begin
-  FX.DoMuteUnmute;
+  FX.doMuteUnmute;
 end;
 
 procedure TUI.progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-var
-  newPosition: integer;
+var vNewPosition: integer;
 begin
   case ssShift in Shift of TRUE:  begin
-                                    ProgressBar.Cursor            := crHSplit;
-                                    newPosition                   := Round(X * (ProgressBar.Max / ProgressBar.ClientWidth));
-                                    ProgressBar.Position          := newPosition;
-                                    WMP.controls.currentPosition  := newPosition;
+                                    progressBar.Cursor            := crHSplit;
+                                    vNewPosition                  := Round(X * (progressBar.Max / progressBar.ClientWidth));
+                                    progressBar.Position          := vNewPosition;
+                                    WMP.controls.currentPosition  := vNewPosition;
                                   end;
-                          FALSE: ProgressBar.Cursor := crDefault;
+                          FALSE:  progressBar.Cursor := crDefault;
   end;
-  FX.UpdateTimeDisplay;
+  FX.updateTimeDisplay;
 end;
 
 procedure TUI.progressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var
-  newPosition : integer;
+var vNewPosition : integer;
 begin
-  ProgressBar.Cursor            := crHSplit;
-  newPosition                   := Round(x * ProgressBar.Max / ProgressBar.ClientWidth) ;
-  ProgressBar.Position          := newPosition;
-  WMP.controls.currentPosition  := newPosition;
-  FX.UpdateTimeDisplay;
+  progressBar.Cursor            := crHSplit;
+  vNewPosition                  := Round(x * progressBar.Max / progressBar.ClientWidth) ;
+  progressBar.Position          := vNewPosition;
+  WMP.controls.currentPosition  := vNewPosition;
+  FX.updateTimeDisplay;
 end;
 
 function TUI.repositionWMP: boolean;
@@ -1091,7 +1092,7 @@ begin
   lblVol.Visible := FALSE;
 end;
 
-function TUI.ToggleControls(Shift: TShiftState): boolean;
+function TUI.toggleControls(Shift: TShiftState): boolean;
 var vVisible: boolean;
 begin
   lblRate.Caption := '';
@@ -1128,21 +1129,20 @@ begin
 end;
 
 procedure TUI.setupProgressBar;
-var
-  ProgressBarStyle: Integer;
+var vProgressBarStyle: Integer;
 begin
   SetThemeAppProperties(0);
   ProgressBar.Brush.Color := clBlack;
   // Set Background colour
   SendMessage(ProgressBar.Handle, PBM_SETBARCOLOR, 0, clDkGray);
   // Set bar colour
-  ProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_EXSTYLE);
-  ProgressBarStyle := ProgressBarStyle - WS_EX_STATICEDGE;
-  SetWindowLong(ProgressBar.Handle, GWL_EXSTYLE, ProgressBarStyle);
+  vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_EXSTYLE);
+  vProgressBarStyle := vProgressBarStyle - WS_EX_STATICEDGE;
+  SetWindowLong(ProgressBar.Handle, GWL_EXSTYLE, vProgressBarStyle);
   // add thin border to fix redraw problems
-  ProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_STYLE);
-  ProgressBarStyle := ProgressBarStyle - WS_BORDER;
-  SetWindowLong(ProgressBar.Handle, GWL_STYLE, ProgressBarStyle);
+  vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_STYLE);
+  vProgressBarStyle := vProgressBarStyle - WS_BORDER;
+  SetWindowLong(ProgressBar.Handle, GWL_STYLE, vProgressBarStyle);
 end;
 
 procedure TUI.WMPClick(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
@@ -1200,19 +1200,19 @@ end;
 
 { TGV }
 
-constructor TGV.Create;
+constructor TGV.create;
 begin
   inherited;
   FFiles := TList<string>.Create;
 end;
 
-destructor TGV.Destroy;
+destructor TGV.destroy;
 begin
   case FFiles <> NIL of TRUE: FFiles.Free; end;
   inherited;
 end;
 
-function TGV.GetExePath: string;
+function TGV.getExePath: string;
 begin
   result := IncludeTrailingBackslash(ExtractFilePath(ParamStr(0)));
 end;
