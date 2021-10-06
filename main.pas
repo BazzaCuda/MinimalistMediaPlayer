@@ -8,7 +8,6 @@ uses
 
 type
   TUI = class(TForm)
-    pnlBackground: TPanel;
     progressBar: TProgressBar;
     tmrPlayNext: TTimer;
     tmrTimeDisplay: TTimer;
@@ -194,6 +193,7 @@ begin
                                                FALSE: vDelta := 8; end;
 
   UI.Height := trunc(UI.Width * vRatio) + vDelta;
+  UI.Width  := UI.Width - 1; // experimental
 
   UI.repositionWMP;
 end;
@@ -478,6 +478,7 @@ function TFX.openWithShotcut: boolean;
 // mklink C:\ProgramFiles "C:\Program Files"
 // The above command line allows C:\Program Files\ to be referenced in programs without the annoying space
 // This can simpifly things when multiple nested double quotes and apostrophes are being used to construct a command line
+// At some point, the user's preferred video editor needs to be picked up from a mediaplayer.ini file
 begin
   UI.WMP.controls.pause;
   doCommandLine('C:\ProgramFiles\Shotcut\shotcut.exe "' + GV.files[GV.fileIx] + '"');
@@ -541,6 +542,7 @@ end;
 
 function TFX.playWithPotPlayer: boolean;
 // P = Play with [P]otPlayer
+// At some point, the user's preferred alternative media player needs to be picked up from a mediaplayer.ini file
 begin
   UI.WMP.controls.pause;
   doCommandLine('B:\Tools\Pot\PotPlayerMini64.exe "' + GV.files[GV.fileIx] + '"');
@@ -820,6 +822,7 @@ begin
     ord('5')          : saveCurrentPosition;                  // 5 = save current media position to an ini file
     ord('6')          : resumePosition;                       // 6 = resume video from saved media position
     ord('9')          : matchVideoWidth;                      // 9 = match window width to video width
+    ord('8')          : UI.repositionWMP;                     // 8 = reposition WMP to eliminate border pixels
   end;
   UpdateTimeDisplay;
   UI.tmrRateLabel.Enabled := TRUE;
@@ -848,6 +851,8 @@ begin
 end;
 
 function TFX.updateTimeDisplay: boolean;
+// Update the video timestamp display regardless of whether it's visible or not
+// Also update the progress bar to match the current video position
 begin
   UI.lblTimeDisplay.Caption := UI.WMP.controls.currentPositionString + ' / ' + UI.WMP.currentMedia.durationString;
 
@@ -875,12 +880,13 @@ begin
 end;
 
 function TFX.WMPplay: boolean;
+// Called to both start and resume the playing of a video
 begin
   try
-    UI.tmrMetaData.Enabled := FALSE; // prevent the display of invalid metadata
-    clearMediaMetaData;
+    UI.tmrMetaData.Enabled := FALSE; // prevent the display of invalid metadata while we [potentially] switch videos
+    clearMediaMetaData;              // "Out with the old..."
     UI.WMP.controls.play;
-    UI.tmrMetaData.Enabled := TRUE;
+    UI.tmrMetaData.Enabled := TRUE;  // necessary delay before trying to access video metadata from WMP 
   except begin
     ShowMessage('Oops!');
     UI.WMP.controls.stop;
@@ -894,8 +900,8 @@ begin
 
   UI.WMP.Width    := trunc(UI.WMP.Width * 1.1);
   UI.WMP.Height   := trunc(UI.WMP.Height * 1.1);
-  UI.WMP.Top      := UI.pnlBackground.Top - ((UI.WMP.Height - UI.pnlBackground.Height) div 2);
-  UI.WMP.Left     := UI.pnlBackground.Left - ((UI.WMP.Width - UI.pnlBackground.Width) div 2);
+  UI.WMP.Top      := UI.Top - ((UI.WMP.Height - UI.ClientHeight) div 2);
+  UI.WMP.Left     := UI.Left - ((UI.WMP.Width - UI.ClientWidth) div 2);
 end;
 
 function TFX.zoomOut: boolean;
@@ -905,21 +911,23 @@ begin
 
   UI.WMP.Width    := trunc(UI.WMP.Width * 0.9);
   UI.WMP.Height   := trunc(UI.WMP.Height * 0.9);
-  UI.WMP.Top      := UI.pnlBackground.Top - ((UI.WMP.Height - UI.pnlBackground.Height) div 2);   // zero minus a negative = a positive
-  UI.WMP.Left     := UI.pnlBackground.Left - ((UI.WMP.Width - UI.pnlBackground.Width) div 2);    // zero minus a negative = a positive
+  UI.WMP.Top      := UI.Top - ((UI.WMP.Height - UI.ClientHeight) div 2);   // zero minus a negative = a positive
+  UI.WMP.Left     := UI.Left - ((UI.WMP.Width - UI.ClientWidth) div 2);    // zero minus a negative = a positive
 end;
 
 function TFX.clipboardCurrentFileName: boolean;
 // [=] copy name of current video file (without the extension) to the clipboard
-// This can be useful before opening the file in ShotCut, for eventually naming the edited video
+// This can be useful, before opening the file in ShotCut, for naming the edited video
 begin
   clipboard.AsText := TPath.GetFileNameWithoutExtension(GV.Files[GV.FileIx]);
 end;
 
 function TFX.showHideTitleBar: boolean;
-// 0 = Show/Hide the window title bar
-// Part of this application's attempt to provide an entirely borderless window for the video
-// Unfortunately, this is only partially successful as WMP insists on show a 5-pixel (approx.) black border along the top of the video
+// 0 = Show or Hide(i.e. zero) the window title bar
+// Part of this application's attempt to provide an entirely borderless window for the video without displaying fullScreen.
+// Unfortunately, this is only partially successful as WMP insists on showing a 7-pixel (approx.) black border along the top of every video
+// I mitigate this myself by having a Windows desktop wallpaper image* which is almost entirely black, and a desktop that contains no icons at all.
+// *https://c4.wallpaperflare.com/wallpaper/68/50/540/lamborghini-car-vehicle-wallpaper-preview.jpg
 var
   vStyle: longint;
 begin
@@ -987,7 +995,7 @@ var
   Key: word;
   shiftState: TShiftState;
 begin
-  case GV.inputBox of  TRUE: EXIT; end;
+  case GV.inputBox of  TRUE: EXIT; end;    // don't trap keystrokes when the inputBoxForm is being displayed
 
   case MSG.message = WM_KEYDOWN of   TRUE:  begin
                                               shiftState  := KeyboardStateToShiftState;
@@ -1017,9 +1025,6 @@ begin
                             FALSE:  FX.resizeWindow1; // otherwise, default size
   end;
 
-
-  pnlBackground.Color := clBlack;
-
   WMP.uiMode          := 'none';
   WMP.windowlessVideo := TRUE;
   WMP.stretchToFit    := TRUE;
@@ -1044,6 +1049,8 @@ begin
   lblVol.Caption          := '';
   lblTimeDisplay.Caption  := '';
 
+  progressBar.Parent      := WMP;
+
   setupProgressBar;
 
   case g_mixer.muted of TRUE: FX.DoMuteUnmute; end; // GV.Mute starts out FALSE; this brings it in line with the system
@@ -1055,7 +1062,7 @@ begin
 
   FX.playCurrentFile;                               // automatically start the clicked video
 
-  GV.startup := TRUE;
+  GV.startup := TRUE;                               // used in FormResize to initially left-justify the application window if required
 end;
 
 procedure TUI.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -1076,6 +1083,12 @@ begin
 end;
 
 procedure TUI.FormResize(Sender: TObject);
+// If the user opens two video files simultaneously from Explorer with the CAPS LOCK key on, two instances of MediaPlayer will be launched.
+// FormCreate will call resizeWindow2 to allow both videos to be positioned by the user alongside each other on a 1920-pixel-width monitor.
+// FormResize will left-justify both windows on the monitor, leaving the user to drag one window to the right of the other.
+// This allows two seemingly identical videos to be compared for picture quality, duration, etc., so the user can decide which to keep.
+// This is also useful when Handbrake has been used to reduce the resolution of a video to free up disk space, to ensure that the lower-resolution
+// video is of sufficient quality to warrant deleting the original.
 begin
   FX.windowCaption;
 
@@ -1086,17 +1099,21 @@ begin
 end;
 
 procedure TUI.lblMuteUnmuteClick(Sender: TObject);
+// The user clicked the Mute/Unmute label in the top right corner of the window
 begin
   FX.doMuteUnmute;
 end;
 
 procedure TUI.progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 // When a SHIFT key is held down, calculate a new video position based on where the mouse is on the prograss bar.
-// This should be to allow dragging/scrubbing through the video.
+// This *was* intended to allow dragging/scrubbing through the video.
 // Unfortunately, WMP can't cope. It doesn't react to the new positions fast enough and gets itself into a right state.
 // Consequently, this functionality is unusable while WMP is used as the media playing component. 
 var vNewPosition: integer;
 begin
+  progressBar.Cursor := crHandPoint;
+  EXIT;
+
   case ssShift in Shift of TRUE:  begin
                                     progressBar.Cursor            := crHSplit;
                                     vNewPosition                  := Round(X * (progressBar.Max / progressBar.ClientWidth));
@@ -1110,7 +1127,7 @@ end;
 
 procedure TUI.progressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 // calculate a new video position based on where the progress bar is clicked
-var vNewPosition : integer;
+var vNewPosition: integer;
 begin
   vNewPosition                  := Round(x * progressBar.Max / progressBar.ClientWidth);
   progressBar.Position          := vNewPosition;
@@ -1119,11 +1136,13 @@ begin
 end;
 
 function TUI.repositionWMP: boolean;
+// Set WMP to be 1 pixel to the left of the window and 1-pixel too wide on the right
+// This eliminates any chance of a border pixel on the left and right of the window
 begin
-  WMP.Left    := pnlBackground.Left - 1;
-  WMP.Height  := pnlBackground.Height + 2;
-  WMP.Width   := pnlBackground.Width + 2;
-  WMP.Top     := pnlBackground.Top - 1;
+  WMP.Height  := ClientHeight + 2;
+  WMP.Width   := ClientWidth + 2;
+  WMP.Left    := 0;
+  WMP.Top     := 0;
 end;
 
 procedure TUI.tmrRateLabelTimer(Sender: TObject);
@@ -1231,10 +1250,14 @@ begin
   vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_EXSTYLE);
   vProgressBarStyle := vProgressBarStyle - WS_EX_STATICEDGE;
   SetWindowLong(ProgressBar.Handle, GWL_EXSTYLE, vProgressBarStyle);
-  // add thin border to fix redraw problems
-  vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_STYLE);
-  vProgressBarStyle := vProgressBarStyle - WS_BORDER;
-  SetWindowLong(ProgressBar.Handle, GWL_STYLE, vProgressBarStyle);
+
+// add thin border to fix redraw problems
+// in keeping with the minimalist nature of the app, this border isn't necessary:
+//        the bar becomes more pronounced as the video progresses
+//        the change of cursor in progressBarMouseMove makes it's presence and location obvious
+//  vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_STYLE);
+//  vProgressBarStyle := vProgressBarStyle - WS_BORDER;
+//  SetWindowLong(ProgressBar.Handle, GWL_STYLE, vProgressBarStyle);
 end;
 
 procedure TUI.WMPClick(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
