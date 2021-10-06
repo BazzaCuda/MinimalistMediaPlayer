@@ -55,6 +55,8 @@ type
     procedure setupProgressBar;
   protected
   public
+    function  hideLabels: boolean;
+    function  isWindowCaptionVisible: boolean;
     function  repositionLabels: boolean;
     function  repositionTimeDisplay: boolean;
     function  repositionWMP: boolean;
@@ -178,7 +180,6 @@ function TFX.adjustAspectRatio: boolean;
 var
   X, Y:         integer;
   vRatio:       double;
-  vStyle:       longint;
   vHeightTitle: integer;
   vDelta:       integer;
 begin
@@ -190,9 +191,8 @@ begin
   vRatio := Y / X;
 
   vHeightTitle := GetSystemMetrics(SM_CYCAPTION);
-  vStyle := GetWindowLong(UI.Handle, GWL_STYLE);
-  case (vStyle and WS_CAPTION) = WS_CAPTION of  TRUE: vDelta := vHeightTitle + 7;
-                                               FALSE: vDelta := 8; end;
+  case UI.isWindowCaptionVisible of  TRUE: vDelta := vHeightTitle + 7;
+                                    FALSE: vDelta := 8; end;
 
   UI.Height := trunc(UI.Width * vRatio) + vDelta;
   UI.Width  := UI.Width - 1; // experimental
@@ -207,12 +207,12 @@ begin
   GV.blackOut             := NOT GV.blackOut;
   UI.progressBar.Visible  := NOT GV.blackOut;
   UI.repositionWMP;
-  UI.repositionTimeDisplay;
 
   case isControlKeyDown of TRUE:  begin
                                     showHideTitleBar;
                                     adjustAspectRatio;
                                   end;end;
+  UI.repositionTimeDisplay;
 end;
 
 function TFX.clearMediaMetaData: boolean;
@@ -903,8 +903,10 @@ begin
 
   UI.WMP.Width    := trunc(UI.WMP.Width * 1.1);
   UI.WMP.Height   := trunc(UI.WMP.Height * 1.1);
-  UI.WMP.Top      := UI.Top - ((UI.WMP.Height - UI.ClientHeight) div 2);
-  UI.WMP.Left     := UI.Left - ((UI.WMP.Width - UI.ClientWidth) div 2);
+  UI.WMP.Top      := -(UI.WMP.Height - UI.Height) div 2;
+  UI.WMP.Left     := -(UI.WMP.Width - UI.Width) div 2;
+
+  UI.hideLabels;  // now that WMP's dimensions bear no relation to the window's, label positioning gets too complicated
 end;
 
 function TFX.zoomOut: boolean;
@@ -914,8 +916,10 @@ begin
 
   UI.WMP.Width    := trunc(UI.WMP.Width * 0.9);
   UI.WMP.Height   := trunc(UI.WMP.Height * 0.9);
-  UI.WMP.Top      := UI.Top - ((UI.WMP.Height - UI.ClientHeight) div 2);   // zero minus a negative = a positive
-  UI.WMP.Left     := UI.Left - ((UI.WMP.Width - UI.ClientWidth) div 2);    // zero minus a negative = a positive
+  UI.WMP.Top      := -(UI.WMP.Height - UI.ClientHeight) div 2;  // zero minus a negative = a positive
+  UI.WMP.Left     := -(UI.WMP.Width - UI.ClientWidth) div 2;    // zero minus a negative = a positive
+
+  UI.hideLabels;  // now that WMP's dimensions bear no relation to the window's, label positioning gets too complicated
 end;
 
 function TFX.clipboardCurrentFileName: boolean;
@@ -1028,6 +1032,8 @@ begin
                             FALSE:  FX.resizeWindow1; // otherwise, default size
   end;
 
+  color := clBlack; // background color of the window's client area, so zooming-out doesn't show the design-time color
+
   WMP.uiMode          := 'none';
   WMP.windowlessVideo := TRUE;
   WMP.stretchToFit    := TRUE;
@@ -1052,7 +1058,7 @@ begin
   lblVol.Caption          := '';
   lblTimeDisplay.Caption  := '';
 
-  progressBar.Parent      := WMP;
+//  progressBar.Parent      := WMP;  // this is ok until you start zooming in: then you lose the progressBar altogether
 
   setupProgressBar;
 
@@ -1101,6 +1107,16 @@ begin
   repositionLabels;
 
   repositionWMP;
+end;
+
+function TUI.hideLabels: boolean;
+begin
+  case lblTimeDisplay.Visible of TRUE: toggleControls([]); end;
+end;
+
+function TUI.isWindowCaptionVisible: boolean;
+begin
+  result := GetWindowLong(UI.Handle, GWL_STYLE) AND WS_CAPTION = WS_CAPTION;
 end;
 
 procedure TUI.lblMuteUnmuteClick(Sender: TObject);
@@ -1180,12 +1196,15 @@ function TUI.repositionTimeDisplay: boolean;
 begin
   lblTimeDisplay.Left   := width - lblTimeDisplay.Width - 20; // NB: text aignment is taRightJustify in the Object Inspector
   case progressBar.Visible of  TRUE:  lblTimeDisplay.Top := progressBar.Top - lblTimeDisplay.Height;
-                              FALSE:  lblTimeDisplay.Top := WMP.Height - lblTimeDisplay.Height; end;
+                              FALSE:  case isWindowCaptionVisible of
+                                         TRUE: lblTimeDisplay.Top := Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) - 16;
+                                        FALSE: lblTimeDisplay.Top := Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) + 7;
+                                      end;end;
 end;
 
 function TUI.repositionWMP: boolean;
 // Set WMP to be 1 pixel to the left of the window and 1-pixel too wide on the right
-// This eliminates any chance of a border pixel on the left and right of the window
+// This [in theory] eliminates any chance of a border pixel on the left and right of the window
 begin
   WMP.Height  := ClientHeight + 2;
   WMP.Width   := ClientWidth + 2;
