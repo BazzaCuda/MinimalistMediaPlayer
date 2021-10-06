@@ -828,8 +828,8 @@ begin
     ord('2')          : ResizeWindow2;                        // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
     ord('5')          : saveCurrentPosition;                  // 5 = save current media position to an ini file
     ord('6')          : resumePosition;                       // 6 = resume video from saved media position
-    ord('9')          : matchVideoWidth;                      // 9 = match window width to video width
     ord('8')          : UI.repositionWMP;                     // 8 = reposition WMP to eliminate border pixels
+    ord('9')          : matchVideoWidth;                      // 9 = match window width to video width
   end;
   UpdateTimeDisplay;
   UI.tmrRateLabel.Enabled := TRUE;
@@ -1063,6 +1063,7 @@ begin
 //  progressBar.Parent      := WMP;  // this is ok until you start zooming in: then you lose the progressBar altogether
 
   setupProgressBar;
+  repositionLabels;
 
   case g_mixer.muted of TRUE: FX.DoMuteUnmute; end; // GV.Mute starts out FALSE; this brings it in line with the system
 
@@ -1211,8 +1212,8 @@ function TUI.repositionWMP: boolean;
 begin
   WMP.Height  := ClientHeight + 2;
   WMP.Width   := ClientWidth + 2;
-  WMP.Left    := -1;
-  WMP.Top     := -1;
+  WMP.Left    := 0;
+  WMP.Top     := 0;
 end;
 
 procedure TUI.tmrRateLabelTimer(Sender: TObject);
