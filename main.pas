@@ -746,12 +746,12 @@ begin
                         EXIT;
                       end;end;end;
 
-  case NOT (ssCtrl in Shift) and NOT GV.zoomed of                            // when not zoomed, up/down increases or decreases the volume by 1%
-     TRUE:  case Key in [VK_UP, 191, VK_DOWN, 220] of
+  case NOT (ssCtrl in Shift) and NOT GV.zoomed of                        // when not zoomed, up/down increases or decreases the volume by 1%
+     TRUE:  case Key in [VK_UP, VK_DOWN] of
                TRUE:  begin
                         case Key of
-                          VK_UP, 191:   g_mixer.Volume := g_mixer.Volume + (65535 div 100);  // volume up 1%
-                          VK_DOWN, 220: g_mixer.Volume := g_mixer.Volume - (65535 div 100);  // volume down 1%
+                          VK_UP:   g_mixer.Volume := g_mixer.Volume + (65535 div 100);  // volume up 1%
+                          VK_DOWN: g_mixer.Volume := g_mixer.Volume - (65535 div 100);  // volume down 1%
                         end;
                         UpdateVolumeDisplay;
                         UI.tmrVol.Enabled := TRUE;                       // confirm the new volume setting for the user
@@ -789,8 +789,10 @@ begin
                                         wmppsPaused,
                                         wmppsStopped:   WMPplay; end;
 
-    VK_UP, 191 {Slash}:         SpeedIncrease(Shift);         // Ctrl-UpArrow or / = Speed up
-    VK_DOWN, 220 {Backslash}:   SpeedDecrease(Shift);         // Ctrl-DnArrow or \ = Slow down
+    VK_UP:            SpeedIncrease(Shift);         // Ctrl-UpArrow = Speed up
+    VK_DOWN:          SpeedDecrease(Shift);         // Ctrl-DnArrow = Slow down
+    191 {Slash}:      SpeedIncrease([ssCtrl]);      // Ctrl-UpArrow = Speed up
+    220 {Backslash}:  SpeedDecrease([ssCtrl]);      // Ctrl-DnArrow = Slow down
 
     VK_F12: openWithShotcut;
 
