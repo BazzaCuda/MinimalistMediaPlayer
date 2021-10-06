@@ -722,7 +722,9 @@ begin
   end;
 
   UI.lblTab.Caption  := format('%dth', [vFactor]);
-  case isControlKeyDown of TRUE: UI.lblTab.Caption := '<< ' + UI.lblTab.Caption; end;
+  case isControlKeyDown of  TRUE: UI.lblTab.Caption := '<< ' + UI.lblTab.Caption;
+                           FALSE: UI.lblTab.Caption := '>> ' + UI.lblTab.Caption;
+  end;
   UI.tmrTab.Enabled  := TRUE;      // confirm the fraction jumped (and the direction) for the user
 end;
 
@@ -943,9 +945,9 @@ begin
   case (vStyle and WS_CAPTION) = WS_CAPTION of TRUE: begin
     case UI.BorderStyle of
       bsSingle, bsSizeable:
-        SetWindowLong(UI.Handle, GWL_STYLE, vStyle and (not (WS_CAPTION)) or WS_BORDER);
+        SetWindowLong(UI.Handle, GWL_STYLE, vStyle AND (NOT (WS_CAPTION)) and (NOT (WS_BORDER))); //  or WS_BORDER);
       bsDialog:
-        SetWindowLong(UI.Handle, GWL_STYLE, vStyle and (not (WS_CAPTION)) or DS_MODALFRAME or WS_DLGFRAME);
+        SetWindowLong(UI.Handle, GWL_STYLE, vStyle AND (NOT (WS_CAPTION)) OR DS_MODALFRAME OR WS_DLGFRAME);
     end;
     UI.Refresh;
   end;end;
@@ -953,9 +955,9 @@ begin
   case (vStyle and WS_CAPTION) = WS_CAPTION of FALSE: begin
     case UI.BorderStyle of
       bsSingle, bsSizeable:
-        SetWindowLong(UI.Handle, GWL_STYLE, vStyle or WS_CAPTION or WS_BORDER);
+        SetWindowLong(UI.Handle, GWL_STYLE, vStyle OR WS_CAPTION OR WS_BORDER);
       bsDialog:
-        SetWindowLong(UI.Handle, GWL_STYLE, vStyle or WS_CAPTION or DS_MODALFRAME or WS_DLGFRAME);
+        SetWindowLong(UI.Handle, GWL_STYLE, vStyle OR WS_CAPTION OR DS_MODALFRAME OR WS_DLGFRAME);
     end;
     UI.Height := UI.Height + 1;  // fix Windows bug and force title bar to repaint properly
     UI.Height := UI.Height - 1;  // fix Windows bug and force title bar to repaint properly
@@ -1028,6 +1030,8 @@ end;
 
 procedure TUI.FormCreate(Sender: TObject);
 begin
+  SetWindowLong(UI.Handle, GWL_STYLE, GetWindowLong(UI.Handle, GWL_STYLE) OR WS_CAPTION AND (NOT (WS_BORDER)));
+
   case FX.isCapsLockOn of    TRUE:  FX.resizeWindow2; // size so that two videos can be positioned side-by-side horizontally by the user
                             FALSE:  FX.resizeWindow1; // otherwise, default size
   end;
@@ -1161,33 +1165,33 @@ function TUI.repositionLabels: boolean;
 // Delphi 10.4 seems to have a problem with Anchors = [akRight, akBottom] and placed all the labels offscreen about 1000 pixels too far to the right.
 // I now position them manually.
 begin
-  lblMuteUnmute.Left := WMP.Width - lblMuteUnmute.Width - 30;       // NB: text alignment is taCenter in the Object Inspector
+  lblMuteUnmute.Left := WMP.Width - lblMuteUnmute.Width - 10;       // NB: text alignment is taCenter in the Object Inspector
 
-  lblXY.Left            := WMP.Width - lblXY.Width            - 30;
-  lblXY2.Left           := WMP.Width - lblXY2.Width           - 30;
-  lblFrameRate.Left     := WMP.Width - lblFrameRate.Width     - 30;
-  lblBitRate.Left       := WMP.Width - lblBitRate.Width       - 30;
-  lblAudioBitRate.Left  := WMP.Width - lblAudioBitRate.Width  - 30;
-  lblVideoBitRate.Left  := WMP.Width - lblVideoBitRate.Width  - 30;
-  lblXYRatio.Left       := WMP.Width - lblXYRatio.Width       - 30;
-  lblFileSize.Left      := WMP.Width - lblFileSize.Width      - 30;
+  lblXY.Left            := 4;
+  lblXY2.Left           := 4;
+  lblFrameRate.Left     := 4;
+  lblBitRate.Left       := 4;
+  lblAudioBitRate.Left  := 4;
+  lblVideoBitRate.Left  := 4;
+  lblXYRatio.Left       := 4;
+  lblFileSize.Left      := 4;
 
-  lblXY.Top             := progressBar.Top - 172;
-  lblXY2.Top            := progressBar.Top - 156;
-  lblFrameRate.Top      := progressBar.Top - 140;
-  lblBitRate.Top        := progressBar.Top - 124;
-  lblAudioBitRate.Top   := progressBar.Top - 108;
-  lblVideoBitRate.Top   := progressBar.Top -  92;
-  lblXYRatio.Top        := progressBar.Top -  76;
-  lblFileSize.Top       := progressBar.Top -  60;
+  lblXY.Top             := progressBar.Top - 128;
+  lblXY2.Top            := progressBar.Top - 112;
+  lblFrameRate.Top      := progressBar.Top -  96;
+  lblBitRate.Top        := progressBar.Top -  80;
+  lblAudioBitRate.Top   := progressBar.Top -  64;
+  lblVideoBitRate.Top   := progressBar.Top -  48;
+  lblXYRatio.Top        := progressBar.Top -  32;
+  lblFileSize.Top       := progressBar.Top -  16;
 
-  lblRate.Left          := WMP.Width - lblRate.Width  - 30;
-  lblTab.Left           := WMP.Width - lblTab.Width   - 30;
-  lblVol.Left           := WMP.Width - lblVol.Width   - 30;
+  lblRate.Left          := Width - lblRate.Width  - 20;
+  lblTab.Left           := Width - lblTab.Width   - 30;
+  lblVol.Left           := Width - lblVol.Width   - 20;
 
-  lblRate.Top           := progressBar.Top        - 40;
-  lblTab.Top            := progressBar.Top        - 40;
-  lblVol.Top            := progressBar.Top        - 40;
+  lblRate.Top           := progressBar.Top        - 26;
+  lblTab.Top            := progressBar.Top        - 26;
+  lblVol.Top            := progressBar.Top        - 26;
 
   repositionTimeDisplay;
 end;
@@ -1197,8 +1201,8 @@ begin
   lblTimeDisplay.Left   := width - lblTimeDisplay.Width - 20; // NB: text aignment is taRightJustify in the Object Inspector
   case progressBar.Visible of  TRUE:  lblTimeDisplay.Top := progressBar.Top - lblTimeDisplay.Height;
                               FALSE:  case isWindowCaptionVisible of
-                                         TRUE: lblTimeDisplay.Top := Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) - 16;
-                                        FALSE: lblTimeDisplay.Top := Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) + 7;
+                                         TRUE: lblTimeDisplay.Top := Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) - 14;
+                                        FALSE: lblTimeDisplay.Top := Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) + 9;
                                       end;end;
 end;
 
@@ -1304,6 +1308,7 @@ begin
     lblFileSize.Visible     := vVisible;
   end;end;
 
+  repositionLabels;
 end;
 
 procedure TUI.setupProgressBar;

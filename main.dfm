@@ -6995,7 +6995,7 @@ object UI: TUI
     Visible = False
   end
   object lblAudioBitRate: TLabel
-    Left = 664
+    Left = 10
     Top = 300
     Width = 86
     Height = 13
@@ -7011,8 +7011,8 @@ object UI: TUI
     Visible = False
   end
   object lblBitRate: TLabel
-    Left = 664
-    Top = 283
+    Left = 10
+    Top = 281
     Width = 86
     Height = 13
     AutoSize = False
@@ -7027,7 +7027,7 @@ object UI: TUI
     Visible = False
   end
   object lblFileSize: TLabel
-    Left = 664
+    Left = 10
     Top = 351
     Width = 86
     Height = 13
@@ -7043,7 +7043,7 @@ object UI: TUI
     Visible = False
   end
   object lblFrameRate: TLabel
-    Left = 664
+    Left = 10
     Top = 266
     Width = 86
     Height = 13
@@ -7093,7 +7093,7 @@ object UI: TUI
     Visible = False
   end
   object lblVideoBitRate: TLabel
-    Left = 664
+    Left = 10
     Top = 317
     Width = 86
     Height = 13
@@ -7126,7 +7126,7 @@ object UI: TUI
     Visible = False
   end
   object lblXY: TLabel
-    Left = 664
+    Left = 10
     Top = 229
     Width = 86
     Height = 13
@@ -7142,7 +7142,7 @@ object UI: TUI
     Visible = False
   end
   object lblXY2: TLabel
-    Left = 664
+    Left = 10
     Top = 248
     Width = 86
     Height = 13
@@ -7158,7 +7158,7 @@ object UI: TUI
     Visible = False
   end
   object lblXYRatio: TLabel
-    Left = 664
+    Left = 10
     Top = 334
     Width = 86
     Height = 13
