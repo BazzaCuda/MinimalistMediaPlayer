@@ -232,11 +232,9 @@ end;
 function TFX.deleteCurrentFile(Shift: TShiftState): boolean;
 // D / DEL = [D]elete the current file
 // Ctrl-D / Ctrl-DEL = Delete the entire contents of the current file's folder (doesn't include subfolders)
-var
-  vMsg: string;
 begin
   UI.WMP.controls.pause;
-  vMsg := 'DELETE '#13#10#13#10'Folder: ' + ExtractFilePath(GV.files[GV.fileIx]);
+  var vMsg := 'DELETE '#13#10#13#10'Folder: ' + ExtractFilePath(GV.files[GV.fileIx]);
   case ssCtrl in Shift of  TRUE: vMsg := vMsg + '*.*';
                           FALSE: vMsg := vMsg + #13#10#13#10'File: '            + ExtractFileName(GV.files[GV.fileIx]); end;
 
@@ -279,8 +277,6 @@ function TFX.doCommandLine(aCommandLIne: string): boolean;
 var
   vStartInfo:  TStartupInfo;
   vProcInfo:   TProcessInformation;
-  vCmd:        string;
-  vParams:     string;
 begin
   result := FALSE;
   case trim(aCommandLIne) = ''  of TRUE: EXIT; end;
@@ -291,8 +287,8 @@ begin
   vStartInfo.wShowWindow := SW_HIDE;
   vStartInfo.dwFlags     := STARTF_USESHOWWINDOW;
 
-  vCmd := 'c:\windows\system32\cmd.exe';
-  vParams := '/c ' + aCommandLIne;
+  var vCmd := 'c:\windows\system32\cmd.exe';
+  var vParams := '/c ' + aCommandLIne;
 
   result := CreateProcess(PWideChar(vCmd), PWideChar(vParams), nil, nil, FALSE,
                           CREATE_NEW_PROCESS_GROUP + NORMAL_PRIORITY_CLASS, nil, PWideChar(ExtractFilePath(application.ExeName)),
@@ -346,7 +342,7 @@ var
   end;
 
   function isFileExtOK: boolean;
-  // Filter out all but the explicity-supported file types 
+  // Filter out all but the explicity-supported file types
   begin
     result := EXTS_FILTER.Contains(LowerCase(ExtractFileExt(sr.Name)));
   end;
@@ -937,10 +933,8 @@ function TFX.showHideTitleBar: boolean;
 // Unfortunately, this is only partially successful as WMP insists on showing a 7-pixel (approx.) black border along the top of every video
 // I mitigate this myself by having a Windows desktop wallpaper image* which is almost entirely black, and a desktop that contains no icons at all.
 // *https://c4.wallpaperflare.com/wallpaper/68/50/540/lamborghini-car-vehicle-wallpaper-preview.jpg
-var
-  vStyle: longint;
 begin
-  vStyle := GetWindowLong(UI.Handle, GWL_STYLE);
+  var vStyle := GetWindowLong(UI.Handle, GWL_STYLE);
 
   case (vStyle and WS_CAPTION) = WS_CAPTION of TRUE: begin
     case UI.BorderStyle of
@@ -972,8 +966,6 @@ function TFX.showOKCancelMsgDlg(aMsg: string): TModalResult;
 // used for displaying the delete file/folder confirmation dialog
 // We modify the standard dialog to make everything bigger, especially the width so that long folder names and files display properly
 // The standard dialog would truncate them.
-var
-  i: Integer;
 begin
   with CreateMessageDialog(aMsg, mtConfirmation, MBOKCANCEL, MBCANCEL) do
   try
@@ -981,7 +973,7 @@ begin
     Font.Size := 12;
     Height    := Height + 50;
     Width     := width + 200;
-    for i := 0 to ControlCount - 1 do begin
+    for var i := 0 to ControlCount - 1 do begin
       case Controls[i] is TLabel  of   TRUE: with Controls[i] as TLabel   do    Width := Width + 200; end;
       case Controls[i] is TButton of   TRUE: with Controls[i] as TButton  do  begin
                                                                                 Top   := Top + 60;
@@ -1114,6 +1106,7 @@ begin
 end;
 
 function TUI.hideLabels: boolean;
+// called from ZoomIn and ZoomOut
 begin
   case lblTimeDisplay.Visible of TRUE: toggleControls([]); end;
 end;
@@ -1132,16 +1125,15 @@ end;
 procedure TUI.progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 // When a SHIFT key is held down, calculate a new video position based on where the mouse is on the prograss bar.
 // This *was* intended to allow dragging/scrubbing through the video.
-// Unfortunately, WMP can't cope. It doesn't react to the new positions fast enough and gets itself into a right state.
+// Unfortunately, WMP can't cope. It doesn't react to the new positions fast enough and gets itself into a right pickle.
 // Consequently, this functionality is unusable while WMP is used as the media playing component. 
-var vNewPosition: integer;
 begin
   progressBar.Cursor := crHandPoint;
   EXIT;
 
   case ssShift in Shift of TRUE:  begin
                                     progressBar.Cursor            := crHSplit;
-                                    vNewPosition                  := Round(X * (progressBar.Max / progressBar.ClientWidth));
+                                    var vNewPosition: integer     := Round(X * (progressBar.Max / progressBar.ClientWidth));
                                     progressBar.Position          := vNewPosition;
                                     WMP.controls.currentPosition  := vNewPosition;
                                   end;
@@ -1152,9 +1144,8 @@ end;
 
 procedure TUI.progressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 // calculate a new video position based on where the progress bar is clicked
-var vNewPosition: integer;
 begin
-  vNewPosition                  := Round(x * progressBar.Max / progressBar.ClientWidth);
+  var vNewPosition: integer     := Round(x * progressBar.Max / progressBar.ClientWidth);
   progressBar.Position          := vNewPosition;
   WMP.controls.currentPosition  := vNewPosition;
   FX.updateTimeDisplay;
@@ -1197,12 +1188,14 @@ begin
 end;
 
 function TUI.repositionTimeDisplay: boolean;
+// We always want the timestamp display to be sat either on top of the progressBar or sat on the bottom edge of the window
+// On other displays, the magic numbers may need to be adjusted and configurable via an application ini file
 begin
-  lblTimeDisplay.Left   := width - lblTimeDisplay.Width - 20; // NB: text aignment is taRightJustify in the Object Inspector
+  lblTimeDisplay.Left := width - lblTimeDisplay.Width - 20; // NB: text aignment is taRightJustify in the Object Inspector
   case progressBar.Visible of  TRUE:  lblTimeDisplay.Top := progressBar.Top - lblTimeDisplay.Height;
                               FALSE:  case isWindowCaptionVisible of
-                                         TRUE: lblTimeDisplay.Top := Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) - 14;
-                                        FALSE: lblTimeDisplay.Top := Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) + 9;
+                                         TRUE: lblTimeDisplay.Top := Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) - 14; // magic number
+                                        FALSE: lblTimeDisplay.Top := Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) + 9;  // magic number
                                       end;end;
 end;
 
@@ -1212,11 +1205,13 @@ function TUI.repositionWMP: boolean;
 begin
   WMP.Height  := ClientHeight + 2;
   WMP.Width   := ClientWidth + 2;
-  WMP.Left    := 0;
-  WMP.Top     := 0;
+  WMP.Left    := -1;
+  WMP.Top     := -1;
 end;
 
 procedure TUI.tmrRateLabelTimer(Sender: TObject);
+// There is a delay between a change of playback speed, and WMP reporting the amended speed.
+// So, we delay showing the change to hopefully report the correct speed.
 begin
   tmrRateLabel.Enabled  := FALSE;
   case lblRate.Visible of FALSE:  begin
@@ -1232,18 +1227,21 @@ begin
 end;
 
 procedure TUI.tmrMetaDataTimer(Sender: TObject);
+// We used this timer to delay fetching the video metadata from WMP. Trying to access it to soon after playback commences can cause WMP problems.
 begin
   FX.FetchMediaMetaData;
   WMP.Cursor := crNone;
 end;
 
 procedure TUI.tmrPlayNextTimer(Sender: TObject);
+// At the end of a video, WMP behaves better (internal to itself) if we use a timer to slightly delay playing the next video in the list
 begin
   tmrPlayNext.Enabled := FALSE;
   FX.PlayNextFile;
 end;
 
 procedure TUI.tmrTabTimer(Sender: TObject);
+// We want the tab feedback info to only be shown briefly. So, we use a timer to both show it and hide it again.
 begin
   tmrTab.Enabled := FALSE;
   case lblTab.Visible of FALSE:  begin
@@ -1274,7 +1272,6 @@ function TUI.toggleControls(Shift: TShiftState): boolean;
 // C = Show the timestamp display and the mute/unmute button OR Hide all displayed controls/metadata
 // Ctrl-C Show/Hide all displayed controls/metadata
 // If the timestamp and mute/unmute button are already being displayed, Ctrl-C will also display all the metadata info
-var vVisible: boolean;
 begin
   lblRate.Caption := '';      // These are only valid at the time the user presses the appropriate key to change them
   lblTab.Caption  := '';
@@ -1292,7 +1289,7 @@ begin
     EXIT;
   end;end;
 
-  vVisible := NOT lblMuteUnmute.Visible;
+  var vVisible := NOT lblMuteUnmute.Visible;
 
   lblMuteUnmute.Visible   := vVisible;      // toggle their display status
   lblTimeDisplay.Visible  := vVisible;
@@ -1313,14 +1310,13 @@ end;
 
 procedure TUI.setupProgressBar;
 // change the Progress Bar from it's Windows default characteristics to a minimalist display
-var vProgressBarStyle: Integer;
 begin
   SetThemeAppProperties(0);
   ProgressBar.Brush.Color := clBlack;
   // Set Background colour
   SendMessage(ProgressBar.Handle, PBM_SETBARCOLOR, 0, clDkGray);
   // Set bar colour
-  vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_EXSTYLE);
+  var vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_EXSTYLE);
   vProgressBarStyle := vProgressBarStyle - WS_EX_STATICEDGE;
   SetWindowLong(ProgressBar.Handle, GWL_EXSTYLE, vProgressBarStyle);
 
