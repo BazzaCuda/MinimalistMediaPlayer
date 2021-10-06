@@ -55,6 +55,8 @@ type
     procedure setupProgressBar;
   protected
   public
+    function  repositionLabels: boolean;
+    function  repositionTimeDisplay: boolean;
     function  repositionWMP: boolean;
     function  toggleControls(Shift: TShiftState): boolean;
   end;
@@ -205,6 +207,7 @@ begin
   GV.blackOut             := NOT GV.blackOut;
   UI.progressBar.Visible  := NOT GV.blackOut;
   UI.repositionWMP;
+  UI.repositionTimeDisplay;
 
   case isControlKeyDown of TRUE:  begin
                                     showHideTitleBar;
@@ -1095,6 +1098,8 @@ begin
   case GV.startup AND FX.isCapsLockOn of  TRUE: SetWindowPos(self.Handle, 0, -6, 200, 0, 0, SWP_NOZORDER + SWP_NOSIZE); end; // left justify on screen
   GV.startup := FALSE;
 
+  repositionLabels;
+
   repositionWMP;
 end;
 
@@ -1133,6 +1138,49 @@ begin
   progressBar.Position          := vNewPosition;
   WMP.controls.currentPosition  := vNewPosition;
   FX.updateTimeDisplay;
+end;
+
+function TUI.repositionLabels: boolean;
+// called from FormResize
+// Delphi 10.4 seems to have a problem with Anchors = [akRight, akBottom] and placed all the labels offscreen about 1000 pixels too far to the right.
+// I now position them manually.
+begin
+  lblMuteUnmute.Left := WMP.Width - lblMuteUnmute.Width - 30;       // NB: text alignment is taCenter in the Object Inspector
+
+  lblXY.Left            := WMP.Width - lblXY.Width            - 30;
+  lblXY2.Left           := WMP.Width - lblXY2.Width           - 30;
+  lblFrameRate.Left     := WMP.Width - lblFrameRate.Width     - 30;
+  lblBitRate.Left       := WMP.Width - lblBitRate.Width       - 30;
+  lblAudioBitRate.Left  := WMP.Width - lblAudioBitRate.Width  - 30;
+  lblVideoBitRate.Left  := WMP.Width - lblVideoBitRate.Width  - 30;
+  lblXYRatio.Left       := WMP.Width - lblXYRatio.Width       - 30;
+  lblFileSize.Left      := WMP.Width - lblFileSize.Width      - 30;
+
+  lblXY.Top             := progressBar.Top - 172;
+  lblXY2.Top            := progressBar.Top - 156;
+  lblFrameRate.Top      := progressBar.Top - 140;
+  lblBitRate.Top        := progressBar.Top - 124;
+  lblAudioBitRate.Top   := progressBar.Top - 108;
+  lblVideoBitRate.Top   := progressBar.Top -  92;
+  lblXYRatio.Top        := progressBar.Top -  76;
+  lblFileSize.Top       := progressBar.Top -  60;
+
+  lblRate.Left          := WMP.Width - lblRate.Width  - 30;
+  lblTab.Left           := WMP.Width - lblTab.Width   - 30;
+  lblVol.Left           := WMP.Width - lblVol.Width   - 30;
+
+  lblRate.Top           := progressBar.Top        - 40;
+  lblTab.Top            := progressBar.Top        - 40;
+  lblVol.Top            := progressBar.Top        - 40;
+
+  repositionTimeDisplay;
+end;
+
+function TUI.repositionTimeDisplay: boolean;
+begin
+  lblTimeDisplay.Left   := width - lblTimeDisplay.Width - 20; // NB: text aignment is taRightJustify in the Object Inspector
+  case progressBar.Visible of  TRUE:  lblTimeDisplay.Top := progressBar.Top - lblTimeDisplay.Height;
+                              FALSE:  lblTimeDisplay.Top := WMP.Height - lblTimeDisplay.Height; end;
 end;
 
 function TUI.repositionWMP: boolean;
@@ -1236,6 +1284,7 @@ begin
     lblXYRatio.Visible      := vVisible;
     lblFileSize.Visible     := vVisible;
   end;end;
+
 end;
 
 procedure TUI.setupProgressBar;

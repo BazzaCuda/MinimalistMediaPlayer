@@ -3,8 +3,8 @@ object UI: TUI
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'MediaPlayer'
-  ClientHeight = 417
-  ClientWidth = 760
+  ClientHeight = 430
+  ClientWidth = 754
   Color = clGray
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -6954,8 +6954,8 @@ object UI: TUI
   OnMouseMove = FormMouseMove
   OnResize = FormResize
   DesignSize = (
-    760
-    417)
+    754
+    430)
   PixelsPerInch = 96
   TextHeight = 13
   object lblMuteUnmute: TLabel
@@ -6977,12 +6977,28 @@ object UI: TUI
     Visible = False
     OnClick = lblMuteUnmuteClick
   end
+  object lblTimeDisplay: TLabel
+    Left = 656
+    Top = 394
+    Width = 98
+    Height = 13
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = '00:00:00 / 00:00:00'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWhite
+    Font.Height = -11
+    Font.Name = 'Tahoma'
+    Font.Style = []
+    ParentFont = False
+    Transparent = True
+    Visible = False
+  end
   object lblAudioBitRate: TLabel
     Left = 664
     Top = 300
     Width = 86
     Height = 13
-    Anchors = [akRight, akBottom]
     AutoSize = False
     Caption = 'AR:'
     Font.Charset = DEFAULT_CHARSET
@@ -6999,7 +7015,6 @@ object UI: TUI
     Top = 283
     Width = 86
     Height = 13
-    Anchors = [akRight, akBottom]
     AutoSize = False
     Caption = 'BR:'
     Font.Charset = DEFAULT_CHARSET
@@ -7016,7 +7031,6 @@ object UI: TUI
     Top = 351
     Width = 86
     Height = 13
-    Anchors = [akRight, akBottom]
     AutoSize = False
     Caption = 'FS:'
     Font.Charset = DEFAULT_CHARSET
@@ -7033,7 +7047,6 @@ object UI: TUI
     Top = 266
     Width = 86
     Height = 13
-    Anchors = [akRight, akBottom]
     AutoSize = False
     Caption = 'FR: '
     Font.Charset = DEFAULT_CHARSET
@@ -7051,7 +7064,6 @@ object UI: TUI
     Width = 59
     Height = 13
     Alignment = taCenter
-    Anchors = [akRight, akBottom]
     AutoSize = False
     Caption = '100%'
     Font.Charset = DEFAULT_CHARSET
@@ -7069,27 +7081,8 @@ object UI: TUI
     Width = 59
     Height = 13
     Alignment = taCenter
-    Anchors = [akRight, akBottom]
     AutoSize = False
     Caption = '100%'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -11
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
-    Transparent = True
-    Visible = False
-  end
-  object lblTimeDisplay: TLabel
-    Left = 657
-    Top = 394
-    Width = 98
-    Height = 13
-    Alignment = taCenter
-    Anchors = [akRight, akBottom]
-    AutoSize = False
-    Caption = '00:00:00 / 00:00:00'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWhite
     Font.Height = -11
@@ -7104,7 +7097,6 @@ object UI: TUI
     Top = 317
     Width = 86
     Height = 13
-    Anchors = [akRight, akBottom]
     AutoSize = False
     Caption = 'VR:'
     Font.Charset = DEFAULT_CHARSET
@@ -7122,7 +7114,6 @@ object UI: TUI
     Width = 59
     Height = 13
     Alignment = taCenter
-    Anchors = [akRight, akBottom]
     AutoSize = False
     Caption = '100%'
     Font.Charset = DEFAULT_CHARSET
@@ -7139,7 +7130,6 @@ object UI: TUI
     Top = 229
     Width = 86
     Height = 13
-    Anchors = [akRight, akBottom]
     AutoSize = False
     Caption = 'XY:'
     Font.Charset = DEFAULT_CHARSET
@@ -7156,7 +7146,6 @@ object UI: TUI
     Top = 248
     Width = 86
     Height = 13
-    Anchors = [akRight, akBottom]
     AutoSize = False
     Caption = 'XY:'
     Font.Charset = DEFAULT_CHARSET
@@ -7173,7 +7162,6 @@ object UI: TUI
     Top = 334
     Width = 86
     Height = 13
-    Anchors = [akRight, akBottom]
     AutoSize = False
     Caption = 'X:Y'
     Font.Charset = DEFAULT_CHARSET
@@ -7185,20 +7173,9 @@ object UI: TUI
     Transparent = True
     Visible = False
   end
-  object progressBar: TProgressBar
-    Left = 0
-    Top = 407
-    Width = 760
-    Height = 10
-    Align = alBottom
-    BackgroundColor = clBlack
-    TabOrder = 0
-    OnMouseMove = progressBarMouseMove
-    OnMouseUp = progressBarMouseUp
-  end
   object WMP: TWindowsMediaPlayer
-    Left = 129
-    Top = 122
+    Left = 73
+    Top = 44
     Width = 200
     Height = 174
     Margins.Left = 0
@@ -7206,7 +7183,7 @@ object UI: TUI
     Margins.Right = 0
     Margins.Bottom = 0
     TabStop = False
-    TabOrder = 1
+    TabOrder = 0
     OnPlayStateChange = WMPPlayStateChange
     OnClick = WMPClick
     OnKeyDown = WMPKeyDown
@@ -7219,6 +7196,20 @@ object UI: TUI
       650000000B0000000B0000000B0000000B00FFFF0B0000000800020000000000
       0800020000000000080002000000000008000200000000000B000000AC140000
       FC110000}
+  end
+  object progressBar: TProgressBar
+    Left = 0
+    Top = 420
+    Width = 754
+    Height = 10
+    Align = alBottom
+    BackgroundColor = clBlack
+    TabOrder = 1
+    OnMouseMove = progressBarMouseMove
+    OnMouseUp = progressBarMouseUp
+    ExplicitLeft = 1
+    ExplicitTop = 419
+    ExplicitWidth = 184
   end
   object tmrTimeDisplay: TTimer
     Enabled = False
