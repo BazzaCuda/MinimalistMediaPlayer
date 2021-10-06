@@ -734,13 +734,13 @@ begin
   result := TRUE;
 
   case (ssCtrl in Shift) AND GV.zoomed of                                // when zoomed, Ctrl-up/down/left/right moves the video around the window
-     TRUE:  case key in [VK_RIGHT, VK_LEFT, VK_UP, 191, VK_DOWN, 220] of
+     TRUE:  case key in [VK_RIGHT, VK_LEFT, VK_UP, VK_DOWN] of
                TRUE:  begin
                         case Key of
                           VK_RIGHT:     FX.GoRight;                      // Move zoomed WMP right
                           VK_LEFT:      FX.GoLeft;                       // Move zoomed WMP left
-                          VK_UP, 191:   FX.GoUp;                         // Move zoomed WMP up
-                          VK_DOWN, 220: FX.GoDown;                       // Move zoomed WMP down
+                          VK_UP:        FX.GoUp;                         // Move zoomed WMP up
+                          VK_DOWN:      FX.GoDown;                       // Move zoomed WMP down
                         end;
                         Key := 0;
                         EXIT;
