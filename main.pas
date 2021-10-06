@@ -148,8 +148,8 @@ type
     function saveCurrentPosition: boolean;
     function showHideTitleBar: boolean;
     function ShowOKCancelMsgDlg(aMsg: string): TModalResult;
-    function speedDecrease: boolean;
-    function speedIncrease: boolean;
+    function speedDecrease(Shift: TShiftState): boolean;
+    function speedIncrease(Shift: TShiftState): boolean;
     function startOver: boolean;
     function tabForwardsBackwards: boolean;
     function UIKey(var Key: Word; Shift: TShiftState): boolean;
@@ -667,17 +667,21 @@ begin
   sl.Free;
 end;
 
-function TFX.speedDecrease: boolean;
-// DownArrow = decrease playback speed by 10%
+function TFX.speedDecrease(Shift: TShiftState): boolean;
+// Ctrl-DownArrow = decrease playback speed by 10%
 begin
+  case ssCtrl in Shift of FALSE: EXIT; end;
+
   UI.WMP.settings.rate    := UI.WMP.settings.rate - 0.1;
   FX.updateRateLabel;
   UI.tmrRateLabel.Enabled := TRUE; // start the timer to display the new speed
 end;
 
-function TFX.speedIncrease: boolean;
-// UpArrow = increase playback speed by 10% 
+function TFX.speedIncrease(Shift: TShiftState): boolean;
+// Ctrl-UpArrow = increase playback speed by 10%
 begin
+  case ssCtrl in Shift of FALSE: EXIT; end;
+
   UI.WMP.settings.rate    := UI.WMP.settings.rate + 0.1;
   FX.updateRateLabel;
   UI.tmrRateLabel.Enabled := TRUE; // start the timer to display the new speed
@@ -742,7 +746,7 @@ begin
                         EXIT;
                       end;end;end;
 
-  case (ssCtrl in Shift) and NOT GV.zoomed of                            // when not zoomed, Ctrl-up/down increases or decreases the volume by 1%
+  case NOT (ssCtrl in Shift) and NOT GV.zoomed of                            // when not zoomed, up/down increases or decreases the volume by 1%
      TRUE:  case Key in [VK_UP, 191, VK_DOWN, 220] of
                TRUE:  begin
                         case Key of
@@ -785,8 +789,8 @@ begin
                                         wmppsPaused,
                                         wmppsStopped:   WMPplay; end;
 
-    VK_UP, 191 {Slash}:         SpeedIncrease;                // Speed up
-    VK_DOWN, 220 {Backslash}:   SpeedDecrease;                // Slow down
+    VK_UP, 191 {Slash}:         SpeedIncrease(Shift);         // Ctrl-UpArrow or / = Speed up
+    VK_DOWN, 220 {Backslash}:   SpeedDecrease(Shift);         // Ctrl-DnArrow or \ = Slow down
 
     VK_F12: openWithShotcut;
 
