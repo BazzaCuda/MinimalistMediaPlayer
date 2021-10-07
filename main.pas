@@ -1256,14 +1256,14 @@ begin
                                        FALSE: vBase := UI.Height - GetSystemMetrics(SM_CYCAPTION) + 9;   // magic number;
                                       end;end;
 
-  lblXY.Top             := vBase - 128;
-  lblXY2.Top            := vBase - 112;
-  lblFrameRate.Top      := vBase -  96;
-  lblBitRate.Top        := vBase -  80;
-  lblAudioBitRate.Top   := vBase -  64;
-  lblVideoBitRate.Top   := vBase -  48;
-  lblXYRatio.Top        := vBase -  32;
-  lblFileSize.Top       := vBase -  16;
+  lblXY.Top             := vBase - 125;
+  lblXY2.Top            := vBase - 109;
+  lblFrameRate.Top      := vBase -  93;
+  lblBitRate.Top        := vBase -  77;
+  lblAudioBitRate.Top   := vBase -  61;
+  lblVideoBitRate.Top   := vBase -  45;
+  lblXYRatio.Top        := vBase -  29;
+  lblFileSize.Top       := vBase -  13;
 
   lblRate.Left          := Width - lblRate.Width  - 20;
   lblTab.Left           := Width - lblTab.Width   - 30;
