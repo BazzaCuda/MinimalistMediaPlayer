@@ -724,6 +724,9 @@ end;
 function TFX.saveCurrentPosition: boolean;
 // [5] = save current video position to an ini file
 begin
+  case FileExists(getINIname) of
+    TRUE: case MessageDlg('Do you want to overwrite the previous bookmark?', TMsgDlgType.mtConfirmation, [mbYes, mbNo], 0) = mrNo of TRUE: EXIT; end;end;
+
   var sl := TStringList.Create;
   sl.Add(FloatToStr(UI.WMP.controls.currentPosition));
   sl.SaveToFile(getINIname);
