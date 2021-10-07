@@ -9,6 +9,7 @@ It provides both a minimalist/keyboard-operated user interface (so that on-scree
 ---------------------
 
 `SPACEBAR`				Pause/Resume playback
+
 `Ctrl-Up Arrow`			Increase playback speed 10%
 
 `/`						Increase playback speed 10%
@@ -46,5 +47,9 @@ It provides both a minimalist/keyboard-operated user interface (so that on-scree
 `H`						Position the window Horizontally (and Vertically) in the center of the screen
 
 `I`						Zoom in by 10% of the video's height and width
+
+`J`						ad[J]ust the window's aspect ratio to match the video's.
+
+
 
 	
