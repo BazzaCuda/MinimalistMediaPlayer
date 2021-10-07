@@ -57,7 +57,7 @@ Control | Action
 `2`						| resize the window so that 2 instances of the application can be placed side-by-side
 `5`						| save/bookmark the current video timestamp to an INI file
 `6`						| retrieve a saved/bookmarked video timestamp from an INI file and continue playback from that point
-'7'						| delete any previously saved/bookmarked video timestamp
+`7`						| delete any previously saved/bookmarked video timestamp
 `8`						| set the video to 1-pixel larger than the window on all four sides
 `9`						| resize the window to the dimensions of the video
 `RIGHT ARROW`			| step forwards one frame
