@@ -525,7 +525,7 @@ end;
 
 function TFX.matchVideoWidth: boolean;
 // [9] = resize the width of the window to match the video width.
-// [9], [J], [H] and [G] can be used to obtain the optimum window to match the video.
+// Judicious use of [9], [J], [H] and [G] can be used to obtain the optimum window to match the video.
 begin
   var X := UI.WMP.currentMedia.imageSourceWidth;
   var Y := UI.WMP.currentMedia.imageSourceHeight;
@@ -858,7 +858,7 @@ begin
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
     ord('b'), ord('B'): BlackOut;                             // B = Blackout                       Mods: Ctrl-B
     ord('c'), ord('C'): UI.ToggleControls(Shift);             // C = Control Panel show/hide        Mods: Ctrl-C
-    ord('d'), ord('D'), VK_DELETE: deleteCurrentFile(Shift);  // D = Delete File                    Mods: Ctrl-C
+    ord('d'), ord('D'), VK_DELETE: deleteCurrentFile(Shift);  // D = Delete File                    Mods: Ctrl-D / Ctrl-DEL
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): fullScreen;                           // F = Fullscreen
     ord('g'), ord('G'): ResizeWindow3;                        // G = Greater window size            Mods: Ctrl-G
@@ -874,17 +874,17 @@ begin
     ord('q'), ord('Q'): PlayPrevFile;                         // Q = Play previous in folder
     ord('r'), ord('R'): RenameCurrentFile;                    // R = Rename
     ord('s'), ord('S'): startOver;                            // S = Start-over
-    ord('t'), ord('T'): TabForwardsBackwards;                 // T = Tab forwards/backwards n%      Mods: SHIFT-T, ALT-T, CAPSLOCK, Ctrl-T
+    ord('t'), ord('T'): TabForwardsBackwards;                 // T = Tab forwards/backwards n%      Mods: ALT-T, SHIFT-T, CAPSLOCK, Ctrl-T
     ord('u'), ord('U'): UnZoom;                               // U = Unzoom
     ord('v'), ord('V'): WindowMaximizeRestore;                // V = View Maximize/Restore
     ord('w'), ord('W'): PlayNextFile;                         // W = Watch next in folder
     ord('x'), ord('X'): UI.CLOSE;                             // X = eXit app
     ord('y'), ord('Y'): sampleVideo;                          // Y = trYout video
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
-    ord('0')          : ShowHideTitleBar;                     // 0 = Show/Hide window title bar
+    ord('0')          : ShowHideTitleBar;                     // 0 = Hide(zero)/show window title bar
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('2')          : ResizeWindow2;                        // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
-    ord('5')          : saveCurrentPosition;                  // 5 = save current media position to an ini file
+    ord('5')          : saveCurrentPosition;                  // 5 = save current media position to an INI file
     ord('6')          : resumePosition;                       // 6 = resume video from saved media position
     ord('8')          : UI.repositionWMP;                     // 8 = reposition WMP to eliminate border pixels
     ord('9')          : matchVideoWidth;                      // 9 = match window width to video width
