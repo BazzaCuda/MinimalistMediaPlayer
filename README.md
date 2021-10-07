@@ -68,7 +68,7 @@ Zoom|
 `Ctrl-UP ARROW`			| when zoomed in/out, move video UP inside the window
 `Ctrl-DOWN ARROW`		| when zoomed in/out, move video DOWN inside the window
 Additional |
-`Ctrl-Left click on the video and hold`	| the window can be dragged/repositioned without a window caption title bar
+`Ctrl-Left Click on the video and hold`	| the window can be dragged/repositioned without a window caption title bar
 
 Media File Formats
 ------------------
