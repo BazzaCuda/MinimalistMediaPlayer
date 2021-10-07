@@ -31,3 +31,4 @@ Currently, Minimalist Media Player will recognize the following file extensions:
 .wmv .mp4 .avi .flv .mpg .mpeg .mkv .3gp .mov .m4v .vob .ts .webm .divx .m4a .mp3 .wav .aac .m2ts .flac .mts .rm .asf 	
 
 
+
