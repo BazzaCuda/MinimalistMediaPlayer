@@ -1429,12 +1429,11 @@ begin
 end;
 
 procedure TUI.WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; afX, fY: Integer);
-// When there is no window caption you can drag the window around by holding down a CTRL key and the left mouse button on the video.
-// If the CTRL is not down, the mouse click triggers a standard Pause/Play operation.
+// When there is no window caption you can drag the window around by holding down a CTRL key and dragging with the left mouse button on the video.
 const
   SC_DRAGMOVE = $F012;
 begin
-  case FX.isControlKeyDown of FALSE: begin FX.doPausePlay; EXIT; end;end;
+  case FX.isControlKeyDown of FALSE: EXIT; end;
 
   ReleaseCapture;
   Perform(WM_SYSCOMMAND, SC_DRAGMOVE, 0);
@@ -1443,7 +1442,7 @@ end;
 procedure TUI.WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
 // Handle a MouseMove message from the media player: display the standard mouse cursor
 begin
-  WMP.cursor := crDefault; // this is changed to crNone when tmrMetaData fires
+  WMP.cursor := crDefault; // this is changed back to crNone when tmrMetaData fires
 end;
 
 procedure TUI.WMPPlayStateChange(ASender: TObject; NewState: Integer);
