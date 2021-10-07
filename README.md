@@ -8,48 +8,63 @@ It provides both a minimalist/keyboard-operated user interface (so that on-scree
 ### Keyboard Controls
 ---------------------
 
-`SPACEBAR`				Pause/Resume playback
+Control | Action
 
-`Ctrl-Up Arrow`			Increase playback speed 10%
+`SPACEBAR`				| Pause/Resume playback
 
-`/`						Increase playback speed 10%
+`Ctrl-Up Arrow`			| Increase playback speed 10%
 
-`Ctrl-Down Arrow'		Decrease playback speed 10%
+`/`						| Increase playback speed 10%
 
-`\`						Decrease playback speed 10%
+`Ctrl-Down Arrow`		| Decrease playback speed 10%
 
-`F12`					Open video in third party video editor
+`\`						| Decrease playback speed 10%
 
-`=`						Copy video file name to clipboard
+`F12`					| Open video in third party video editor
 
-`A`						Play first video in the current folder
+`=`						| Copy video file name to clipboard
 
-`B`						Blackout/restore progress bar
+`A`						| Play first video in the current folder
 
-`Ctrl-B`				Blackout/restore window caption/title bar and all on-screen artifacts
+`B`						| [B]lackout/restore progress bar
 
-`C`						Show/Hide on-screen controls and video timestamp
+`Ctrl-B`				| [B]lackout/restore window caption/title bar and all on-screen artifacts
 
-`Ctrl-C`				Show/Hide all on-screen controls, video timestamp and video metadata
+`C`						| Show/Hide on-screen [C]ontrols and video timestamp
 
-`D` and `DEL`			Delete current video file (after confirmation)
+`Ctrl-C`				| Show/Hide all on-screen controls, video timestamp and video metadata
 
-`Ctrl-D and Ctrl-DEL`	Delete all files in the current video's folder (after confirmation)
+`D` and `DEL`			| [D]elete current video file (after confirmation)
 
-`E`						"Ears" - Mute/Unmute sound
+`Ctrl-D and Ctrl-DEL`	| [D]elete all files in the current video's folder (after confirmation)
 
-`F`						Show/Cancel fullScreen mode
+`E`						| [E]ars - Mute/Unmute sound
 
-`G`						Greater window size
+`F`						| Show/Cancel [F]ullScreen mode
 
-`Ctrl-G`				Reduce window size
+`G`						| [G]reater window size
 
-`H`						Position the window Horizontally (and Vertically) in the center of the screen
+`Ctrl-G`				| Reduce (un[G]reater) window size
 
-`I`						Zoom in by 10% of the video's height and width
+`H`						| Position the window [H]orizontally (and Vertically) in the center of the screen
 
-`J`						ad[J]ust the window's aspect ratio to match the video's.
+`I`						| Zoom [I]n by 10% of the video's height and width
 
+`J`						| ad[J]ust the window's aspect ratio to match the video's.
 
+`K`						| Mark this video as [K]eep
 
-	
+`L`						| re[L]oad the list of supported video files from the current folder
+
+`M`						| [M]aximize / Restore window
+
+`N`						| mi[N]imize window to the Windows taskbar
+
+`O`						| Zoom [O]ut by 10% of video's height and width
+
+`P` 					| pause the video and play it instead with [P]otplayer, if installed
+
+`Q`						| Play the previoue video in the [Q]ueue/list
+
+`R`						| [R]ename the current video file
+
