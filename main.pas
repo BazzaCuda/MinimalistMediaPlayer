@@ -249,6 +249,31 @@ begin
   UI.lblFileSize.Caption      := format('FS:', []);
 end;
 
+function TFX.clipboardCurrentFileName: boolean;
+// [=] copy name of current video file (without the extension) to the clipboard
+// This can be useful, before opening the file in ShotCut, for naming the edited video
+begin
+  clipboard.AsText := TPath.GetFileNameWithoutExtension(currentFilePath);
+end;
+
+function TFX.currentFilePath: string;
+// returns the current file in the list
+begin
+  result := GV.files[GV.fileIx];
+end;
+
+function TFX.Delay(dwMilliseconds: DWORD): boolean;
+// Used to delay an operation; "sleep()" would pause the thread, which is not what is required
+var
+  iStart, iStop: DWORD;
+begin
+  iStart := GetTickCount;
+  repeat
+    iStop  := GetTickCount;
+    Application.ProcessMessages;
+  until (iStop  -  iStart) >= dwMilliseconds;
+end;
+
 function TFX.deleteCurrentFile(Shift: TShiftState): boolean;
 // [D] / DEL = [D]elete the current file
 // Ctrl-D / Ctrl-DEL = Delete the entire contents of the current file's folder (doesn't touch subfolders)
@@ -630,7 +655,7 @@ begin
     s := '';   // any funny business, force the rename to be abandoned
   end;
   case (s = '') OR (s = vOldFileName) of TRUE: EXIT; end; // nothing to do
-  
+
   vNewFilePath := ExtractFilePath(currentFilePath) + s + vExt;  // construct the full path and new filename with the original extension
   case RenameFile(currentFilePath, vNewFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
                                                          TRUE: GV.files[GV.fileIx] {currentFilePath} := vNewFilePath; end;
@@ -666,7 +691,7 @@ begin
 end;
 
 function TFX.resumePosition: boolean;
-// 6 = read the saved video position from the ini file and continue playing from that position
+// [6] = read the saved video position from the INI file and continue playing from that position
 begin
   case FileExists(getINIname) of FALSE: EXIT; end;
 
@@ -677,7 +702,7 @@ begin
 end;
 
 function TFX.sampleVideo: boolean;
-// Y = sample/tr[Y]out the video by playing a few seconds then skipping 10% of the video
+// [Y] = sample/tr[Y]out the video by playing a few seconds then skipping 10% of the video
 // This will stop once the current video position is more than 90% the way through the video
 // If the next video is played, sampling will continue until Y is pressed again to cancel sampling
 begin
@@ -694,7 +719,7 @@ begin
 end;
 
 function TFX.saveCurrentPosition: boolean;
-// 5 = save current video position to an ini file
+// [5] = save current video position to an ini file
 begin
   var sl := TStringList.Create;
   sl.Add(FloatToStr(UI.WMP.controls.currentPosition));
@@ -721,15 +746,15 @@ begin
 end;
 
 function TFX.startOver: boolean;
-// S = StartOver; play the current video from the beginning
+// [S] = StartOver; play the current video from the beginning
 begin
   UI.WMP.controls.currentPosition := 0;
   UI.WMP.controls.play;
 end;
 
 function TFX.tabForwardsBackwards: boolean;
-// T = Tab Forward or Ctrl-T = Tab Backward through a fraction of the video.
-// The fraction to jump can be modified using the following keys:  
+// [T] = Tab Forward or Ctrl-T = Tab Backward through a fraction of the video.
+// The fraction to jump can be modified using the following keys:
 //    Default   = 100th
 //    ALT       = 50th
 //    SHIFT     = 20th
@@ -792,13 +817,13 @@ begin
                         EXIT;
                       end;end;end;
 
-  case Key in [VK_RIGHT, VK_LEFT, ord('i'), ord('I'), ord('o'), ord('O')] of  
+  case Key in [VK_RIGHT, VK_LEFT, ord('i'), ord('I'), ord('o'), ord('O')] of
      TRUE:  begin
               case Key of
                 VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards
                 VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards
-                ord('i'), ord('I'): FX.ZoomIn;                           // Zoom In
-                ord('o'), ord('O'): FX.ZoomOut;                          // Zoom Out
+                ord('i'), ord('I'): FX.ZoomIn;                           // Zoom [I]n
+                ord('o'), ord('O'): FX.ZoomOut;                          // Zoom [O]ut
               end;
               Key := 0;
               EXIT
@@ -865,12 +890,11 @@ begin
     ord('9')          : matchVideoWidth;                      // 9 = match window width to video width
   end;
   UpdateTimeDisplay;
-//  UI.tmrRateLabel.Enabled := TRUE; // why?
   Key := 0;
 end;
 
 function TFX.unZoom: boolean;
-// U = [U]nzoom
+// U = [U]nzoom; re-fit the video to the window
 begin
   GV.zoomed := FALSE;
   UI.repositionWMP;
@@ -925,7 +949,7 @@ begin
     UI.tmrMetaData.Enabled := FALSE; // prevent the display of invalid metadata while we [potentially] switch videos
     clearMediaMetaData;              // "Out with the old..."
     UI.WMP.controls.play;
-    UI.tmrMetaData.Enabled := TRUE;  // necessary delay before trying to access video metadata from WMP 
+    UI.tmrMetaData.Enabled := TRUE;  // necessary delay before trying to access video metadata from WMP
   except begin
     ShowMessage('Oops!');
     UI.WMP.controls.stop;
@@ -958,32 +982,8 @@ begin
   UI.hideLabels;  // now that WMP's dimensions bear no relation to the window's, label positioning gets too complicated
 end;
 
-function TFX.clipboardCurrentFileName: boolean;
-// [=] copy name of current video file (without the extension) to the clipboard
-// This can be useful, before opening the file in ShotCut, for naming the edited video
-begin
-  clipboard.AsText := TPath.GetFileNameWithoutExtension(currentFilePath);
-end;
-
-function TFX.currentFilePath: string;
-// returns the current file in the list
-begin
-  result := GV.files[GV.fileIx];
-end;
-
-function TFX.Delay(dwMilliseconds: DWORD): boolean;
-var
-  iStart, iStop: DWORD;
-begin
-  iStart := GetTickCount;
-  repeat
-    iStop  := GetTickCount;
-    Application.ProcessMessages;
-  until (iStop  -  iStart) >= dwMilliseconds;
-end;
-
 function TFX.showHideTitleBar: boolean;
-// 0 = Show or Hide(i.e. zero) the window title bar
+// [0] = Show or Hide(i.e. zero) the window title bar
 // Part of this application's attempt to provide an entirely borderless window for the video without displaying fullScreen.
 // Unfortunately, this is only partially successful as WMP insists on showing a 7-pixel (approx.) black border along the top of every video
 // I mitigate this myself by having a Windows desktop wallpaper image* which is almost entirely black, and a desktop that contains no icons at all.

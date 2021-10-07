@@ -10,7 +10,7 @@ A simple but very effective media player built around the Windows Media Player A
 
 Control | Action
 ------- | ------
-`SPACEBAR` 				| pause/resume playback
+`SPACEBAR` 				| pause/resume playback (also left mouse click on the video)
 `Ctrl-Up Arrow` 		| increase playback speed 10%
 `/`						| increase playback speed 10%
 `Ctrl-Down Arrow`		| decrease playback speed 10%
@@ -30,7 +30,7 @@ Control | Action
 `Ctrl-G`				| reduce, i.e. un[G]reater, the window size
 `H`						| position the window [H]orizontally (and Vertically) in the center of the screen
 `I`						| zoom [I]n by 10% of the video's height and width
-`J`						| ad[J]ust the window's aspect ratio to match the video's.
+`J`						| ad[J]ust the window's aspect ratio to match the video's aspect ratio
 `K`						| mark this video as [K]eep
 `L`						| re[L]oad the list of supported video files from the current folder
 `M`						| [M]aximize / restore window
@@ -88,7 +88,9 @@ So, firstly, I make full use of all 160 columns of my editor.
 
 3. I like to experiment with different ways of separating out the User Interface definition from the general program logic and how application-wide variables should be handled. For this project, all three are still located in main.pas, but on a much larger project with multiple units, the way I've separated them out could be adopted, placing them all in separate units. My only criticism of Delphi, going all the way back to v1, is the way it (and all the many books) encourages all code to be contained within the form's unit and event handler procedures. It's taken us too long to finally break away from that paradigm, in my opinion.
 
-I present all this merely as food for thought; I'm not expecting the industry to suddenly adopt my bizarre coding strategies. You may find some little inspiration to do things slightly differently, though, to how you've traditionally written code. And if not, as least you've been warned! 
+4. Despite falling in love with Delphi since the moment I unboxed v1, I loathe and detest BEGIN...END with a passion {I definitely have Curly Brace Envy}. As such, I try to find ways to make my code look much neater, which includes not have every END on a separate line.
+
+I present all this merely as food for thought; I'm not expecting the industry to suddenly adopt my bizarre coding strategies. You may find some little inspiration to do things slightly differently though to how you've traditionally written code. And if not, as least you've been forewarned! 
 
 Why did I write ``Minimalist Media Player``?
 --------------------------------------------
