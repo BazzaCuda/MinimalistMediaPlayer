@@ -68,8 +68,7 @@ type
     procedure WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
     procedure tmrVolTimer(Sender: TObject);
     procedure applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
-    procedure WMPMouseDown(ASender: TObject; nButton,
-      nShiftState: SmallInt; fX, fY: Integer);
+    procedure WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; afX, fY: Integer);
   private
     procedure setupProgressBar;
   protected
@@ -130,11 +129,13 @@ type
     function clipboardCurrentFileName: boolean;
     function currentFilePath: string;
     function Delay(dwMilliseconds:DWORD): boolean;
+    function deleteBookmarkedPosition: boolean;
+    function deleteCurrentFile(Shift: TShiftState): boolean;
     function deleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
     function doCentreWindow: boolean;
     function doCommandLine(aCommandLIne: string): boolean;
     function doMuteUnmute: boolean;
-    function deleteCurrentFile(Shift: TShiftState): boolean;
+    function doPausePlay: boolean;
     function fetchMediaMetaData: boolean;
     function findMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
     function fullScreen: boolean;
@@ -277,6 +278,11 @@ begin
   until (iStop  -  iStart) >= dwMilliseconds;
 end;
 
+function TFX.deleteBookmarkedPosition: boolean;
+begin
+  DeleteFile(getINIname);
+end;
+
 function TFX.deleteCurrentFile(Shift: TShiftState): boolean;
 // [D] / DEL = [D]elete the current file
 // Ctrl-D / Ctrl-DEL = Delete the entire contents of the current file's folder (doesn't touch subfolders)
@@ -354,6 +360,15 @@ begin
      TRUE:  UI.lblMuteUnmute.Caption  := 'Unmute';
     FALSE:  UI.lblMuteUnmute.Caption  := 'Mute';
   end;
+end;
+
+function TFX.doPausePlay: boolean;
+// [SpaceBar] or click on video = Pause / Play
+begin
+  case UI.WMP.playState of
+                          wmppsPlaying:   UI.WMP.controls.pause;
+                          wmppsPaused,
+                          wmppsStopped:   WMPplay; end;
 end;
 
 function TFX.fetchMediaMetaData: boolean;
@@ -849,9 +864,8 @@ begin
 
   case Key of
 //    VK_ESCAPE: case UI.WMP.fullScreen of FALSE: UI.CLOSE; end; // eXit app  - WMP doesn't allow this key to be re-used
-    VK_SPACE:  case UI.WMP.playState of wmppsPlaying:   UI.WMP.controls.pause;    // Pause / Play
-                                        wmppsPaused,
-                                        wmppsStopped:   WMPplay; end;
+
+    VK_SPACE:  doPausePlay;                         // Pause / Play
 
     VK_UP:            SpeedIncrease(Shift);         // Ctrl-UpArrow = Speed up
     VK_DOWN:          SpeedDecrease(Shift);         // Ctrl-DnArrow = Slow down
@@ -890,8 +904,9 @@ begin
     ord('0')          : ShowHideTitleBar;                     // 0 = Hide(zero)/show window title bar
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('2')          : ResizeWindow2;                        // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
-    ord('5')          : saveCurrentPosition;                  // 5 = save current media position to an INI file
-    ord('6')          : resumePosition;                       // 6 = resume video from saved media position
+    ord('5')          : saveCurrentPosition;                  // 5 = save current media position to an INI file     (bookmark)
+    ord('6')          : resumePosition;                       // 6 = resume video from saved media position         (bookmark)
+    ord('7')          : deleteBookmarkedPosition;             // 7 = delete INI file containing bookmarked position (bookmark)
     ord('8')          : UI.repositionWMP;                     // 8 = reposition WMP to eliminate border pixels
     ord('9')          : matchVideoWidth;                      // 9 = match window width to video width
   end;
@@ -1413,11 +1428,14 @@ begin
   FX.UIKeyUp(Key, TShiftState(nShiftState));
 end;
 
-procedure TUI.WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
-// When there is no window caption you can drag the window around by holding down the left mouse button on the video
+procedure TUI.WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; afX, fY: Integer);
+// When there is no window caption you can drag the window around by holding down a CTRL key and the left mouse button on the video.
+// If the CTRL is not down, the mouse click triggers a standard Pause/Play operation.
 const
   SC_DRAGMOVE = $F012;
 begin
+  case FX.isControlKeyDown of FALSE: begin FX.doPausePlay; EXIT; end;end;
+
   ReleaseCapture;
   Perform(WM_SYSCOMMAND, SC_DRAGMOVE, 0);
 end;

@@ -55,8 +55,9 @@ Control | Action
 `0`						| hide(zero) or show the window title bar / caption
 `1`						| reset the playback speed to normal, i.e. [1]00%
 `2`						| resize the window so that 2 instances of the application can be placed side-by-side
-`5`						| save the current video timestamp to an INI file
-`6`						| retrieve a saved video timestamp from an INI file and continue playback from that point
+`5`						| save/bookmark the current video timestamp to an INI file
+`6`						| retrieve a saved/bookmarked video timestamp from an INI file and continue playback from that point
+'7'						| delete any previously saved/bookmarked video timestamp
 `8`						| set the video to 1-pixel larger than the window on all four sides
 `9`						| resize the window to the dimensions of the video
 `RIGHT ARROW`			| step forwards one frame
@@ -66,6 +67,8 @@ Zoom|
 `CTRL-LEFT ARROW`		| when zoomed in/out, move video LEFT inside the window
 `CTRL-UP ARROW`			| when zoomed in/out, move video UP inside the window
 `CTRL-DOWN ARROW`		| when zoomed in/out, move video DOWN inside the window
+Additional
+`Left click on the video and hold`	| the window can be dragged/repositioned without a window caption title bar
 
 Media File Formats
 ------------------
@@ -79,7 +82,7 @@ WMP has problems playing some FLV files which, bizarrely, go away if you rename 
 
 WMPLib_TLB.pas
 --------------
-In order for you to be able to open the project and display the main form containing the Windows Media Player ActiveX component, in RAD Studio/Delphi you will need to do "Component / Import Component... / Import ActiveX Control, and select the Windows Media Player from the list, for RAD Studio to generate this unit automatically and install the component to the ActiveX palette.
+In order for you to be able to open the project and display the main form containing the Windows Media Player ActiveX component, in RAD Studio/Delphi you will first need to do "Component / Import Component... / Import ActiveX Control, and select the Windows Media Player from the list, for RAD Studio to generate this unit automatically and install the component to the ActiveX palette.
 
 Notes concerning the code - a warning for the overly sensitive :D
 -------------------------
@@ -93,6 +96,8 @@ So, firstly, I make full use of all 160 columns of my editor.
 3. I like to experiment with different ways of separating out the User Interface definition from the general program logic and how application-wide variables should be handled. For this project, all three are still located in main.pas, but on a much larger project with multiple units, the way I've separated them out could be adopted, placing them all in separate units. My only criticism of Delphi, going all the way back to v1, is the way it (and all the many books) encourages all code to be contained within the form's unit and event handler procedures. It's taken us too long to finally break away from that paradigm, in my opinion.
 
 4. Despite falling in love with Delphi since the moment I unboxed v1, I loathe and detest BEGIN...END with a passion {I definitely have Curly Brace Envy}. As such, I try to find ways to make my code look much neater, which includes not have every END on a separate line.
+
+5. All methods that I write (as opposed to IDE-created event handler procedures, etc.) are defined as functions.
 
 I present all this merely as food for thought; I'm not expecting the industry to suddenly adopt my bizarre coding strategies. You may find some little inspiration to do things slightly differently though to how you've traditionally written code. And if not, as least you've been forewarned! 
 
