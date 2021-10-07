@@ -1,9 +1,9 @@
 Minimalist Media Player
 =====================
 
-A simple but effective media player built around the Windows Media Player ActiveX control.
+A simple but very effective media player built around the Windows Media Player ActiveX control.
 
-It provides both a minimalist/keyboard-operated user interface (so that on-screen controls don't detract from the video) and the controls to view the video in a minimalist window with no borders, window title bar/caption, progress bar, video timestamps, etc, and with the window resized to fit the video perfectly, eliminating ugly black borders/bands around the video, particularly above and below. This provides an immersive viewing experience even when not played full-screen.
+``Minimalist Media Player`` provides both a minimalist/keyboard-operated user interface (so that on-screen controls don't detract from the video) and the controls with which to view the video in a minimalist window with no borders, window title bar/caption, progress bar, video timestamp, etc, and with the window resized to fit the video perfectly, eliminating ugly black borders/bands around the video, particularly above and below. This provides an immersive viewing experience even when played in window mode rather than full-screen.
 
 ### Keyboard Controls
 ---------------------
@@ -17,7 +17,7 @@ Control | Action
 `\`						| decrease playback speed 10%
 `F12`					| open video in third party video editor
 `=`						| copy video file name to clipboard
-`A`						| play first video in the current folder
+`A`						| play first video in the list
 `B`						| [B]lackout/restore progress bar
 `Ctrl-B`				| [B]lackout/restore window caption/title bar and all on-screen artifacts
 `C`						| show/Hide on-screen [C]ontrols and video timestamp
@@ -39,9 +39,9 @@ Control | Action
 `P` 					| pause the video and play it instead with [P]otplayer, if installed
 `Q`						| play the previous video in the [Q]ueue/list
 `R`						| [R]ename the current video file
-`S`						| re[S]tart the current video from the beginning ([S]tartover)
-`T`						| [T]ab through the video a 100th, 50th, 20th or 10th of its duration (use ALT, SHIFT, CAPS LOCK to modify)
-`Ctrl-T`				| [T]ab back through the video a 100th, 50th, 20th or 10th of its duration (use ALT, SHIFT, CAPS LOCK to modify)
+`S`						| re[S]tart the current video from the beginning, aka [S]tartover
+`T`						| [T]ab through the video a 100th (default), 50th, 20th or 10th of its duration (use ALT, SHIFT, CAPS LOCK to modify)
+`Ctrl-T`				| [T]ab back through the video a 100th (default), 50th, 20th or 10th of its duration (use ALT, SHIFT, CAPS LOCK to modify)
 `U`						| [U]nzoom, i.e. fit the video to the window
 `V`						| maximize / restore [V]iew, same as [M]
 `W`						| [W]atch the next video in the list
@@ -52,18 +52,33 @@ Control | Action
 `Arrow Down`			| decrease the volume by 1%
 `Ctrl-Up Arrow`			| increase the playback speed by 10%
 `Ctrl-Down Arrow`		| decrease the playback speed by 10%
-`0`						| show / hide the window title bar / caption
+`0`						| hide(zero) or show the window title bar / caption
 `1`						| reset the playback speed to normal, i.e. [1]00%
-`2`						| resize the window so that two instances can be place side-by-side
+`2`						| resize the window so that 2 instances of the application can be placed side-by-side
 `5`						| save the current video timestamp to an INI file
-`6`						| retreive a saved video timestamp from an INI file and continue playback from that point
+`6`						| retrieve a saved video timestamp from an INI file and continue playback from that point
 `8`						| set the video to 1-pixel larger than the window on all four sides
-`9`						| match the window to the dimensions of the video
+`9`						| resize the window to the dimensions of the video
 `RIGHT ARROW`			| step forwards one frame
 `LEFT ARROW`			| step backwards one frame
 Zoom|
-`CTRL-RIGHT ARROW`		| when zoomed in/out, move video RIGHT
-`CTRL-LEFT ARROW`		| when zoomed in/out, move video LEFT
-`CTRL-UP ARROW`			| when zoomed in/out, move video UP
-`CTRL-DOWN ARROW`		| when zoomed in/out, move video DOWN
+`CTRL-RIGHT ARROW`		| when zoomed in/out, move video RIGHT inside the window
+`CTRL-LEFT ARROW`		| when zoomed in/out, move video LEFT inside the window
+`CTRL-UP ARROW`			| when zoomed in/out, move video UP inside the window
+`CTRL-DOWN ARROW`		| when zoomed in/out, move video DOWN inside the window
+
+Media File Formats
+==================
+
+Rather than simply taking Microsoft's word that the Windows Media Player ActiveX control supports their published list of media file formats, I have tested many file formats and ``Minimalist Media Player`` explicitly supports the following formats and file extensions:
+
+`.wmv` `.mp4` `.avi` `.flv` `.mpg` `.mpeg` `.mkv` `.3gp` `.mov` `.m4v` `.vob` `.ts` `.webm` `.divx` `.m4a` `.mp3` `.wav` `.aac` `.m2ts` `.flac` `.mts` `.rm` `.asf`
+ 
+
+
+Notes concerning the code
+=========================
+
+
+
 
