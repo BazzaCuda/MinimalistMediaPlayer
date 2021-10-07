@@ -1198,6 +1198,7 @@ end;
 
 procedure TUI.lblMuteUnmuteClick(Sender: TObject);
 // The user clicked the Mute/Unmute label in the top right corner of the window
+// Currently, this label isn't operational.
 begin
   FX.doMuteUnmute;
 end;
@@ -1205,7 +1206,7 @@ end;
 procedure TUI.progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 // When a SHIFT key is held down, calculate a new video position based on where the mouse is on the prograss bar.
 // This *was* intended to allow dragging/scrubbing through the video.
-// Unfortunately, WMP can't cope. It doesn't react to the new positions fast enough and gets itself into a right pickle.
+// Unfortunately, WMP can't cope. It doesn't react to the new positions fast enough and gets itself in a right pickle.
 // Consequently, this functionality is unusable while WMP is used as the media playing component. 
 begin
   progressBar.Cursor := crHandPoint;
@@ -1301,8 +1302,7 @@ begin
 end;
 
 procedure TUI.tmrRateLabelTimer(Sender: TObject);
-// There is a delay between a change of playback speed, and WMP reporting the amended speed.
-// So, we delay showing the change to hopefully report the correct speed.
+// The change of playback speed is briefly displayed, then this timer event hides it.
 begin
   tmrRateLabel.Enabled  := FALSE;
   lblRate.Visible       := FALSE;
@@ -1323,7 +1323,7 @@ begin
 end;
 
 procedure TUI.tmrTabTimer(Sender: TObject);
-// We want the tab feedback info to only be shown briefly. So, we use a timer to both show it and hide it again.
+// We want the tab feedback info to only be shown briefly. So, we use a timer to hide it again.
 begin
   tmrTab.Enabled := FALSE;
   lblTab.Visible := FALSE;
