@@ -7188,6 +7188,7 @@ object UI: TUI
     OnClick = WMPClick
     OnKeyDown = WMPKeyDown
     OnKeyUp = WMPKeyUp
+    OnMouseDown = WMPMouseDown
     OnMouseMove = WMPMouseMove
     ControlData = {
       0003000008000200000000000500000000000000F03F03000000000005000000

@@ -24,7 +24,8 @@ uses
   Vcl.Themes,
   Vcl.Styles,
   Mixer in 'Mixer.pas',
-  MMDevApi_tlb in 'MMDevApi_tlb.pas';
+  MMDevApi_tlb in 'MMDevApi_tlb.pas',
+  WMPLib_TLB in 'WMPLib_TLB.pas';
 
 {$R *.res}
 

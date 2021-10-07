@@ -139,6 +139,7 @@
         </DCCReference>
         <DCCReference Include="Mixer.pas"/>
         <DCCReference Include="MMDevApi_tlb.pas"/>
+        <DCCReference Include="WMPLib_TLB.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -165,14 +166,14 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="3">
-                <DeployFile LocalName="Win64\Release\MinimalistMediaPlayer.exe" Configuration="Release" Class="ProjectOutput">
-                    <Platform Name="Win64">
+                <DeployFile LocalName="Win32\Debug\MinimalistMediaPlayer.exe" Configuration="Debug" Class="ProjectOutput">
+                    <Platform Name="Win32">
                         <RemoteName>MinimalistMediaPlayer.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Debug\MinimalistMediaPlayer.exe" Configuration="Debug" Class="ProjectOutput">
-                    <Platform Name="Win32">
+                <DeployFile LocalName="Win64\Release\MinimalistMediaPlayer.exe" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="Win64">
                         <RemoteName>MinimalistMediaPlayer.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>

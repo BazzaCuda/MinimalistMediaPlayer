@@ -68,6 +68,8 @@ type
     procedure WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
     procedure tmrVolTimer(Sender: TObject);
     procedure applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
+    procedure WMPMouseDown(ASender: TObject; nButton,
+      nShiftState: SmallInt; fX, fY: Integer);
   private
     procedure setupProgressBar;
   protected
@@ -232,6 +234,7 @@ begin
                                     case UI.isWindowCaptionVisible XOR GV.blackOut of FALSE: showHideTitleBar; end; // has user has already hidden title bar?
                                     adjustAspectRatio;
                                   end;end;
+  UI.repositionLabels;
   UI.repositionTimeDisplay;
 end;
 
@@ -1213,6 +1216,10 @@ function TUI.repositionLabels: boolean;
 // called from FormResize
 // Delphi 10.4 seems to have a problem with Anchors = [akRight, akBottom] and placed all the labels offscreen about 1000 pixels too far to the right.
 // I now position them manually.
+// On other displays, the magic numbers may need to be adjusted and configurable via an application INI file.
+// See also repositionTimeDisplay
+var
+  vBase:  integer;
 begin
   lblMuteUnmute.Left := UI.Width - lblMuteUnmute.Width - 16;       // NB: text alignment is taCenter in the Object Inspector
 
@@ -1225,22 +1232,28 @@ begin
   lblXYRatio.Left       := 4;
   lblFileSize.Left      := 4;
 
-  lblXY.Top             := progressBar.Top - 128;
-  lblXY2.Top            := progressBar.Top - 112;
-  lblFrameRate.Top      := progressBar.Top -  96;
-  lblBitRate.Top        := progressBar.Top -  80;
-  lblAudioBitRate.Top   := progressBar.Top -  64;
-  lblVideoBitRate.Top   := progressBar.Top -  48;
-  lblXYRatio.Top        := progressBar.Top -  32;
-  lblFileSize.Top       := progressBar.Top -  16;
+  case progressBar.Visible of  TRUE:  vBase := progressBar.Top;
+                              FALSE:  case isWindowCaptionVisible of
+                                        TRUE: vBase := UI.Height - GetSystemMetrics(SM_CYCAPTION) - 14;  // magic number;
+                                       FALSE: vBase := UI.Height - GetSystemMetrics(SM_CYCAPTION) + 9;   // magic number;
+                                      end;end;
+
+  lblXY.Top             := vBase - 128;
+  lblXY2.Top            := vBase - 112;
+  lblFrameRate.Top      := vBase -  96;
+  lblBitRate.Top        := vBase -  80;
+  lblAudioBitRate.Top   := vBase -  64;
+  lblVideoBitRate.Top   := vBase -  48;
+  lblXYRatio.Top        := vBase -  32;
+  lblFileSize.Top       := vBase -  16;
 
   lblRate.Left          := Width - lblRate.Width  - 20;
   lblTab.Left           := Width - lblTab.Width   - 30;
   lblVol.Left           := Width - lblVol.Width   - 20;
 
-  lblRate.Top           := progressBar.Top        - 26;
-  lblTab.Top            := progressBar.Top        - 26;
-  lblVol.Top            := progressBar.Top        - 26;
+  lblRate.Top           := vBase - lblTimeDisplay.Height - lblRate.Height;
+  lblTab.Top            := vBase - lblTimeDisplay.Height - lblTab.Height;
+  lblVol.Top            := vBase - lblTimeDisplay.Height - lblVol.Height;
 
   repositionTimeDisplay;
 end;
@@ -1395,6 +1408,15 @@ var Key: WORD;
 begin
   Key := nKeyCode;
   FX.UIKeyUp(Key, TShiftState(nShiftState));
+end;
+
+procedure TUI.WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
+// When there is no window caption you can drag the window around by holding down the left mouse button on the video
+const
+  SC_DRAGMOVE = $F012;
+begin
+  ReleaseCapture;
+  Perform(WM_SYSCOMMAND, SC_DRAGMOVE, 0);
 end;
 
 procedure TUI.WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
