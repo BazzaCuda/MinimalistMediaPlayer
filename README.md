@@ -9,9 +9,9 @@ It provides both a minimalist/keyboard-operated user interface (so that on-scree
 ---------------------
 
 Control | Action
+------- | ------
 
 `SPACEBAR`				| Pause/Resume playback
-
 `Ctrl-Up Arrow`			| Increase playback speed 10%
 
 `/`						| Increase playback speed 10%
