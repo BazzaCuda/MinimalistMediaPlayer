@@ -1345,7 +1345,7 @@ begin
     EXIT;
   end;end;
 
-  var vVisible := NOT lblMuteUnmute.Visible;
+  var vVisible := NOT lblTimeDisplay.Visible;
 
 //  lblMuteUnmute.Visible   := vVisible;      // toggle their display status
   lblTimeDisplay.Visible  := vVisible;
