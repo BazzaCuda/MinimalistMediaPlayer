@@ -1,3 +1,24 @@
+{   Minimalist Media Player
+    Copyright (C) 2021 Baz Cuda <bazzacuda@gmx.com>
+
+    NB: I didn't write this unit and I don't remember where I got it.
+    As a courtesy, I have protected its use with this licence on behalf of the original author.
+    The author is welcome to contact me if I have acted in error and they wish this licence to be removed.
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA
+}
 unit Mixer;
 
 interface
@@ -22,8 +43,6 @@ implementation
 uses
   Windows, MMSystem, MMDevApi_tlb, ComObj, ActiveX, SysUtils;
 
-// ---------------------------------------------------------------------------
-
 type
 
   TxpMixer = class(Tmixer)
@@ -41,7 +60,7 @@ type
     destructor Destroy; override;
   end;
 
-  TvistaMixer = class(Tmixer)
+  TVistaMixer = class(Tmixer)
   private
     FmmDev: IMMDevice;
     FmmDevEnum: IMMDeviceEnumerator;
@@ -55,8 +74,6 @@ type
     constructor Create;
   end;
 
-// ---------------------------------------------------------------------------
-
 var
   _g_mixer: Tmixer;
 
@@ -69,14 +86,12 @@ begin
     VerInfo.dwOSVersionInfoSize := SizeOf(TOSVersionInfo);
     GetVersionEx(VerInfo);
     if (VerInfo.dwMajorVersion >= 6) then
-      _g_mixer := TvistaMixer.Create
+      _g_mixer := TVistaMixer.Create
     else
       _g_mixer := TxpMixer.Create;
   end;
   result := _g_mixer;
 end;
-
-// ---------------------------------------------------------------------------
 
 { TxpMixer }
 
@@ -91,15 +106,11 @@ begin
   raise Exception.Create(StrPas(pChar(s)));
 end;
 
-// ---------------------------------------------------------------------------
-
 constructor TxpMixer.Create;
 begin
   Fmxct := MIXERLINE_COMPONENTTYPE_DST_SPEAKERS;
   chk(mixerOpen(@Fmixer, 0, 0, 0, 0));
 end;
-
-// ---------------------------------------------------------------------------
 
 destructor TxpMixer.Destroy;
 begin
@@ -107,8 +118,6 @@ begin
     mixerClose(Fmixer);
   inherited;
 end;
-
-// ---------------------------------------------------------------------------
 
 function TxpMixer.getMute: boolean;
 var
@@ -143,8 +152,6 @@ begin
   result := BoolDetails.fValue <> 0;
 end;
 
-// ---------------------------------------------------------------------------
-
 function TxpMixer.getVolume: integer;
 var
   Line: TMixerLine;
@@ -175,8 +182,6 @@ begin
   chk(mixerGetControlDetails(Fmixer, @Details, MIXER_GETCONTROLDETAILSF_VALUE));
   result := UnsignedDetails.dwValue;
 end;
-
-// ---------------------------------------------------------------------------
 
 procedure TxpMixer.setMute(Value: boolean);
 var
@@ -214,8 +219,6 @@ begin
   chk(mixerSetControlDetails(0, @Details, MIXER_SETCONTROLDETAILSF_VALUE));
 end;
 
-// ---------------------------------------------------------------------------
-
 procedure TxpMixer.setVolume(Value: integer);
 var
   Line: TMixerLine;
@@ -252,20 +255,16 @@ begin
   chk(mixerSetControlDetails(Fmixer, @Details, MIXER_SETCONTROLDETAILSF_VALUE));
 end;
 
-// ---------------------------------------------------------------------------
+{ TVistaMixer }
 
-{ TvistaMixer }
-
-constructor TvistaMixer.Create;
+constructor TVistaMixer.Create;
 begin
   CoCreateInstance(CLSID_MMDeviceEnumerator, nil, CLSCTX_ALL, IID_IMMDeviceEnumerator, FmmDevEnum);
   FmmDevEnum.GetDefaultAudioEndpoint(eRender, eMultimedia, FmmDev);
   FmmDev.Activate(IID_IAudioEndpointVolume, CLSCTX_ALL, nil, FmmEndpoint);
 end;
 
-// ---------------------------------------------------------------------------
-
-function TvistaMixer.getMute: boolean;
+function TVistaMixer.getMute: boolean;
 var
   vResult: integer;
 begin
@@ -273,9 +272,7 @@ begin
   result := boolean(vResult);
 end;
 
-// ---------------------------------------------------------------------------
-
-function TvistaMixer.getVolume: integer;
+function TVistaMixer.getVolume: integer;
 var
   VolLevel: Single;
 begin
@@ -283,16 +280,12 @@ begin
   result := Round(VolLevel * 65535);
 end;
 
-// ---------------------------------------------------------------------------
-
-procedure TvistaMixer.setMute(Value: boolean);
+procedure TVistaMixer.setMute(Value: boolean);
 begin
   FmmEndpoint.SetMute(integer(Value), nil);
 end;
 
-// ---------------------------------------------------------------------------
-
-procedure TvistaMixer.setVolume(Value: integer);
+procedure TVistaMixer.setVolume(Value: integer);
 var
   fValue: Single;
 begin
@@ -304,7 +297,6 @@ begin
   FmmEndpoint.SetMasterVolumeLevelScalar(fValue, nil);
 end;
 
-// ---------------------------------------------------------------------------
 initialization
 
 finalization

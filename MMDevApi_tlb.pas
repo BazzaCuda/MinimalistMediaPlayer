@@ -1,3 +1,24 @@
+{   Minimalist Media Player
+    Copyright (C) 2021 Baz Cuda <bazzacuda@gmx.com>
+
+    NB: I didn't write this unit and I don't remember where I got it.
+    As a courtesy, I have protected its use with this licence on behalf of the original author.
+    The author is welcome to contact me if I have acted in error and they wish this licence to be removed.
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA
+}
 unit MMDevApi_tlb;
 
 interface

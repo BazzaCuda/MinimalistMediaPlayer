@@ -7207,9 +7207,6 @@ object UI: TUI
     TabOrder = 1
     OnMouseMove = progressBarMouseMove
     OnMouseUp = progressBarMouseUp
-    ExplicitLeft = 1
-    ExplicitTop = 419
-    ExplicitWidth = 184
   end
   object tmrTimeDisplay: TTimer
     Enabled = False
@@ -7227,7 +7224,6 @@ object UI: TUI
   end
   object tmrRateLabel: TTimer
     Enabled = False
-    Interval = 100
     OnTimer = tmrRateLabelTimer
     Left = 400
     Top = 208

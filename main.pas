@@ -1,3 +1,20 @@
+{   Minimalist Media Player
+    Copyright (C) 2021 Baz Cuda <bazzacuda@gmx.com>
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307, USA
+}
 unit main;
 
 interface
@@ -55,6 +72,7 @@ type
     procedure setupProgressBar;
   protected
   public
+    // UI Functions only - application logic is in TFX
     function  hideLabels: boolean;
     function  isWindowCaptionVisible: boolean;
     function  repositionLabels: boolean;
@@ -110,6 +128,7 @@ type
     function blackOut: boolean;
     function clearMediaMetaData: boolean;
     function clipboardCurrentFileName: boolean;
+    function currentFilePath: string;
     function deleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
     function doCentreWindow: boolean;
     function doCommandLine(aCommandLIne: string): boolean;
@@ -173,10 +192,11 @@ var
 { TFX }
 
 function TFX.adjustAspectRatio: boolean;
-// J = ad[J]ust aspect ratio
+// [J] = ad[J]ust aspect ratio
 // This attempts to resize the window height to match its width in the same ratio as the video dimensions,
 // in order to eliminate the black bars above and below the video.
 // Usage: size the window to the required width then press J to ad-J-ust the window's height to match the aspect ratio
+// On other diplays, the magic numbers may need to be configured via an application INI file.
 var
   X, Y:         integer;
   vRatio:       double;
@@ -191,8 +211,8 @@ begin
   vRatio := Y / X;
 
   vHeightTitle := GetSystemMetrics(SM_CYCAPTION);
-  case UI.isWindowCaptionVisible of  TRUE: vDelta := vHeightTitle + 7;
-                                    FALSE: vDelta := 8; end;
+  case UI.isWindowCaptionVisible of  TRUE: vDelta := vHeightTitle + 7; // magic number
+                                    FALSE: vDelta := 8; end;           // magic number
 
   UI.Height := trunc(UI.Width * vRatio) + vDelta;
   UI.Width  := UI.Width - 1; // experimental
@@ -201,15 +221,15 @@ begin
 end;
 
 function TFX.blackOut: boolean;
-// B = [B]lackout i.e. Show/Hide ProgressBar
-// Ctrl-B = total blackOut: i.e. also show/hide the window title bar and adjust the window's aspect ratio
+// [B] = [B]lackout i.e. Show/Hide ProgressBar
+// Ctrl-B = total [B]lackOut: i.e. also show/hide the window title bar and adjust the window's aspect ratio
 begin
   GV.blackOut             := NOT GV.blackOut;
   UI.progressBar.Visible  := NOT GV.blackOut;
   UI.repositionWMP;
 
   case isControlKeyDown of TRUE:  begin
-                                    showHideTitleBar;
+                                    case UI.isWindowCaptionVisible XOR GV.blackOut of FALSE: showHideTitleBar; end; // has user has already hidden title bar?
                                     adjustAspectRatio;
                                   end;end;
   UI.repositionTimeDisplay;
@@ -230,17 +250,17 @@ begin
 end;
 
 function TFX.deleteCurrentFile(Shift: TShiftState): boolean;
-// D / DEL = [D]elete the current file
-// Ctrl-D / Ctrl-DEL = Delete the entire contents of the current file's folder (doesn't include subfolders)
+// [D] / DEL = [D]elete the current file
+// Ctrl-D / Ctrl-DEL = Delete the entire contents of the current file's folder (doesn't touch subfolders)
 begin
   UI.WMP.controls.pause;
-  var vMsg := 'DELETE '#13#10#13#10'Folder: ' + ExtractFilePath(GV.files[GV.fileIx]);
+  var vMsg := 'DELETE '#13#10#13#10'Folder: ' + ExtractFilePath(currentFilePath);
   case ssCtrl in Shift of  TRUE: vMsg := vMsg + '*.*';
-                          FALSE: vMsg := vMsg + #13#10#13#10'File: '            + ExtractFileName(GV.files[GV.fileIx]); end;
+                          FALSE: vMsg := vMsg + #13#10#13#10'File: ' + ExtractFileName(currentFilePath); end;
 
   case showOkCancelMsgDlg(vMsg) = IDOK of
     TRUE: begin
-            deleteThisFile(GV.files[GV.fileIx], Shift);
+            deleteThisFile(currentFilePath, Shift);
 
             case isLastFile or (ssCtrl in Shift) of TRUE: begin UI.CLOSE; EXIT; end;end;  // close app after deleting final file or deleting folder contents
 
@@ -261,7 +281,9 @@ end;
 
 function TFX.doCentreWindow: boolean;
 // H = [H]orizontal
-// position the window centrally, both horizontally and vertically
+// Position the window centrally, both horizontally and vertically.
+// Originally, the window was only positioned horizontally, hence [H].
+// Later, this was changed to centre the window on the screen.
 var
   vR: TRect;
 begin
@@ -273,7 +295,7 @@ end;
 
 function TFX.doCommandLine(aCommandLIne: string): boolean;
 // Create a cmd.exe process to execute any command line
-// "Current Directory" defaults to the folder containing this application's .exe
+// "Current Directory" defaults to the folder containing this application's executable.
 var
   vStartInfo:  TStartupInfo;
   vProcInfo:   TProcessInformation;
@@ -307,8 +329,8 @@ begin
 end;
 
 function TFX.fetchMediaMetaData: boolean;
-// called from the tmrMetaDataTimer event handler
-// There is a delay after a video starts playing before its metadata becomes available
+// called from the tmrMetaDataTimer event handler.
+// There is a delay after a video starts playing before its metadata becomes available.
 // Consequently, when a video starts playing, tmrMetaData is started to delay an attempt to access it.
 begin
   UI.lblXY.Caption                := format('XY:  %s x %s', [UI.WMP.currentMedia.getItemInfo('WM/VideoWidth'), UI.WMP.currentMedia.getItemInfo('WM/VideoHeight')]);
@@ -323,13 +345,13 @@ begin
 end;
 
 function TFX.findMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
-// Called from FormCreate and reloadVideoFiles
-// Standard Functionality: Clicking a video file type associated with this application causes MediaPlayer to run and play the video
-// All supported video file types in that video's folder will be added to aFileList (subfolders aren't processed)
-// The function returns the aFileList index of the clicked video file                     
-// This list of supported file types was created manually after confirming they are playable by Windows Media Player
+// Called from FormCreate and reloadVideoFiles.
+// Standard Functionality: Clicking a video file type associated with this application causes MediaPlayer to run and play the video.
+// All supported video file types in that video's folder will be added to aFileList (subfolders aren't processed).
+// The function returns the aFileList index of the clicked video file.
+// This list of supported file types was created manually after confirming they are playable by Windows Media Player.
 // It sometimes has problems playing an flv video but, bizarrely, will play it if the file is renamed to, for example, .m4v
-// PotPlayer has no such problems playing the same .flv video
+// PotPlayer has no such problems playing the same .flv video.
 const EXTS_FILTER = '.wmv.mp4.avi.flv.mpg.mpeg.mkv.3gp.mov.m4v.vob.ts.webm.divx.m4a.mp3.wav.aac.m2ts.flac.mts.rm.asf';
 var
   sr:           TSearchRec;
@@ -369,23 +391,24 @@ begin
 end;
 
 function TFX.fullScreen: boolean;
-// Tell WMP to diplay fullScreen. The video timestamp and metadata displays etc aren't available.
+// [F] = Tell WMP to diplay fullScreen.
+// The video timestamp and metadata displays etc. won't show until fullScreen mode is exited.
 begin
   case UI.WMP.fullScreen of   TRUE: UI.WMP.fullScreen := FALSE;
                              FALSE: UI.WMP.fullScreen := TRUE;  end;
 end;
 
 function TFX.getINIname: string;
-// A video timestamp can be saved to and retrieved from an ini file, named after the video file 
+// A video timestamp can be saved to and retrieved from an INI file, named after the video file.
 begin
-  result := ExtractFileName(GV.files[GV.fileIx]);
+  result := ExtractFileName(currentFilePath);
   result := ChangeFileExt(result, '.ini');
-  result := ExtractFilePath(GV.files[GV.fileIx]) + result;
+  result := ExtractFilePath(currentFilePath) + result;
 end;
 
 // When the video is zoomed in or out, the CTRL key plus the UP, DOWN, LEFT, RIGHT arrow keys can be used to reposition the video
 // Bizarrely, if WMP is paused and repositioned, it will revert its position when playback is resumed;
-//            if WMP is repositioned during zoomed playback then paused, it will revert its position 
+//            if WMP is repositioned during zoomed playback then paused, it will revert its position.
 const MOVE_PIXELS = 10;
 function TFX.goDown: boolean;
 begin
@@ -448,23 +471,24 @@ end;
 function TFX.keepCurrentFile: boolean;
 // K = [K]eep current file
 // When examining a folder to determine which videos to keep or delete,
-// this provides a convenient way to mark a video to be kept by renaming the file, prefixing an underscore to its filename.
+//    this provides a convenient way to mark a video to be kept by renaming the file, prefixing an underscore to its filename.
 // This causes all such files to gravitate to the top of the displayed folder thus making it easy to select all the other files and delete them.
 // Occasionally, Windows or WMP will prevent the file from being renamed while WMP has it open.
 // There is no apparent pattern to when the rename is allowed and when it isn't.
 begin
   UI.WMP.controls.pause;
   delay(250);       // give WMP time to register internally that the video has been paused
-  var vFileName := '_' + ExtractFileName(GV.files[GV.fileIx]);
-  var vFilePath := ExtractFilePath(GV.files[GV.fileIx]) + vFileName;
-  case RenameFile(GV.files[GV.fileIx], vFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
-                                                      TRUE: GV.files[GV.fileIx] := vFilePath; end; // reflect the new name in the list
+  var vFileName := '_' + ExtractFileName(currentFilePath);
+  var vFilePath := ExtractFilePath(currentFilePath) + vFileName;
+  case RenameFile(currentFilePath, vFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
+                                                  TRUE: GV.files[GV.fileIx] {currentFilePath} := vFilePath; end; // reflect the new name in the list
   windowCaption;
   UI.WMP.controls.play;
 end;
 
 function TFX.matchVideoWidth: boolean;
-// 9 = resize the width of the window to match the video width
+// [9] = resize the width of the window to match the video width.
+// [9], [J], [H] and [G] can be used to obtain the optimum window to match the video.
 begin
   var X := UI.WMP.currentMedia.imageSourceWidth;
   var Y := UI.WMP.currentMedia.imageSourceHeight;
@@ -473,24 +497,25 @@ begin
 end;
 
 function TFX.openWithShotcut: boolean;
-// F12 = open the video in the ShotCut video editor
+// [F12] = open the video in the ShotCut* video editor
 // mklink C:\ProgramFiles "C:\Program Files"
-// The above command line allows C:\Program Files\ to be referenced in programs without the annoying space
+// The above command line allows C:\Program Files\ to be referenced in programs without the annoying space.
 // This can simpifly things when multiple nested double quotes and apostrophes are being used to construct a command line
-// At some point, the user's preferred video editor needs to be picked up from a mediaplayer.ini file
+// At some point, the user's preferred video editor needs to be configurable via an application INI file.
+// *https://shotcut.org/
 begin
   UI.WMP.controls.pause;
-  doCommandLine('C:\ProgramFiles\Shotcut\shotcut.exe "' + GV.files[GV.fileIx] + '"');
+  doCommandLine('C:\ProgramFiles\Shotcut\shotcut.exe "' + currentFilePath + '"');
 end;
 
 function TFX.playCurrentFile: boolean;
 // CurrentFile is the one whose index in the list equals fileIx
 begin
-  case (GV.fileIx < 0) OR (GV.fileIx > GV.files.Count - 1) of TRUE: EXIT; end;
+  case (GV.fileIx < 0) OR (GV.fileIx > GV.files.Count - 1) of TRUE: EXIT; end;  // sanity check
 
-  case FileExists(GV.files[GV.fileIx]) of TRUE: begin
+  case FileExists(currentFilePath) of TRUE: begin                               // i.e. if file *still* exists :D
     windowCaption;
-    UI.WMP.URL := 'file://' + GV.files[GV.fileIx];
+    UI.WMP.URL := 'file://' + currentFilePath;
     unZoom;
     GV.blankRate := TRUE;
     WMPplay;
@@ -544,7 +569,7 @@ function TFX.playWithPotPlayer: boolean;
 // At some point, the user's preferred alternative media player needs to be picked up from a mediaplayer.ini file
 begin
   UI.WMP.controls.pause;
-  doCommandLine('B:\Tools\Pot\PotPlayerMini64.exe "' + GV.files[GV.fileIx] + '"');
+  doCommandLine('B:\Tools\Pot\PotPlayerMini64.exe "' + currentFilePath + '"');
 end;
 
 function TFX.rateReset: boolean;
@@ -557,20 +582,20 @@ end;
 
 function TFX.reloadMediaFiles: boolean;
 // L = re[L]oad the list of video files from the current folder
-// Previously, a facility existed whereby if MediaPlayer was launched with the CAPS LOCK key down,
-// only video files greater than 100MB in size would be loaded into the file list. 
+// Previously, a facility existed whereby if MediaPlayer was launched with the CAPS LOCK key on,
+//    only video files greater than 100MB in size would be loaded into the file list.
 // This allowed folders to be examined to quicly keep or delete the largest videos.
-// This reloadMediaFiles function could than used to find all files in the current folder regardless of size.
+// This reloadMediaFiles function could than be used to find all files in the current folder regardless of size,
+//    without having to close and restart the app *without* the CAPS LOCK key on.
 // Typically, this was actually because the user had launched MediaPlayer forgetting that the CAPS LOCK key was on.
-// The CAPS LOCK key has been repurposed for something else (see FormCreate) so for the time being this function isn't called or useful
+// The CAPS LOCK key has now been repurposed for something else (see FormCreate) so for the time being this function isn't called or useful
 begin
-  var vCurrentFile  := GV.files[GV.fileIx];
-  GV.fileIx         := findMediaFilesInFolder(vCurrentFile, GV.files);
+  GV.fileIx := findMediaFilesInFolder(currentFilePath, GV.files);
   windowCaption;
 end;
 
 function TFX.renameCurrentFile: boolean;
-// R = [R]ename current file
+// [R] = [R]ename current file
 // Occasionally, Windows or WMP will prevent the file from being renamed while WMP has it open.
 // There is no apparent pattern to when the rename is allowed and when it isn't.
 var
@@ -581,7 +606,7 @@ var
 begin
   UI.WMP.controls.pause;
   try
-    vOldFileName  := ExtractFileName(GV.files[GV.fileIx]);
+    vOldFileName  := ExtractFileName(currentFilePath);
     vExt          := ExtractFileExt(vOldFileName);
     vOldFileName  := copy(vOldFileName, 1, pos(vExt, vOldFileName) - 1); // strip the file extension; the user can edit the main part of the filename
 
@@ -596,9 +621,9 @@ begin
   end;
   case (s = '') OR (s = vOldFileName) of TRUE: EXIT; end; // nothing to do
   
-  vNewFilePath := ExtractFilePath(GV.files[GV.fileIx]) + s + vExt;  // construct the full path and new filename with the original extension
-  case RenameFile(GV.files[GV.fileIx], vNewFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
-                                                         TRUE: GV.files[GV.fileIx] := vNewFilePath; end;
+  vNewFilePath := ExtractFilePath(currentFilePath) + s + vExt;  // construct the full path and new filename with the original extension
+  case RenameFile(currentFilePath, vNewFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
+                                                         TRUE: GV.files[GV.fileIx] {currentFilePath} := vNewFilePath; end;
   windowCaption; // update the caption with the new name
 end;
 
@@ -610,14 +635,14 @@ begin
 end;
 
 function TFX.resizeWindow2: boolean;
-// 2 = resize so that two videos can be positioned side-by-side horizontally by the user
+// [2] = resize so that two videos can be positioned side-by-side horizontally by the user
 begin
   UI.width   := 970;
   UI.height  := 640;
 end;
 
 function TFX.resizeWindow3: boolean;
-// G[reater]  = increase size of window
+// [G]reater  = increase size of window
 // Ctrl-G     = decrease size of window
 begin
   case isControlKeyDown of
@@ -832,7 +857,7 @@ begin
     ord('9')          : matchVideoWidth;                      // 9 = match window width to video width
   end;
   UpdateTimeDisplay;
-  UI.tmrRateLabel.Enabled := TRUE;
+//  UI.tmrRateLabel.Enabled := TRUE; // why?
   Key := 0;
 end;
 
@@ -876,7 +901,7 @@ end;
 function TFX.windowCaption: boolean;
 begin
   case GV.Files.Count = 0 of TRUE: EXIT; end;
-  UI.Caption := format('[%d/%d] %s', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(GV.Files[GV.FileIx])]);
+  UI.Caption := format('[%d/%d] %s', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(currentFilePath)]);
 end;
 
 function TFX.windowMaximizeRestore: boolean;
@@ -920,8 +945,8 @@ begin
 
   UI.WMP.Width    := trunc(UI.WMP.Width * 0.9);
   UI.WMP.Height   := trunc(UI.WMP.Height * 0.9);
-  UI.WMP.Top      := -(UI.WMP.Height - UI.ClientHeight) div 2;  // zero minus a negative = a positive
-  UI.WMP.Left     := -(UI.WMP.Width - UI.ClientWidth) div 2;    // zero minus a negative = a positive
+  UI.WMP.Top      := -(UI.WMP.Height - UI.ClientHeight) div 2;
+  UI.WMP.Left     := -(UI.WMP.Width - UI.ClientWidth) div 2;
 
   UI.hideLabels;  // now that WMP's dimensions bear no relation to the window's, label positioning gets too complicated
 end;
@@ -930,7 +955,13 @@ function TFX.clipboardCurrentFileName: boolean;
 // [=] copy name of current video file (without the extension) to the clipboard
 // This can be useful, before opening the file in ShotCut, for naming the edited video
 begin
-  clipboard.AsText := TPath.GetFileNameWithoutExtension(GV.Files[GV.FileIx]);
+  clipboard.AsText := TPath.GetFileNameWithoutExtension(currentFilePath);
+end;
+
+function TFX.currentFilePath: string;
+// returns the current file in the list
+begin
+  result := GV.files[GV.fileIx];
 end;
 
 function TFX.showHideTitleBar: boolean;
@@ -971,28 +1002,12 @@ end;
 function TFX.showOKCancelMsgDlg(aMsg: string): TModalResult;
 // used for displaying the delete file/folder confirmation dialog
 // We modify the standard dialog to make everything bigger, especially the width so that long folder names and files display properly
-// The standard dialog would truncate them.
+// The standard dialog would unhelpfully truncate them.
 begin
-  with CreateMessageDialog(aMsg, mtConfirmation, MBOKCANCEL, MBCANCEL) do
-  try
-    Font.Name := 'Segoe UI';
-    Font.Size := 12;
-    Height    := Height + 50;
-    Width     := width + 200;
-    for var i := 0 to ControlCount - 1 do begin
-      case Controls[i] is TLabel  of   TRUE: with Controls[i] as TLabel   do    Width := Width + 200; end;
-      case Controls[i] is TButton of   TRUE: with Controls[i] as TButton  do  begin
-                                                                                Top   := Top + 60;
-                                                                                Left  := Left + 100;
-                                                                              end;end;
-    end;
-    result := ShowModal;
-  finally
-    Free;
-  end;
+  result := bzUtils.showOKCancelMsgDlg(aMsg);
 end;
 
-//===== UI Event Handlers =====
+//===== UI Event Handlers and Functions =====
 
 {$R *.dfm}
 
@@ -1099,8 +1114,9 @@ procedure TUI.FormResize(Sender: TObject);
 // FormCreate will call resizeWindow2 to allow both videos to be positioned by the user alongside each other on a 1920-pixel-width monitor.
 // FormResize will left-justify both windows on the monitor, leaving the user to drag one window to the right of the other.
 // This allows two seemingly identical videos to be compared for picture quality, duration, etc., so the user can decide which to keep.
-// This is also useful when Handbrake has been used to reduce the resolution of a video to free up disk space, to ensure that the lower-resolution
+// This is also useful when Handbrake* has been used to reduce the resolution of a video to free up disk space, to ensure that the lower-resolution
 // video is of sufficient quality to warrant deleting the original.
+// *https://handbrake.fr/
 begin
   FX.windowCaption;
 
@@ -1136,17 +1152,16 @@ procedure TUI.progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: In
 // Consequently, this functionality is unusable while WMP is used as the media playing component. 
 begin
   progressBar.Cursor := crHandPoint;
-  EXIT;
 
-  case ssShift in Shift of TRUE:  begin
-                                    progressBar.Cursor            := crHSplit;
-                                    var vNewPosition: integer     := Round(X * (progressBar.Max / progressBar.ClientWidth));
-                                    progressBar.Position          := vNewPosition;
-                                    WMP.controls.currentPosition  := vNewPosition;
-                                  end;
-                          FALSE:  progressBar.Cursor := crDefault;
-  end;
-  FX.updateTimeDisplay;
+//  case ssShift in Shift of TRUE:  begin
+//                                    progressBar.Cursor            := crHSplit;
+//                                    var vNewPosition: integer     := Round(X * (progressBar.Max / progressBar.ClientWidth));
+//                                    progressBar.Position          := vNewPosition;
+//                                    WMP.controls.currentPosition  := vNewPosition;
+//                                  end;
+//                          FALSE:  progressBar.Cursor := crDefault;
+//  end;
+//  FX.updateTimeDisplay;
 end;
 
 procedure TUI.progressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -1163,7 +1178,7 @@ function TUI.repositionLabels: boolean;
 // Delphi 10.4 seems to have a problem with Anchors = [akRight, akBottom] and placed all the labels offscreen about 1000 pixels too far to the right.
 // I now position them manually.
 begin
-  lblMuteUnmute.Left := WMP.Width - lblMuteUnmute.Width - 10;       // NB: text alignment is taCenter in the Object Inspector
+  lblMuteUnmute.Left := UI.Width - lblMuteUnmute.Width - 16;       // NB: text alignment is taCenter in the Object Inspector
 
   lblXY.Left            := 4;
   lblXY2.Left           := 4;
@@ -1196,24 +1211,26 @@ end;
 
 function TUI.repositionTimeDisplay: boolean;
 // We always want the timestamp display to be sat either on top of the progressBar or sat on the bottom edge of the window
-// On other displays, the magic numbers may need to be adjusted and configurable via an application ini file
+// On other displays, the magic numbers may need to be adjusted and configurable via an application INI file
 begin
   lblTimeDisplay.Left := width - lblTimeDisplay.Width - 20; // NB: text aignment is taRightJustify in the Object Inspector
   case progressBar.Visible of  TRUE:  lblTimeDisplay.Top := progressBar.Top - lblTimeDisplay.Height;
                               FALSE:  case isWindowCaptionVisible of
-                                         TRUE: lblTimeDisplay.Top := Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) - 14; // magic number
-                                        FALSE: lblTimeDisplay.Top := Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) + 9;  // magic number
+                                         TRUE: lblTimeDisplay.Top := UI.Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) - 14; // magic number
+                                        FALSE: lblTimeDisplay.Top := UI.Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) + 9;  // magic number
                                       end;end;
 end;
 
 function TUI.repositionWMP: boolean;
 // Set WMP to be 1 pixel to the left of the window and 1-pixel too wide on the right
 // This [in theory] eliminates any chance of a border pixel on the left and right of the window
+// Windows still insists on drawing a 1-pixel border!
+// I was tempted to make the window a borderless dialog frame, but this would then make it non-resizable by the user.
 begin
-  WMP.Height  := ClientHeight + 2;
-  WMP.Width   := ClientWidth + 2;
-  WMP.Left    := 0;
-  WMP.Top     := 0;
+  WMP.Height  := UI.Height + 2;
+  WMP.Width   := UI.Width + 2;
+  WMP.Left    := -1;
+  WMP.Top     := -1;
 end;
 
 procedure TUI.tmrRateLabelTimer(Sender: TObject);
@@ -1223,18 +1240,18 @@ begin
   tmrRateLabel.Enabled  := FALSE;
   case lblRate.Visible of FALSE:  begin
                                     lblRate.Visible       := TRUE;
-                                    tmrRateLabel.Interval := 500; // delay showing to allow WMP time to adjust the rate internally
+                                    tmrRateLabel.Interval := 1000; // delay showing to allow WMP time to adjust the rate internally
                                     tmrRateLabel.Enabled  := TRUE;
                                   end;
                            TRUE:  begin
-                                    lblRate.Visible := FALSE;
+                                    lblRate.Visible       := FALSE;
                                     tmrRateLabel.Interval := 100; // hide it quickly so that the rate can be adjusted quickly in succession
                                   end;
   end;
 end;
 
 procedure TUI.tmrMetaDataTimer(Sender: TObject);
-// We used this timer to delay fetching the video metadata from WMP. Trying to access it to soon after playback commences can cause WMP problems.
+// We used this timer to delay fetching the video metadata from WMP. Trying to access it to soon after playback commences can cause WMP internal problems.
 begin
   FX.FetchMediaMetaData;
   WMP.Cursor := crNone;
@@ -1258,7 +1275,7 @@ begin
                                   end;
                            TRUE:  begin
                                     lblTab.Visible := FALSE;
-                                    tmrTab.Interval := 100;  // show quick
+                                    tmrTab.Interval := 100;  // show quick next time
                                   end;end;
 end;
 
@@ -1276,9 +1293,9 @@ begin
 end;
 
 function TUI.toggleControls(Shift: TShiftState): boolean;
-// C = Show the timestamp display and the mute/unmute button OR Hide all displayed controls/metadata
+// [C] = Show the timestamp display and the Mute/Unmute button OR Hide all displayed controls/metadata
 // Ctrl-C Show/Hide all displayed controls/metadata
-// If the timestamp and mute/unmute button are already being displayed, Ctrl-C will also display all the metadata info
+// If the timestamp and Mute/Unmute button are already being displayed, Ctrl-C will also display all the metadata info
 begin
   lblRate.Caption := '';      // These are only valid at the time the user presses the appropriate key to change them
   lblTab.Caption  := '';
@@ -1330,14 +1347,14 @@ begin
 // add thin border to fix redraw problems
 // in keeping with the minimalist nature of the app, this border isn't necessary:
 //        the bar becomes more pronounced as the video progresses
-//        the change of cursor in progressBarMouseMove makes it's presence and location obvious
+//        the change of cursor in progressBarMouseMove makes its presence and location obvious
 //  vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_STYLE);
 //  vProgressBarStyle := vProgressBarStyle - WS_BORDER;
 //  SetWindowLong(ProgressBar.Handle, GWL_STYLE, vProgressBarStyle);
 end;
 
 procedure TUI.WMPClick(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
-// Standard functionality: Start/Pause a video when the user left-clicks on it
+// Standard functionality: Play/Pause a video when the user left-clicks on it
 begin
   case WMP.playState of
     wmppsPlaying:               WMP.controls.pause;
@@ -1364,7 +1381,7 @@ end;
 procedure TUI.WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
 // Handle a MouseMove message from the media player: display the standard mouse cursor
 begin
-  WMP.cursor := crDefault;
+  WMP.cursor := crDefault; // this is changed to crNone when tmrMetaData fires
 end;
 
 procedure TUI.WMPPlayStateChange(ASender: TObject; NewState: Integer);
