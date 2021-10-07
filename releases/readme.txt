@@ -19,7 +19,7 @@
 Just unzip to a folder of your choice.
 
 Contents:
-MediaPlayer.exe	- the main application
+MinimalistMediaPlayer.exe	- the main application
 rot.exe			- command line deletion app called from MediaPlayer
 readme.txt		- this file
 license.txt		- the GNU v2 license
