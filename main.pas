@@ -95,7 +95,6 @@ type
   TGV = class                        // Global [application-wide] Variables
   strict private
     FBlackOut: boolean;
-    FBlankRate: boolean;
     FClosing: boolean;
     FFileIx:  integer;
     FFiles:   TList<string>;
@@ -110,7 +109,6 @@ type
     constructor create;
     destructor  destroy;  override;
     property    blackOut:     boolean       read FBlackOut  write FBlackOut;
-    property    blankRate:    boolean       read FBlankRate write FBlankRate;
     property    closing:      boolean       read FClosing   write FClosing;
     property    exePath:      string        read GetExePath;
     property    fileIx:       integer       read FFileIx    write FFileIx;
@@ -329,7 +327,7 @@ begin
 end;
 
 function TFX.fetchMediaMetaData: boolean;
-// called from the tmrMetaDataTimer event handler.
+// Called from the tmrMetaDataTimer event handler.
 // There is a delay after a video starts playing before its metadata becomes available.
 // Consequently, when a video starts playing, tmrMetaData is started to delay an attempt to access it.
 begin
@@ -477,7 +475,7 @@ function TFX.keepCurrentFile: boolean;
 // There is no apparent pattern to when the rename is allowed and when it isn't.
 begin
   UI.WMP.controls.pause;
-  delay(250);       // give WMP time to register internally that the video has been paused
+  delay(250);   // give WMP time to register internally that the video has been paused (delay() doesn't "sleep()" the thread).
   var vFileName := '_' + ExtractFileName(currentFilePath);
   var vFilePath := ExtractFilePath(currentFilePath) + vFileName;
   case RenameFile(currentFilePath, vFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
@@ -517,7 +515,6 @@ begin
     windowCaption;
     UI.WMP.URL := 'file://' + currentFilePath;
     unZoom;
-    GV.blankRate := TRUE;
     WMPplay;
   end;end;
 end;
@@ -577,7 +574,6 @@ function TFX.rateReset: boolean;
 begin
   UI.WMP.settings.rate    := 1;
   FX.updateRateLabel;
-  UI.tmrRateLabel.Enabled := TRUE;
 end;
 
 function TFX.reloadMediaFiles: boolean;
@@ -677,7 +673,7 @@ begin
   try
     repeat
       UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition + (UI.WMP.currentMedia.duration / 10);
-      delay(3000); // let the video play for 3 seconds before skipping
+      delay(3000); // let the video play for 3 seconds before skipping (delay() doesn't "sleep()" the thread).
     until GV.Closing OR NOT GV.sampling OR (UI.WMP.controls.currentPosition >= (UI.wmp.currentMedia.duration * 0.90));
   finally
   end;
@@ -697,9 +693,8 @@ function TFX.speedDecrease(Shift: TShiftState): boolean;
 begin
   case ssCtrl in Shift of FALSE: EXIT; end;
 
-  UI.WMP.settings.rate    := UI.WMP.settings.rate - 0.1;
+  UI.WMP.settings.rate := UI.WMP.settings.rate - 0.1;
   FX.updateRateLabel;
-  UI.tmrRateLabel.Enabled := TRUE; // start the timer to display the new speed
 end;
 
 function TFX.speedIncrease(Shift: TShiftState): boolean;
@@ -707,9 +702,8 @@ function TFX.speedIncrease(Shift: TShiftState): boolean;
 begin
   case ssCtrl in Shift of FALSE: EXIT; end;
 
-  UI.WMP.settings.rate    := UI.WMP.settings.rate + 0.1;
+  UI.WMP.settings.rate := UI.WMP.settings.rate + 0.1;
   FX.updateRateLabel;
-  UI.tmrRateLabel.Enabled := TRUE; // start the timer to display the new speed
 end;
 
 function TFX.startOver: boolean;
@@ -750,7 +744,8 @@ begin
   case isControlKeyDown of  TRUE: UI.lblTab.Caption := '<< ' + UI.lblTab.Caption;
                            FALSE: UI.lblTab.Caption := '>> ' + UI.lblTab.Caption;
   end;
-  UI.tmrTab.Enabled  := TRUE;      // confirm the fraction jumped (and the direction) for the user
+  UI.lblTab.Visible := TRUE;
+  UI.tmrTab.Enabled := TRUE;      // confirm the fraction jumped (and the direction) for the user
 end;
 
 function TFX.UIKey(var Key: Word; Shift: TShiftState): boolean;
@@ -779,7 +774,6 @@ begin
                           VK_DOWN: g_mixer.Volume := g_mixer.Volume - (65535 div 100);  // volume down 1%
                         end;
                         UpdateVolumeDisplay;
-                        UI.tmrVol.Enabled := TRUE;                       // confirm the new volume setting for the user
                         Key := 0;
                         EXIT;
                       end;end;end;
@@ -871,15 +865,13 @@ begin
 end;
 
 function TFX.updateRateLabel: boolean;
-// confirm to the user the new playback rate/speed
-// Usage:  call this function and then enable tmrRateLabel to hide it again
+// Confirm to the user the new playback rate/speed.
+// We briefly delay accessing the new rate so that it registers internally within WMP, otherwise we'll still get the old rate
 begin
-  case GV.BlankRate of   TRUE:  begin
-                                  UI.lblRate.Caption  := '';
-                                  GV.BlankRate        := FALSE;
-                                end;
-                        FALSE:  UI.lblRate.Caption  := IntToStr(round(UI.WMP.settings.rate * 100)) + '%';
-  end;
+  delay(100);             // delay() doesn't "sleep()" the thread
+  UI.lblRate.Caption      := IntToStr(round(UI.WMP.settings.rate * 100)) + '%';
+  UI.lblRate.Visible      := TRUE;
+  UI.tmrRateLabel.Enabled := TRUE; // briefly display the new speed
 end;
 
 function TFX.updateTimeDisplay: boolean;
@@ -896,6 +888,7 @@ function TFX.updateVolumeDisplay: boolean;
 begin
   UI.lblVol.Caption := IntToStr(trunc(g_mixer.volume / 65535 * 100))  + '%';
   UI.lblVol.Visible := TRUE;
+  UI.tmrVol.Enabled := TRUE; // briefly confirm the new volume setting for the user
 end;
 
 function TFX.windowCaption: boolean;
@@ -1238,20 +1231,11 @@ procedure TUI.tmrRateLabelTimer(Sender: TObject);
 // So, we delay showing the change to hopefully report the correct speed.
 begin
   tmrRateLabel.Enabled  := FALSE;
-  case lblRate.Visible of FALSE:  begin
-                                    lblRate.Visible       := TRUE;
-                                    tmrRateLabel.Interval := 1000; // delay showing to allow WMP time to adjust the rate internally
-                                    tmrRateLabel.Enabled  := TRUE;
-                                  end;
-                           TRUE:  begin
-                                    lblRate.Visible       := FALSE;
-                                    tmrRateLabel.Interval := 100; // hide it quickly so that the rate can be adjusted quickly in succession
-                                  end;
-  end;
+  lblRate.Visible       := FALSE;
 end;
 
 procedure TUI.tmrMetaDataTimer(Sender: TObject);
-// We used this timer to delay fetching the video metadata from WMP. Trying to access it to soon after playback commences can cause WMP internal problems.
+// We used this timer to delay fetching the video metadata from WMP. Trying to access it too soon after playback commences can cause WMP internal problems.
 begin
   FX.FetchMediaMetaData;
   WMP.Cursor := crNone;
@@ -1268,15 +1252,7 @@ procedure TUI.tmrTabTimer(Sender: TObject);
 // We want the tab feedback info to only be shown briefly. So, we use a timer to both show it and hide it again.
 begin
   tmrTab.Enabled := FALSE;
-  case lblTab.Visible of FALSE:  begin
-                                    lblTab.Visible := TRUE;
-                                    tmrTab.Interval := 1000; // hide slow
-                                    tmrTab.Enabled  := TRUE;
-                                  end;
-                           TRUE:  begin
-                                    lblTab.Visible := FALSE;
-                                    tmrTab.Interval := 100;  // show quick next time
-                                  end;end;
+  lblTab.Visible := FALSE;
 end;
 
 procedure TUI.tmrTimeDisplayTimer(Sender: TObject);

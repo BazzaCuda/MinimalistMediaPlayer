@@ -7224,6 +7224,7 @@ object UI: TUI
   end
   object tmrRateLabel: TTimer
     Enabled = False
+    Interval = 500
     OnTimer = tmrRateLabelTimer
     Left = 400
     Top = 208
@@ -7236,14 +7237,13 @@ object UI: TUI
   end
   object tmrTab: TTimer
     Enabled = False
-    Interval = 100
+    Interval = 500
     OnTimer = tmrTabTimer
     Left = 400
     Top = 112
   end
   object tmrVol: TTimer
     Enabled = False
-    Interval = 3000
     OnTimer = tmrVolTimer
     Left = 400
     Top = 352
