@@ -2,7 +2,7 @@ object UI: TUI
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
-  Caption = 'MediaPlayer'
+  Caption = 'MinimalistMediaPlayer'
   ClientHeight = 430
   ClientWidth = 754
   Color = clGray

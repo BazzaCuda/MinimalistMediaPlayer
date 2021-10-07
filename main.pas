@@ -1085,6 +1085,8 @@ begin
 
   color := clBlack; // background color of the window's client area, so zooming-out doesn't show the design-time color
 
+  lblMuteUnmute.Visible := FALSE; // I suddenly took a dislike to this being displayed when all I actually wanted was the video timestamp.
+
   WMP.uiMode          := 'none';
   WMP.windowlessVideo := TRUE;
   WMP.stretchToFit    := TRUE;
@@ -1332,7 +1334,7 @@ begin
 
   var vVisible := NOT lblMuteUnmute.Visible;
 
-  lblMuteUnmute.Visible   := vVisible;      // toggle their display status
+//  lblMuteUnmute.Visible   := vVisible;      // toggle their display status
   lblTimeDisplay.Visible  := vVisible;
 
   case (ssCtrl in Shift) or NOT vVisible of TRUE: begin // toggle the metadata display status if CTRL-C was pressed
