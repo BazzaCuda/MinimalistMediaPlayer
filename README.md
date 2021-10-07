@@ -63,10 +63,10 @@ Control | Action
 `RIGHT ARROW`			| step forwards one frame
 `LEFT ARROW`			| step backwards one frame
 Zoom|
-`CTRL-RIGHT ARROW`		| when zoomed in/out, move video RIGHT inside the window
-`CTRL-LEFT ARROW`		| when zoomed in/out, move video LEFT inside the window
-`CTRL-UP ARROW`			| when zoomed in/out, move video UP inside the window
-`CTRL-DOWN ARROW`		| when zoomed in/out, move video DOWN inside the window
+`Ctrl-RIGHT ARROW`		| when zoomed in/out, move video RIGHT inside the window
+`Ctrl-LEFT ARROW`		| when zoomed in/out, move video LEFT inside the window
+`Ctrl-UP ARROW`			| when zoomed in/out, move video UP inside the window
+`Ctrl-DOWN ARROW`		| when zoomed in/out, move video DOWN inside the window
 Additional |
 `Ctrl-Left click on the video and hold`	| the window can be dragged/repositioned without a window caption title bar
 
