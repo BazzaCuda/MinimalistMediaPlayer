@@ -89,11 +89,11 @@ implementation
 uses
   WinApi.CommCtrl,  WinApi.uxTheme,
   System.SysUtils, System.Generics.Collections, System.Math, System.Variants,
-  FormInputBox, bzUtils, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils;
+  FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils;
 
 type
   TGV = class                        // Global [application-wide] Variables
-  strict private
+  strict private                     // force code to use the properties
     FBlackOut: boolean;
     FClosing: boolean;
     FFileIx:  integer;
@@ -127,6 +127,7 @@ type
     function clearMediaMetaData: boolean;
     function clipboardCurrentFileName: boolean;
     function currentFilePath: string;
+    function Delay(dwMilliseconds:DWORD): boolean;
     function deleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
     function doCentreWindow: boolean;
     function doCommandLine(aCommandLIne: string): boolean;
@@ -135,6 +136,7 @@ type
     function fetchMediaMetaData: boolean;
     function findMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
     function fullScreen: boolean;
+    function getFileSize(const aFilePath: string): int64;
     function getINIname: string;
     function goDown: boolean;
     function goLeft: boolean;
@@ -394,6 +396,18 @@ function TFX.fullScreen: boolean;
 begin
   case UI.WMP.fullScreen of   TRUE: UI.WMP.fullScreen := FALSE;
                              FALSE: UI.WMP.fullScreen := TRUE;  end;
+end;
+
+function TFX.getFileSize(const aFilePath: string): int64;
+var
+  vHandle:  THandle;
+  vRec:     TWin32FindData;
+begin
+  vHandle := FindFirstFile(PChar(aFilePath), vRec);
+  case vHandle <> INVALID_HANDLE_VALUE of TRUE: begin
+                                                  WinAPI.Windows.FindClose(vHandle);
+                                                  case (vRec.dwFileAttributes and FILE_ATTRIBUTE_DIRECTORY) = 0 of TRUE:
+                                                    result := (Int64(vRec.nFileSizeHigh) shl 32) + vRec.nFileSizeLow; end;end;end;
 end;
 
 function TFX.getINIname: string;
@@ -957,6 +971,17 @@ begin
   result := GV.files[GV.fileIx];
 end;
 
+function TFX.Delay(dwMilliseconds: DWORD): boolean;
+var
+  iStart, iStop: DWORD;
+begin
+  iStart := GetTickCount;
+  repeat
+    iStop  := GetTickCount;
+    Application.ProcessMessages;
+  until (iStop  -  iStart) >= dwMilliseconds;
+end;
+
 function TFX.showHideTitleBar: boolean;
 // 0 = Show or Hide(i.e. zero) the window title bar
 // Part of this application's attempt to provide an entirely borderless window for the video without displaying fullScreen.
@@ -997,7 +1022,23 @@ function TFX.showOKCancelMsgDlg(aMsg: string): TModalResult;
 // We modify the standard dialog to make everything bigger, especially the width so that long folder names and files display properly
 // The standard dialog would unhelpfully truncate them.
 begin
-  result := bzUtils.showOKCancelMsgDlg(aMsg);
+  with CreateMessageDialog(aMsg, mtConfirmation, MBOKCANCEL, MBCANCEL) do
+  try
+    Font.Name := 'Segoe UI';
+    Font.Size := 12;
+    Height    := Height + 50;
+    Width     := width + 200;
+    for var i := 0 to ControlCount - 1 do begin
+      case Controls[i] is TLabel  of   TRUE: with Controls[i] as TLabel do Width := Width + 200; end;
+      case Controls[i] is TButton of   TRUE: with Controls[i] as TButton do begin
+                                                                                Top   := Top + 60;
+                                                                                Left  := Left + 100;
+                                                                            end;end;
+    end;
+    result := ShowModal;
+  finally
+    Free;
+  end;
 end;
 
 //===== UI Event Handlers and Functions =====

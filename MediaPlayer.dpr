@@ -23,7 +23,6 @@ uses
   FormInputBox in 'FormInputBox.pas' {InputBoxForm},
   Vcl.Themes,
   Vcl.Styles,
-  bzUtils in 'bzUtils.pas',
   Mixer in 'Mixer.pas',
   MMDevApi_tlb in 'MMDevApi_tlb.pas';
 

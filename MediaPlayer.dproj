@@ -137,7 +137,6 @@
             <Form>InputBoxForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="bzUtils.pas"/>
         <DCCReference Include="Mixer.pas"/>
         <DCCReference Include="MMDevApi_tlb.pas"/>
         <BuildConfiguration Include="Release">
