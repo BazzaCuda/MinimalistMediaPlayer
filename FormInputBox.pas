@@ -1,5 +1,6 @@
 {   Minimalist Media Player
     Copyright (C) 2021 Baz Cuda <bazzacuda@gmx.com>
+    https://github.com/BazzaCuda/MinimalistMediaPlayer
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -61,14 +62,15 @@ begin
 end;
 
 procedure TInputBoxForm.FormCreate(Sender: TObject);
+// NB We had to disable themes in setupProgressBar in order to override the standard ProgressBar characteristics
 begin
-  try
-    TStyleManager.LoadFromFile('C:\Users\Public\Documents\Embarcadero\Studio\20.0\Styles\CharcoalDarkSlate.vsf');
-  except
-
-  end;
+//  try
+//    TStyleManager.LoadFromFile('C:\Users\Public\Documents\Embarcadero\Studio\20.0\Styles\CharcoalDarkSlate.vsf');
+//  except
+//
+//  end;
 //  TStyleManager.SetStyle('Charcoal Dark Slate');
-//  styleName := 'Charcoal Dark Slate'; // might be a 10.4 thing
+//  styleName := 'Charcoal Dark Slate';
 //  var style: string;
 //  for style in TStyleManager.StyleNames do
 //    ShowMessage(style);

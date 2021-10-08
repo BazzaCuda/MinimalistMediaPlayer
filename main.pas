@@ -1,5 +1,6 @@
 {   Minimalist Media Player
     Copyright (C) 2021 Baz Cuda <bazzacuda@gmx.com>
+    https://github.com/BazzaCuda/MinimalistMediaPlayer
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -64,8 +65,11 @@ type
     procedure applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
     procedure WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
     procedure WMDropFiles(var Msg: TWMDropFiles); message WM_DROPFILES;
+    procedure FormActivate(Sender: TObject);
+    procedure WMSysCommand(var Message : TWMSysCommand); Message WM_SYSCOMMAND;
   private
-    procedure setupProgressBar;
+    function  addMenuItem: boolean;
+    function  setupProgressBar: boolean;
   protected
   public
     // UI Functions only - application logic is in TFX
@@ -86,7 +90,11 @@ implementation
 uses
   WinApi.CommCtrl,  WinApi.uxTheme,
   System.SysUtils, System.Generics.Collections, System.Math, System.Variants,
-  FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils, ShellAPI;
+  FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils, ShellAPI, FormAbout;
+
+const
+  APP_VERSION = 'v1.8';
+  MENU_ID     = 1001;
 
 type
   TGV = class                        // Global [application-wide] Variables
@@ -102,10 +110,12 @@ type
     FZoomed: boolean;
     function  GetExePath: string;
   private
+    function getAppVersion: string;
   public
     constructor create;
     destructor  destroy;  override;
     function    invalidPlayIx: boolean;
+    property    appVersion:   string        read getAppVersion;
     property    blackOut:     boolean       read FBlackOut  write FBlackOut;
     property    closing:      boolean       read FClosing   write FClosing;
     property    exePath:      string        read GetExePath;
@@ -1101,6 +1111,14 @@ end;
 
 {$R *.dfm}
 
+function TUI.addMenuItem: boolean;
+var vSysMenu: HMENU;
+begin
+  vSysMenu := GetSystemMenu(Handle, False);
+  AppendMenu(vSysMenu, MF_SEPARATOR, 0, '');
+  AppendMenu(vSysMenu, MF_STRING, MENU_ID, '&About Minimalist Media Player…');
+end;
+
 procedure TUI.applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
 // main event handler for capturing keystrokes
 var
@@ -1121,6 +1139,11 @@ begin
                                               FX.UIKeyUp(Key, shiftState);
                                               Handled     := TRUE;
                                             end;end;
+end;
+
+procedure TUI.FormActivate(Sender: TObject);
+begin
+  showInfo(GV.appVersion);
 end;
 
 procedure TUI.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -1144,6 +1167,7 @@ begin
   color := clBlack; // background color of the window's client area, so zooming-out doesn't show the design-time color
 
   setupProgressBar;
+  addMenuItem;
 
   case ParamCount = 0 of TRUE: begin
                                 FX.ShowOKCancelMsgDlg('Typically, you would use "Open with..." in your File Explorer / Manager, to open a media file'#13#10
@@ -1340,6 +1364,39 @@ begin
   WMP.Top     := -1;
 end;
 
+function TUI.setupProgressBar: boolean;
+// change the Progress Bar from it's Windows default characteristics to a minimalist display
+begin
+  SetThemeAppProperties(0);
+  ProgressBar.Brush.Color := clBlack;
+  // Set Background colour
+  SendMessage(ProgressBar.Handle, PBM_SETBARCOLOR, 0, clDkGray);
+  // Set bar colour
+  var vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_EXSTYLE);
+  vProgressBarStyle := vProgressBarStyle - WS_EX_STATICEDGE;
+  SetWindowLong(ProgressBar.Handle, GWL_EXSTYLE, vProgressBarStyle);
+
+// add thin border to fix redraw problems.
+// However, in keeping with the minimalist nature of the app, this border isn't necessary:
+//        the bar becomes more pronounced as the video progresses
+//        the change of cursor in progressBarMouseMove makes its presence and location obvious
+//
+//  vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_STYLE);
+//  vProgressBarStyle := vProgressBarStyle - WS_BORDER;
+//  SetWindowLong(ProgressBar.Handle, GWL_STYLE, vProgressBarStyle);
+
+  UI.Width := UI.Width - 1; // force the progressBar to redraw. If the app is launched by clicking the EXE,
+  UI.Width := UI.Width + 1; // the progressBar gets a nasty 1-pixel border, despite the above code.
+end;
+
+function TUI.showInfo(aInfo: string): boolean;
+begin
+  lblInfo.Caption := aInfo;
+  case aInfo = '' of TRUE: EXIT; end;
+  lblInfo.Visible := TRUE;
+  tmrInfo.Enabled := TRUE;
+end;
+
 procedure TUI.tmrMetaDataTimer(Sender: TObject);
 // We used this timer to delay fetching the video metadata from WMP. Trying to access it too soon after playback commences can cause WMP internal problems.
 begin
@@ -1403,39 +1460,6 @@ begin
   end;end;
 
   repositionLabels;
-end;
-
-procedure TUI.setupProgressBar;
-// change the Progress Bar from it's Windows default characteristics to a minimalist display
-begin
-  SetThemeAppProperties(0);
-  ProgressBar.Brush.Color := clBlack;
-  // Set Background colour
-  SendMessage(ProgressBar.Handle, PBM_SETBARCOLOR, 0, clDkGray);
-  // Set bar colour
-  var vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_EXSTYLE);
-  vProgressBarStyle := vProgressBarStyle - WS_EX_STATICEDGE;
-  SetWindowLong(ProgressBar.Handle, GWL_EXSTYLE, vProgressBarStyle);
-
-// add thin border to fix redraw problems.
-// However, in keeping with the minimalist nature of the app, this border isn't necessary:
-//        the bar becomes more pronounced as the video progresses
-//        the change of cursor in progressBarMouseMove makes its presence and location obvious
-//
-//  vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_STYLE);
-//  vProgressBarStyle := vProgressBarStyle - WS_BORDER;
-//  SetWindowLong(ProgressBar.Handle, GWL_STYLE, vProgressBarStyle);
-
-  UI.Width := UI.Width - 1; // force the progressBar to redraw. If the app is launched by clicking the EXE,
-  UI.Width := UI.Width + 1; // the progressBar gets a nasty 1-pixel border, despite the above code.
-end;
-
-function TUI.showInfo(aInfo: string): boolean;
-begin
-  lblInfo.Caption := aInfo;
-  case aInfo = '' of TRUE: EXIT; end;
-  lblInfo.Visible := TRUE;
-  tmrInfo.Enabled := TRUE;
 end;
 
 procedure TUI.WMDropFiles(var Msg: TWMDropFiles);
@@ -1527,6 +1551,19 @@ begin
   case NewState of wmppsMediaEnded: tmrPlayNext.Enabled     := TRUE; end;         // WMP needs a thread break before initiating the next video cleanly
 end;
 
+procedure TUI.WMSysCommand(var Message: TWMSysCommand);
+begin
+  inherited;
+  case Message.CmdType of
+    MENU_ID:  with TAboutForm.Create(NIL) do
+                try
+                  ShowModal;
+                finally
+                  Free;
+                end;
+  end;
+end;
+
 { TGV }
 
 constructor TGV.create;
@@ -1539,6 +1576,11 @@ destructor TGV.destroy;
 begin
   case Fplaylist <> NIL of TRUE: Fplaylist.Free; end;
   inherited;
+end;
+
+function TGV.getAppVersion: string;
+begin
+  result := APP_VERSION;
 end;
 
 function TGV.getExePath: string;
