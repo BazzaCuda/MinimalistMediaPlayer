@@ -69,7 +69,7 @@ type
     procedure tmrVolTimer(Sender: TObject);
     procedure applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
     procedure WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; afX, fY: Integer);
-    procedure FormActivate(Sender: TObject);
+    procedure WMDropFiles(var Msg: TWMDropFiles); message WM_DROPFILES;
   private
     procedure setupProgressBar;
   protected
@@ -91,7 +91,7 @@ implementation
 uses
   WinApi.CommCtrl,  WinApi.uxTheme,
   System.SysUtils, System.Generics.Collections, System.Math, System.Variants,
-  FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils;
+  FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils, ShellAPI;
 
 type
   TGV = class                        // Global [application-wide] Variables
@@ -170,7 +170,10 @@ type
     function sampleVideo: boolean;
     function saveCurrentPosition: boolean;
     function showHideTitleBar: boolean;
-    function ShowOKCancelMsgDlg(aMsg: string): TModalResult;
+    function ShowOKCancelMsgDlg(aMsg: string;
+                                msgDlgType: TMsgDlgType = mtConfirmation;
+                                msgDlgButtons: TMsgDlgButtons = MBOKCANCEL;
+                                defButton: TMsgDlgBtn = MBCANCEL): TModalResult;
     function speedDecrease(Shift: TShiftState): boolean;
     function speedIncrease(Shift: TShiftState): boolean;
     function startOver: boolean;
@@ -1039,12 +1042,15 @@ begin
   windowCaption;
 end;
 
-function TFX.showOKCancelMsgDlg(aMsg: string): TModalResult;
+function TFX.showOKCancelMsgDlg(aMsg: string;
+                                msgDlgType: TMsgDlgType = mtConfirmation;
+                                msgDlgButtons: TMsgDlgButtons = MBOKCANCEL;
+                                defButton: TMsgDlgBtn = MBCANCEL): TModalResult;
 // used for displaying the delete file/folder confirmation dialog
 // We modify the standard dialog to make everything bigger, especially the width so that long folder names and files display properly
 // The standard dialog would unhelpfully truncate them.
 begin
-  with CreateMessageDialog(aMsg, mtConfirmation, MBOKCANCEL, MBCANCEL) do
+  with CreateMessageDialog(aMsg, msgDlgType, msgDlgButtons, defButton) do
   try
     Font.Name := 'Segoe UI';
     Font.Size := 12;
@@ -1089,22 +1095,19 @@ begin
                                             end;end;
 end;
 
-procedure TUI.FormActivate(Sender: TObject);
-begin
-  case ParamCount = 0 of TRUE: UI.CLOSE; end;
-end;
-
 procedure TUI.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 // make sure to stop video playback before exiting the app or WMP can get upset
 begin
   WMP.controls.stop;
   CanClose := TRUE;
   GV.Closing := TRUE;
+  DragAcceptFiles(UI.Handle, FALSE);
 end;
 
 procedure TUI.FormCreate(Sender: TObject);
 begin
   SetWindowLong(UI.Handle, GWL_STYLE, GetWindowLong(UI.Handle, GWL_STYLE) OR WS_CAPTION AND (NOT (WS_BORDER)));
+  DragAcceptFiles(UI.Handle, TRUE);
 
   case FX.isCapsLockOn of    TRUE:  FX.resizeWindow2; // size so that two videos can be positioned side-by-side horizontally by the user
                             FALSE:  FX.resizeWindow1; // otherwise, default size
@@ -1115,10 +1118,13 @@ begin
   setupProgressBar;
 
   case ParamCount = 0 of TRUE: begin
-                                ShowMessage('Please use "Open with..."'#13#10'in your File Explorer / Manager, to open a media file');
-                                EXIT; end;end;
+                                FX.ShowOKCancelMsgDlg('Typically, you would use "Open with..." in your File Explorer / Manager, to open a media file'#13#10
+                                            + 'or to permanently associate media file types with this application.'#13#10#13#10
+                                            + 'Alternatively, you can drag and drop a media file onto the window background',
+                                            mtInformation, [MBOK]);
+                                end;end;
 
-  lblMuteUnmute.Visible := FALSE; // I suddenly took a dislike to this being displayed when all I actually wanted was the video timestamp.
+  lblMuteUnmute.Visible := FALSE; // I suddenly took a dislike to this being displayed when all I really want is the video timestamp.
 
   WMP.uiMode          := 'none';
   WMP.windowlessVideo := TRUE;
@@ -1236,6 +1242,8 @@ end;
 procedure TUI.progressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 // calculate a new video position based on where the progress bar is clicked
 begin
+  case GV.files.Count = 0 of TRUE: EXIT; end; // prevent invalid call to WMP when there's no video and the user still clicks the progressBar anyway
+
   var vNewPosition: integer     := Round(x * progressBar.Max / progressBar.ClientWidth);
   progressBar.Position          := vNewPosition;
   WMP.controls.currentPosition  := vNewPosition;
@@ -1405,13 +1413,40 @@ begin
   vProgressBarStyle := vProgressBarStyle - WS_EX_STATICEDGE;
   SetWindowLong(ProgressBar.Handle, GWL_EXSTYLE, vProgressBarStyle);
 
-// add thin border to fix redraw problems
-// in keeping with the minimalist nature of the app, this border isn't necessary:
+// add thin border to fix redraw problems.
+// However, in keeping with the minimalist nature of the app, this border isn't necessary:
 //        the bar becomes more pronounced as the video progresses
 //        the change of cursor in progressBarMouseMove makes its presence and location obvious
+//
 //  vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_STYLE);
 //  vProgressBarStyle := vProgressBarStyle - WS_BORDER;
 //  SetWindowLong(ProgressBar.Handle, GWL_STYLE, vProgressBarStyle);
+
+  UI.Width := UI.Width - 1; // force the progressBar to redraw. If the app is launched by clicking the EXE,
+  UI.Width := UI.Width + 1; // the progressBar gets a nasty 1-pixel border, despite the above code.
+end;
+
+procedure TUI.WMDropFiles(var Msg: TWMDropFiles);
+// Allow a media file to be dropped onto the window.
+// The playlist will be entirely refreshed using the contents of this media file's folder.
+var vFilePath: string;
+begin
+  inherited;
+  var hDrop := Msg.Drop;
+  try
+    var DroppedFileCount := DragQueryFile(hDrop, $FFFFFFFF, nil, 0);
+    for var i := 0 to Pred(DroppedFileCount) do begin
+      var FileNameLength := DragQueryFile(hDrop, I, nil, 0);
+      SetLength(vFilePath, FileNameLength);
+      DragQueryFile(hDrop, I, PChar(vFilePath), FileNameLength + 1);
+      GV.FileIx := FX.findMediaFilesInFolder(vFilePath, GV.Files);
+      FX.playCurrentFile;
+      BREAK;              // we currently only process the first file if multiple files are dropped
+    end;
+  finally
+    DragFinish(hDrop);
+  end;
+  Msg.Result := 0;
 end;
 
 procedure TUI.WMPClick(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);

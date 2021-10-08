@@ -6947,7 +6947,6 @@ object UI: TUI
     0000000000000000000000000000E0070000E0070000F00F0000F81F0000}
   OldCreateOrder = False
   Position = poScreenCenter
-  OnActivate = FormActivate
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
