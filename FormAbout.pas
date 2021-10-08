@@ -43,7 +43,7 @@ type
   private
     { Private declarations }
   public
-    { Public declarations }
+    function setAppVersion(aVersion: string): boolean;
   end;
 
 var
@@ -63,6 +63,11 @@ end;
 procedure TAboutForm.lblWebsiteURLClick(Sender: TObject);
 begin
   ShellExecute(0, 'open', 'https://github.com/BazzaCuda/MinimalistMediaPlayer', '', '', SW_SHOW);
+end;
+
+function TAboutForm.setAppVersion(aVersion: string): boolean;
+begin
+  lblAppVersion.Caption := aVersion;
 end;
 
 end.

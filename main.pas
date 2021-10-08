@@ -1557,6 +1557,7 @@ begin
   case Message.CmdType of
     MENU_ID:  with TAboutForm.Create(NIL) do
                 try
+                  setAppVersion(GV.appVersion);
                   ShowModal;
                 finally
                   Free;
