@@ -141,6 +141,7 @@ type
     function goLeft: boolean;
     function goRight: boolean;
     function goUp: boolean;
+    function hasMediaFiles: boolean;
     function isAltKeyDown: boolean;
     function isCapsLockOn: boolean;
     function isControlKeyDown: boolean;
@@ -488,6 +489,11 @@ begin
   UI.WMP.Top := UI.WMP.Top - MOVE_PIXELS;
 end;
 
+function TFX.hasMediaFiles: boolean;
+begin
+  result := GV.files.Count > 0;
+end;
+
 function TFX.isAltKeyDown: boolean;
 // Did the user hold down the ALT key while pressing another key?
 begin
@@ -585,23 +591,21 @@ begin
 end;
 
 function TFX.playFirstFile: boolean;
-// A = play the first video in the list
+// [A] = play the first video in the list
 begin
-  case GV.files.Count > 0 of TRUE:  begin
-                                      GV.fileIx := 0;
-                                      playCurrentFile;
-                                    end;
-  end;
+  case hasMediaFiles of TRUE: begin
+                                GV.fileIx := 0;
+                                playCurrentFile;
+                              end;end;
 end;
 
 function TFX.playLastFile: boolean;
-// Z = play the last video in the list
+// [Z] = play the last video in the list
 begin
-  case GV.files.Count > 0 of TRUE:  begin
-                                      GV.fileIx := GV.files.Count - 1;
-                                      playCurrentFile;
-                                    end;
-  end;
+  case hasMediaFiles of TRUE: begin
+                                GV.fileIx := GV.files.Count - 1;
+                                playCurrentFile;
+                              end;end;
 end;
 
 function TFX.playNextFile: boolean;
@@ -609,15 +613,12 @@ function TFX.playNextFile: boolean;
 begin
   case isLastFile of TRUE: begin UI.CLOSE; EXIT; end;end;
 
-  case GV.fileIx < GV.files.Count - 1 of TRUE:  begin
-                                                  GV.fileIx := GV.fileIx + 1;
-                                                  playCurrentFile;
-                                                end;
-  end;
+  GV.fileIx := GV.fileIx + 1;
+  playCurrentFile;
 end;
 
 function TFX.playPrevFile: boolean;
-// Q = play the previous video in the list
+// [Q] = play the previous video in the list
 begin
   case GV.fileIx > 0 of TRUE:   begin
                                   GV.fileIx := GV.fileIx - 1;
@@ -627,7 +628,7 @@ begin
 end;
 
 function TFX.playWithPotPlayer: boolean;
-// P = Play with [P]otPlayer
+// [P] = Play with [P]otPlayer
 // At some point, the user's preferred alternative media player needs to be picked up from a mediaplayer.ini file
 begin
   UI.WMP.controls.pause;
@@ -635,14 +636,14 @@ begin
 end;
 
 function TFX.rateReset: boolean;
-// 1 = reset the playback rate to 100%
+// [1] = reset the playback rate to 100%
 begin
   UI.WMP.settings.rate    := 1;
   FX.updateRateLabel;
 end;
 
 function TFX.reloadMediaFiles: boolean;
-// L = re[L]oad the list of video files from the current folder
+// [L] = re[L]oad the list of video files from the current folder
 // Previously, a facility existed whereby if MediaPlayer was launched with the CAPS LOCK key on,
 //    only video files greater than 100MB in size would be loaded into the file list.
 // This allowed folders to be examined to quicly keep or delete the largest videos.
