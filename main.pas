@@ -29,11 +29,9 @@ type
     tmrPlayNext: TTimer;
     tmrTimeDisplay: TTimer;
     WMP: TWindowsMediaPlayer;
-    tmrRateLabel: TTimer;
     tmrMetaData: TTimer;
-    tmrTab: TTimer;
+    tmrInfo: TTimer;
     lblMuteUnmute: TLabel;
-    lblRate: TLabel;
     lblTimeDisplay: TLabel;
     lblXY: TLabel;
     lblFrameRate: TLabel;
@@ -43,9 +41,7 @@ type
     lblXYRatio: TLabel;
     lblFileSize: TLabel;
     lblXY2: TLabel;
-    lblTab: TLabel;
-    lblVol: TLabel;
-    tmrVol: TTimer;
+    lblInfo: TLabel;
     applicationEvents: TApplicationEvents;
     procedure FormCreate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -56,17 +52,15 @@ type
     procedure tmrTimeDisplayTimer(Sender: TObject);
     procedure WMPClick(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
     procedure WMPPlayStateChange(ASender: TObject; NewState: Integer);
-    procedure tmrRateLabelTimer(Sender: TObject);
     procedure lblMuteUnmuteClick(Sender: TObject);
     procedure tmrMetaDataTimer(Sender: TObject);
     procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-    procedure tmrTabTimer(Sender: TObject);
+    procedure tmrInfoTimer(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure WMPKeyUp(ASender: TObject; nKeyCode, nShiftState: SmallInt);
     procedure WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
-    procedure tmrVolTimer(Sender: TObject);
     procedure applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
     procedure WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
     procedure WMDropFiles(var Msg: TWMDropFiles); message WM_DROPFILES;
@@ -153,6 +147,7 @@ type
     function isShiftKeyDown: boolean;
     function keepCurrentFile: boolean;
     function matchVideoWidth: boolean;
+    function noMediaFiles: boolean;
     function openWithShotcut: boolean;
     function playCurrentFile: boolean;
     function playFirstFile: boolean;
@@ -210,7 +205,7 @@ var
   vHeightTitle: integer;
   vDelta:       integer;
 begin
-  case GV.files.Count = 0 of TRUE: EXIT; end;
+  case noMediaFiles of TRUE: EXIT; end;
 
   X := UI.WMP.currentMedia.imageSourceWidth;
   Y := UI.WMP.currentMedia.imageSourceHeight;
@@ -557,6 +552,11 @@ begin
   UI.Width := X;
 end;
 
+function TFX.noMediaFiles: boolean;
+begin
+  result := GV.files.Count = 0;
+end;
+
 function TFX.openWithShotcut: boolean;
 // [F12] = open the video in the ShotCut* video editor
 // mklink C:\ProgramFiles "C:\Program Files"
@@ -790,7 +790,9 @@ function TFX.tabForwardsBackwards: boolean;
 var
   vFactor: integer;
 begin
-  UI.lblTab.Caption  := '';
+  case noMediaFiles of TRUE: EXIT; end;
+
+  UI.lblInfo.Caption  := '';
 
   case isShiftKeyDown of
      TRUE:  vFactor := 20;
@@ -806,12 +808,12 @@ begin
    FALSE: UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition + (UI.WMP.currentMedia.duration / vFactor);
   end;
 
-  UI.lblTab.Caption  := format('%dth', [vFactor]);
-  case isControlKeyDown of  TRUE: UI.lblTab.Caption := '<< ' + UI.lblTab.Caption;
-                           FALSE: UI.lblTab.Caption := '>> ' + UI.lblTab.Caption;
+  UI.lblInfo.Caption  := format('%dth', [vFactor]);
+  case isControlKeyDown of  TRUE: UI.lblInfo.Caption := '<< ' + UI.lblInfo.Caption;
+                           FALSE: UI.lblInfo.Caption := '>> ' + UI.lblInfo.Caption;
   end;
-  UI.lblTab.Visible := TRUE;
-  UI.tmrTab.Enabled := TRUE;      // confirm the fraction jumped (and the direction) for the user
+  UI.lblInfo.Visible  := TRUE;
+  UI.tmrInfo.Enabled  := TRUE;      // confirm the fraction jumped (and the direction) for the user
 end;
 
 function TFX.UIKey(var Key: Word; Shift: TShiftState): boolean;
@@ -934,16 +936,16 @@ function TFX.updateRateLabel: boolean;
 // We briefly delay accessing the new rate so that it registers internally within WMP, otherwise we'll still get the old rate
 begin
   delay(100);             // delay() doesn't "sleep()" the thread
-  UI.lblRate.Caption      := IntToStr(round(UI.WMP.settings.rate * 100)) + '%';
-  UI.lblRate.Visible      := TRUE;
-  UI.tmrRateLabel.Enabled := TRUE; // briefly display the new speed
+  UI.lblInfo.Caption      := IntToStr(round(UI.WMP.settings.rate * 100)) + '%';
+  UI.lblInfo.Visible      := TRUE;
+  UI.tmrInfo.Enabled      := TRUE; // briefly display the new speed
 end;
 
 function TFX.updateTimeDisplay: boolean;
 // Update the video timestamp display regardless of whether it's visible or not
 // Also update the progress bar to match the current video position
 begin
-  case GV.files.Count = 0 of TRUE: EXIT; end;
+  case noMediaFiles of TRUE: EXIT; end;
 
   UI.lblTimeDisplay.Caption := UI.WMP.controls.currentPositionString + ' / ' + UI.WMP.currentMedia.durationString;
 
@@ -953,14 +955,14 @@ end;
 
 function TFX.updateVolumeDisplay: boolean;
 begin
-  UI.lblVol.Caption := IntToStr(trunc(g_mixer.volume / 65535 * 100))  + '%';
-  UI.lblVol.Visible := TRUE;
-  UI.tmrVol.Enabled := TRUE; // briefly confirm the new volume setting for the user
+  UI.lblInfo.Caption  := IntToStr(trunc(g_mixer.volume / 65535 * 100))  + '%';
+  UI.lblInfo.Visible  := TRUE;
+  UI.tmrInfo.Enabled  := TRUE; // briefly confirm the new volume setting for the user
 end;
 
 function TFX.windowCaption: boolean;
 begin
-  case GV.Files.Count = 0 of TRUE: EXIT; end;
+  case noMediaFiles of TRUE: EXIT; end;
   UI.Caption := format('[%d/%d] %s', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(currentFilePath)]);
 end;
 
@@ -1144,14 +1146,10 @@ begin
   lblVideoBitRate.Parent  := WMP;
   lblXYRatio.Parent       := WMP;
   lblFileSize.Parent      := WMP;
-  lblRate.Parent          := WMP;
-  lblTab.Parent           := WMP;
-  lblVol.Parent           := WMP;
+  lblInfo.Parent          := WMP;
   lblTimeDisplay.Parent   := WMP;
 
-  lblRate.Caption         := '';
-  lblTab.Caption          := '';
-  lblVol.Caption          := '';
+  lblInfo.Caption         := '';
   lblTimeDisplay.Caption  := '';
 
 //  progressBar.Parent      := WMP;  // this is ok until you start zooming in: then you lose the progressBar altogether
@@ -1246,7 +1244,7 @@ end;
 procedure TUI.progressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 // calculate a new video position based on where the progress bar is clicked
 begin
-  case GV.files.Count = 0 of TRUE: EXIT; end; // prevent invalid call to WMP when there's no video and the user still clicks the progressBar anyway
+  case FX.noMediaFiles of TRUE: EXIT; end; // prevent invalid call to WMP when there's no video and the user still clicks the progressBar anyway
 
   var vNewPosition: integer     := Round(x * progressBar.Max / progressBar.ClientWidth);
   progressBar.Position          := vNewPosition;
@@ -1289,13 +1287,9 @@ begin
   lblXYRatio.Top        := vBase -  29;
   lblFileSize.Top       := vBase -  13;
 
-  lblRate.Left          := Width - lblRate.Width  - 20;
-  lblTab.Left           := Width - lblTab.Width   - 30;
-  lblVol.Left           := Width - lblVol.Width   - 20;
+  lblInfo.Left          := Width - lblInfo.Width - 20;
 
-  lblRate.Top           := vBase - lblTimeDisplay.Height - lblRate.Height;
-  lblTab.Top            := vBase - lblTimeDisplay.Height - lblTab.Height;
-  lblVol.Top            := vBase - lblTimeDisplay.Height - lblVol.Height;
+  lblInfo.Top           := vBase - lblTimeDisplay.Height - lblInfo.Height;
 
   repositionTimeDisplay;
 end;
@@ -1324,13 +1318,6 @@ begin
   WMP.Top     := -1;
 end;
 
-procedure TUI.tmrRateLabelTimer(Sender: TObject);
-// The change of playback speed is briefly displayed, then this timer event hides it.
-begin
-  tmrRateLabel.Enabled  := FALSE;
-  lblRate.Visible       := FALSE;
-end;
-
 procedure TUI.tmrMetaDataTimer(Sender: TObject);
 // We used this timer to delay fetching the video metadata from WMP. Trying to access it too soon after playback commences can cause WMP internal problems.
 begin
@@ -1345,11 +1332,11 @@ begin
   FX.PlayNextFile;
 end;
 
-procedure TUI.tmrTabTimer(Sender: TObject);
-// We want the tab feedback info to only be shown briefly. So, we use a timer to hide it again.
+procedure TUI.tmrInfoTimer(Sender: TObject);
+// We want the feedback info to only be shown briefly. So, we use a timer to hide it again.
 begin
-  tmrTab.Enabled := FALSE;
-  lblTab.Visible := FALSE;
+  tmrInfo.Enabled := FALSE;
+  lblInfo.Visible := FALSE;
 end;
 
 procedure TUI.tmrTimeDisplayTimer(Sender: TObject);
@@ -1358,21 +1345,12 @@ begin
   FX.UpdateTimeDisplay;
 end;
 
-procedure TUI.tmrVolTimer(Sender: TObject);
-// Hide the Volume setting when the timer fires
-begin
-  tmrVol.Enabled := FALSE;
-  lblVol.Visible := FALSE;
-end;
-
 function TUI.toggleControls(Shift: TShiftState): boolean;
 // [C] = Show the timestamp display and the Mute/Unmute button OR Hide all displayed controls/metadata
 // Ctrl-C Show/Hide all displayed controls/metadata
 // If the timestamp and Mute/Unmute button are already being displayed, Ctrl-C will also display all the metadata info
 begin
-  lblRate.Caption := '';      // These are only valid at the time the user presses the appropriate key to change them
-  lblTab.Caption  := '';
-  lblVol.Caption  := '';
+  lblInfo.Caption := '';      // Only valid at the time the user presses the appropriate key to change something
 
   case (ssCtrl in Shift) AND lblTimeDisplay.Visible and NOT lblXY.Visible of TRUE: begin // add the metadata to the currently displayed timestamp etc
     lblXY.Visible           := TRUE;

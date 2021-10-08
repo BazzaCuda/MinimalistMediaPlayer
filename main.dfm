@@ -7058,40 +7058,6 @@ object UI: TUI
     Transparent = True
     Visible = False
   end
-  object lblRate: TLabel
-    Left = 678
-    Top = 375
-    Width = 59
-    Height = 13
-    Alignment = taCenter
-    AutoSize = False
-    Caption = '100%'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -11
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
-    Transparent = True
-    Visible = False
-  end
-  object lblTab: TLabel
-    Left = 678
-    Top = 375
-    Width = 59
-    Height = 13
-    Alignment = taCenter
-    AutoSize = False
-    Caption = '100%'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWhite
-    Font.Height = -11
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
-    Transparent = True
-    Visible = False
-  end
   object lblVideoBitRate: TLabel
     Left = 10
     Top = 317
@@ -7108,10 +7074,10 @@ object UI: TUI
     Transparent = True
     Visible = False
   end
-  object lblVol: TLabel
-    Left = 678
+  object lblInfo: TLabel
+    Left = 688
     Top = 375
-    Width = 59
+    Width = 66
     Height = 13
     Alignment = taCenter
     AutoSize = False
@@ -7214,21 +7180,14 @@ object UI: TUI
     Interval = 999
     OnTimer = tmrTimeDisplayTimer
     Left = 400
-    Top = 256
+    Top = 208
   end
   object tmrPlayNext: TTimer
     Enabled = False
     Interval = 10
     OnTimer = tmrPlayNextTimer
     Left = 400
-    Top = 304
-  end
-  object tmrRateLabel: TTimer
-    Enabled = False
-    Interval = 500
-    OnTimer = tmrRateLabelTimer
-    Left = 400
-    Top = 208
+    Top = 256
   end
   object tmrMetaData: TTimer
     Enabled = False
@@ -7237,18 +7196,12 @@ object UI: TUI
     Left = 400
     Top = 160
   end
-  object tmrTab: TTimer
+  object tmrInfo: TTimer
     Enabled = False
     Interval = 500
-    OnTimer = tmrTabTimer
+    OnTimer = tmrInfoTimer
     Left = 400
     Top = 112
-  end
-  object tmrVol: TTimer
-    Enabled = False
-    OnTimer = tmrVolTimer
-    Left = 400
-    Top = 352
   end
   object applicationEvents: TApplicationEvents
     OnMessage = applicationEventsMessage
