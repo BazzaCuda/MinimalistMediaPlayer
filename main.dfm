@@ -6947,6 +6947,7 @@ object UI: TUI
     0000000000000000000000000000E0070000E0070000F00F0000F81F0000}
   OldCreateOrder = False
   Position = poScreenCenter
+  OnActivate = FormActivate
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
@@ -7231,6 +7232,7 @@ object UI: TUI
     Top = 208
   end
   object tmrMetaData: TTimer
+    Enabled = False
     Interval = 5000
     OnTimer = tmrMetaDataTimer
     Left = 400

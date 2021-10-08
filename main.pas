@@ -69,6 +69,7 @@ type
     procedure tmrVolTimer(Sender: TObject);
     procedure applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
     procedure WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; afX, fY: Integer);
+    procedure FormActivate(Sender: TObject);
   private
     procedure setupProgressBar;
   protected
@@ -1088,6 +1089,11 @@ begin
                                             end;end;
 end;
 
+procedure TUI.FormActivate(Sender: TObject);
+begin
+  case ParamCount = 0 of TRUE: UI.CLOSE; end;
+end;
+
 procedure TUI.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 // make sure to stop video playback before exiting the app or WMP can get upset
 begin
@@ -1105,6 +1111,12 @@ begin
   end;
 
   color := clBlack; // background color of the window's client area, so zooming-out doesn't show the design-time color
+
+  setupProgressBar;
+
+  case ParamCount = 0 of TRUE: begin
+                                ShowMessage('Please use "Open with..."'#13#10'in your File Explorer / Manager, to open a media file');
+                                EXIT; end;end;
 
   lblMuteUnmute.Visible := FALSE; // I suddenly took a dislike to this being displayed when all I actually wanted was the video timestamp.
 
@@ -1134,7 +1146,6 @@ begin
 
 //  progressBar.Parent      := WMP;  // this is ok until you start zooming in: then you lose the progressBar altogether
 
-  setupProgressBar;
   repositionLabels;
 
   case g_mixer.muted of TRUE: FX.DoMuteUnmute; end; // GV.Mute starts out FALSE; this brings it in line with the system
