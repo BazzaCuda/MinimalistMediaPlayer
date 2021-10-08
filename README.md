@@ -47,7 +47,7 @@ Control | Action
 `W`						| [W]atch the next video in the list
 `X`						| e[X]it the application
 `Y`						| tr[Y]out the video by sampling it at various stages
-`Z`						| watch the last video in the liat
+`Z`						| watch the last video in the list
 `Up Arrow`				| increase the volume by 1%
 `Down Arrow`			| decrease the volume by 1%
 `Ctrl-Up Arrow`			| increase the playback speed by 10%
