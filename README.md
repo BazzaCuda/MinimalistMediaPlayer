@@ -40,7 +40,7 @@ Control | Action
 `Q`						| play the previous video in the [Q]ueue/list
 `R`						| [R]ename the current video file
 `S`						| re[S]tart the current video from the beginning, aka [S]tartover
-`T`						| [T]ab through the video a 100th (default), 50th, 20th or 10th of its duration (use ALT, SHIFT, CAPS LOCK to modify)
+`T`						| [T]ab through the video a 200th, 100th (default), 50th, 20th or 10th of its duration (use SHIFT-ALT, ALT, SHIFT, CAPS LOCK to modify)
 `Ctrl-T`				| [T]ab back through the video a 100th (default), 50th, 20th or 10th of its duration (use ALT, SHIFT, CAPS LOCK to modify)
 `U`						| [U]nzoom, i.e. re-fit the video to the window
 `V`						| maximize / restore [V]iew, same as [M]

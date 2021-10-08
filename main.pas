@@ -93,7 +93,7 @@ uses
   FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils, ShellAPI, FormAbout;
 
 const
-  APP_VERSION = 'v1.8';
+  APP_VERSION = 'v1.9';
   MENU_ID     = 1001;
 
 type
@@ -817,6 +817,7 @@ end;
 function TFX.tabForwardsBackwards: boolean;
 // [T] = Tab Forward or Ctrl-T = Tab Backward through a fraction of the video.
 // The fraction to jump can be modified using the following keys:
+//    SHIFT-ALT = 200th
 //    Default   = 100th
 //    ALT       = 50th
 //    SHIFT     = 20th
@@ -829,14 +830,15 @@ begin
 
   UI.showInfo('');
 
-  case isShiftKeyDown of
-     TRUE:  vFactor := 20;
-    FALSE:  case isAltKeyDown of
-               TRUE:  vFactor := 50;
-              FALSE:  case isCapsLockOn of
-                         TRUE: vFactor := 10;
-                        FALSE: vFactor := 100;
-                      end;end;end;
+  case isShiftKeyDown AND isAltKeyDown of  TRUE:  vFactor := 200;
+                                          FALSE:  case isShiftKeyDown of
+                                                    TRUE: vFactor := 20;
+                                                   FALSE: case isAltKeyDown of
+                                                            TRUE: vFactor := 50;
+                                                           FALSE: case isCapsLockOn of
+                                                                    TRUE: vFactor := 10;
+                                                                   FALSE: vFactor := 100;
+  end;end;end;end;
 
   case isControlKeyDown of
     TRUE: UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition - (UI.WMP.currentMedia.duration / vFactor);
