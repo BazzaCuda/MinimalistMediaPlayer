@@ -42,7 +42,7 @@ Control | Action
 `S`						| re[S]tart the current video from the beginning, aka [S]tartover
 `T`						| [T]ab through the video a 100th (default), 50th, 20th or 10th of its duration (use ALT, SHIFT, CAPS LOCK to modify)
 `Ctrl-T`				| [T]ab back through the video a 100th (default), 50th, 20th or 10th of its duration (use ALT, SHIFT, CAPS LOCK to modify)
-`U`						| [U]nzoom, i.e. fit the video to the window
+`U`						| [U]nzoom, i.e. re-fit the video to the window
 `V`						| maximize / restore [V]iew, same as [M]
 `W`						| [W]atch the next video in the list
 `X`						| e[X]it the application
