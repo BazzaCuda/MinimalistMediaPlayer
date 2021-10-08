@@ -1157,6 +1157,7 @@ end;
 
 procedure TUI.FormCreate(Sender: TObject);
 begin
+  addMenuItem;
   SetWindowLong(UI.Handle, GWL_STYLE, GetWindowLong(UI.Handle, GWL_STYLE) OR WS_CAPTION AND (NOT (WS_BORDER)));
   DragAcceptFiles(UI.Handle, TRUE);
 
@@ -1167,7 +1168,6 @@ begin
   color := clBlack; // background color of the window's client area, so zooming-out doesn't show the design-time color
 
   setupProgressBar;
-  addMenuItem;
 
   case ParamCount = 0 of TRUE: begin
                                 FX.ShowOKCancelMsgDlg('Typically, you would use "Open with..." in your File Explorer / Manager, to open a media file'#13#10

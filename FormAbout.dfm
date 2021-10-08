@@ -2264,9 +2264,9 @@ object AboutForm: TAboutForm
   object Label3: TLabel
     Left = 136
     Top = 78
-    Width = 242
+    Width = 309
     Height = 25
-    Caption = 'Copyright (c) Baz Cuda, 2021'
+    Caption = 'Copyright (c) Baz "Cap'#39'n" Cuda, 2021'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -19
