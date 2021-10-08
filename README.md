@@ -111,7 +111,7 @@ If you find ``Minimalist Media Player`` useful and you have suggestions for impr
 
 MPlayer vs Microsoft Media Foundation vs Windows Media Player
 --------------
-Ultimately, I would like to replace Windows Media Player as the video renderer and make ``Minimalist Media Player`` a front-end for MPlayer with its superior video-handling capabilities, or possibly Microsoft Media Foundation (I need advice on which would be the more up-to-date approach). For instance, WMP really doesn't do Frame Forwards and Frame Backwards properly, and I also had to comment out the video scrubbing facility (dragging the mouse along the progress bar to quickly scan through a video - WMP gets in a right pickle!). If you would like to implement MPlayer to replace WMP, please be my guest!!
+Ultimately, I would like to replace Windows Media Player as the video renderer and make ``Minimalist Media Player`` a front-end for MPlayer with its superior video-handling capabilities, or possibly Microsoft Media Foundation / MFPack (I would appreciate some advice on which would be the most up-to-date approach). For instance, WMP really doesn't do Frame Forwards and Frame Backwards properly, and I also had to comment out the video scrubbing facility (dragging the mouse along the progress bar to quickly scan through a video - WMP gets in a right pickle!). If you would like to implement MPlayer to replace WMP, please be my guest!!
 
 And finally, Esther...
 ------------------
