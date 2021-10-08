@@ -1177,7 +1177,7 @@ procedure TUI.FormResize(Sender: TObject);
 begin
   FX.windowCaption;
 
-  case GV.startup AND FX.isCapsLockOn of  TRUE: SetWindowPos(self.Handle, 0, -6, 200, 0, 0, SWP_NOZORDER + SWP_NOSIZE); end; // left justify on screen
+  case GV.startup AND FX.isCapsLockOn of  TRUE: SetWindowPos(UI.Handle, 0, -6, 200, 0, 0, SWP_NOZORDER + SWP_NOSIZE); end; // left justify on screen
   GV.startup := FALSE;
 
   repositionLabels;
