@@ -125,7 +125,7 @@ type
     function clipboardCurrentFileName: boolean;
     function currentFilePath: string;
     function Delay(dwMilliseconds:DWORD): boolean;
-    function deleteBookmarkedPosition: boolean;
+    function deleteBookmark: boolean;
     function deleteCurrentFile(Shift: TShiftState): boolean;
     function deleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
     function doCentreWindow: boolean;
@@ -162,9 +162,9 @@ type
     function resizeWindow1: boolean;
     function resizeWindow2: boolean;
     function resizeWindow3: boolean;
-    function resumePosition: boolean;
+    function resumeBookmark: boolean;
     function sampleVideo: boolean;
-    function saveCurrentPosition: boolean;
+    function saveBookmark: boolean;
     function showHideTitleBar: boolean;
     function ShowOKCancelMsgDlg(aMsg: string;
                                 msgDlgType: TMsgDlgType = mtConfirmation;
@@ -280,9 +280,10 @@ begin
   until (iStop  -  iStart) >= dwMilliseconds;
 end;
 
-function TFX.deleteBookmarkedPosition: boolean;
+function TFX.deleteBookmark: boolean;
 begin
   DeleteFile(getINIname);
+  UI.showInfo('bookmark deleted');
 end;
 
 function TFX.deleteCurrentFile(Shift: TShiftState): boolean;
@@ -715,15 +716,16 @@ begin
   windowCaption;
 end;
 
-function TFX.resumePosition: boolean;
+function TFX.resumeBookmark: boolean;
 // [6] = read the saved video position from the INI file and continue playing from that position
 begin
-  case FileExists(getINIname) of FALSE: EXIT; end;
+  case FileExists(getINIname) of FALSE: begin UI.showInfo('no bookmark'); EXIT; end;end;
 
   var sl := TStringList.Create;
   sl.LoadFromFile(getINIname);
   UI.WMP.controls.currentPosition := StrToFloat(sl[0]);
   sl.Free;
+  UI.showInfo('resumed from bookmark');
 end;
 
 function TFX.sampleVideo: boolean;
@@ -743,7 +745,7 @@ begin
   end;
 end;
 
-function TFX.saveCurrentPosition: boolean;
+function TFX.saveBookmark: boolean;
 // [5] = save current video position to an ini file
 begin
   case FileExists(getINIname) of
@@ -753,7 +755,7 @@ begin
   sl.Add(FloatToStr(UI.WMP.controls.currentPosition));
   sl.SaveToFile(getINIname);
   sl.Free;
-  UI.showInfo('Bookmarked');
+  UI.showInfo('bookmarked');
 end;
 
 function TFX.speedDecrease(Shift: TShiftState): boolean;
@@ -913,9 +915,9 @@ begin
     ord('0')          : ShowHideTitleBar;                     // 0 = Hide(zero)/show window title bar
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('2')          : ResizeWindow2;                        // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
-    ord('5')          : saveCurrentPosition;                  // 5 = save current media position to an INI file     (bookmark)
-    ord('6')          : resumePosition;                       // 6 = resume video from saved media position         (bookmark)
-    ord('7')          : deleteBookmarkedPosition;             // 7 = delete INI file containing bookmarked position (bookmark)
+    ord('5')          : saveBookmark;                         // 5 = save current media position to an INI file     (bookmark)
+    ord('6')          : resumeBookmark;                       // 6 = resume video from saved media position         (bookmark)
+    ord('7')          : deleteBookmark;                       // 7 = delete INI file containing bookmarked position (bookmark)
     ord('8')          : UI.repositionWMP;                     // 8 = reposition WMP to eliminate border pixels
     ord('9')          : matchVideoWidth;                      // 9 = match window width to video width
   end;
