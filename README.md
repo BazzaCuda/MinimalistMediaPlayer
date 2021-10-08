@@ -59,7 +59,7 @@ Control | Action
 `6`						| retrieve a saved/bookmarked video timestamp from an INI file and continue playback from that point
 `7`						| delete any previously saved/bookmarked video timestamp
 `8`						| set the video to 1-pixel larger than the window on all four sides
-`9`						| resize the window to the dimensions of the video
+`9`						| resize the window to the width of the video
 `RIGHT ARROW`			| step forwards one frame
 `LEFT ARROW`			| step backwards one frame
 Zoom|
