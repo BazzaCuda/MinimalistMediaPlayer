@@ -118,7 +118,7 @@ type
     property    zoomed:       boolean       read FZoomed    write FZoomed;
   end;
 
-  TFX = class                        // application Functions
+  TFX = class                        // application Functions aka program/business logic
   private
     function adjustAspectRatio: boolean;
     function blackOut: boolean;
@@ -355,8 +355,7 @@ begin
   var vParams := '/c ' + aCommandLIne;
 
   result := CreateProcess(PWideChar(vCmd), PWideChar(vParams), nil, nil, FALSE,
-                          CREATE_NEW_PROCESS_GROUP + NORMAL_PRIORITY_CLASS, nil, PWideChar(ExtractFilePath(application.ExeName)),
-                          vStartInfo, vProcInfo);
+                          CREATE_NEW_PROCESS_GROUP + NORMAL_PRIORITY_CLASS, nil, PWideChar(GV.exePath), vStartInfo, vProcInfo);
 end;
 
 function TFX.doMuteUnmute: boolean;
@@ -371,7 +370,7 @@ begin
 end;
 
 function TFX.doPausePlay: boolean;
-// [SpaceBar] or click on video = Pause / Play
+// [SpaceBar] or double-click on video = Pause / Play
 begin
   case UI.WMP.playState of
                           wmppsPlaying:   UI.WMP.controls.pause;
@@ -464,7 +463,7 @@ begin
 end;
 
 function TFX.getINIname: string;
-// A video timestamp can be saved to and retrieved from an INI file, named after the video file.
+// A video timestamp bookmark can be saved to and retrieved from an INI file, named after the video file.
 begin
   result := ExtractFileName(currentFilePath);
   result := ChangeFileExt(result, '.ini');
