@@ -48,8 +48,8 @@ Control | Action
 `X`						| e[X]it the application
 `Y`						| tr[Y]out the video by sampling it at various stages
 `Z`						| watch the last video in the liat
-`Arrow Up`				| increase the volume by 1%
-`Arrow Down`			| decrease the volume by 1%
+`Up Arrow`				| increase the volume by 1%
+`Down Arrow`			| decrease the volume by 1%
 `Ctrl-Up Arrow`			| increase the playback speed by 10%
 `Ctrl-Down Arrow`		| decrease the playback speed by 10%
 `0`						| hide(zero) or show the window title bar / caption
