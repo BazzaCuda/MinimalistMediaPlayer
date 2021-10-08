@@ -105,6 +105,7 @@ type
   public
     constructor create;
     destructor  destroy;  override;
+    function    invalidPlayIx: boolean;
     property    blackOut:     boolean       read FBlackOut  write FBlackOut;
     property    closing:      boolean       read FClosing   write FClosing;
     property    exePath:      string        read GetExePath;
@@ -266,6 +267,7 @@ end;
 function TFX.currentFilePath: string;
 // returns the current file in the list
 begin
+  case noMediaFiles of TRUE: EXIT; end;
   result := GV.playlist[GV.playIx];
 end;
 
@@ -291,6 +293,8 @@ function TFX.deleteCurrentFile(Shift: TShiftState): boolean;
 // [D] / DEL = [D]elete the current file
 // Ctrl-D / Ctrl-DEL = Delete the entire contents of the current file's folder (doesn't touch subfolders)
 begin
+  case noMediaFiles of TRUE: EXIT; end;
+
   UI.WMP.controls.pause;
   var vMsg := 'DELETE '#13#10#13#10'Folder: ' + ExtractFilePath(currentFilePath);
   case ssCtrl in Shift of  TRUE: vMsg := vMsg + '*.*';
@@ -441,6 +445,8 @@ function TFX.fullScreen: boolean;
 // [F] = Tell WMP to diplay fullScreen.
 // The video timestamp and metadata displays etc. won't show until fullScreen mode is exited.
 begin
+  case noMediaFiles of TRUE: EXIT; end;
+
   case UI.WMP.fullScreen of   TRUE: UI.WMP.fullScreen := FALSE;
                              FALSE: UI.WMP.fullScreen := TRUE;  end;
 end;
@@ -540,6 +546,8 @@ function TFX.keepCurrentFile: boolean;
 // Occasionally, Windows or WMP will prevent the file from being renamed while WMP has it open.
 // There is no apparent pattern to when the rename is allowed and when it isn't.
 begin
+  case noMediaFiles of TRUE: EXIT; end;
+
   UI.WMP.controls.pause;
   delay(250);   // give WMP time to register internally that the video has been paused (delay() doesn't "sleep()" the thread).
   var vFileName := '_' + ExtractFileName(currentFilePath);
@@ -554,6 +562,8 @@ function TFX.matchVideoWidth: boolean;
 // [9] = resize the width of the window to match the video width.
 // Judicious use of [9], [J], [H] and [G] can be used to obtain the optimum window to match the video.
 begin
+  case noMediaFiles of TRUE: EXIT; end;
+
   var X := UI.WMP.currentMedia.imageSourceWidth;
   var Y := UI.WMP.currentMedia.imageSourceHeight;
 
@@ -573,6 +583,8 @@ function TFX.openWithShotcut: boolean;
 // At some point, the user's preferred video editor needs to be configurable via an application INI file.
 // *https://shotcut.org/
 begin
+  case noMediaFiles of TRUE: EXIT; end;
+
   UI.WMP.controls.pause;
   doCommandLine('C:\ProgramFiles\Shotcut\shotcut.exe "' + currentFilePath + '"');
 end;
@@ -580,9 +592,9 @@ end;
 function TFX.playCurrentFile: boolean;
 // CurrentFile is the one whose index in the list equals playIx
 begin
-  case (GV.playIx < 0) OR (GV.playIx > GV.playlist.Count - 1) of TRUE: EXIT; end;  // sanity check
+  case GV.invalidPlayIx of TRUE: EXIT; end;             // sanity check
 
-  case FileExists(currentFilePath) of TRUE: begin                               // i.e. if file *still* exists :D
+  case FileExists(currentFilePath) of TRUE: begin       // i.e. if file *still* exists :D
     windowCaption;
     UI.WMP.URL := 'file://' + currentFilePath;
     unZoom;
@@ -666,6 +678,8 @@ var
   s:            string;
   vNewFilePath: string;
 begin
+  case noMediaFiles of TRUE: EXIT; end;
+
   UI.WMP.controls.pause;
   try
     vOldFileName  := ExtractFileName(currentFilePath);
@@ -720,6 +734,8 @@ end;
 function TFX.resumeBookmark: boolean;
 // [6] = read the saved video position from the INI file and continue playing from that position
 begin
+  case noMediaFiles of TRUE: EXIT; end;
+
   case FileExists(getINIname) of FALSE: begin UI.showInfo('no bookmark'); EXIT; end;end;
 
   var sl := TStringList.Create;
@@ -734,6 +750,7 @@ function TFX.sampleVideo: boolean;
 // This will stop once the current video position is more than 90% the way through the video
 // If the next video is played, sampling will continue until Y is pressed again to cancel sampling
 begin
+  case noMediaFiles of TRUE: EXIT; end;
   case GV.sampling of TRUE: begin GV.sampling := FALSE; EXIT; end;end;
 
   GV.sampling := TRUE;
@@ -749,6 +766,8 @@ end;
 function TFX.saveBookmark: boolean;
 // [5] = save current video position to an ini file
 begin
+  case noMediaFiles of TRUE: EXIT; end;
+
   case FileExists(getINIname) of
     TRUE: case MessageDlg('Do you want to overwrite the previous bookmark?', TMsgDlgType.mtConfirmation, [mbYes, mbNo], 0) = mrNo of TRUE: EXIT; end;end;
 
@@ -780,6 +799,8 @@ end;
 function TFX.startOver: boolean;
 // [S] = StartOver; play the current video from the beginning
 begin
+  case noMediaFiles of TRUE: EXIT; end;
+
   UI.WMP.controls.currentPosition := 0;
   UI.WMP.controls.play;
 end;
@@ -976,6 +997,8 @@ end;
 function TFX.WMPplay: boolean;
 // Called to both start and resume the playing of a video
 begin
+  case noMediaFiles of TRUE: EXIT; end;
+
   try
     UI.tmrMetaData.Enabled := FALSE; // prevent the display of invalid metadata while we [potentially] switch videos
     clearMediaMetaData;              // "Out with the old..."
@@ -1522,6 +1545,11 @@ end;
 function TGV.getExePath: string;
 begin
   result := IncludeTrailingBackslash(ExtractFilePath(ParamStr(0)));
+end;
+
+function TGV.invalidPlayIx: boolean;
+begin
+  result := (GV.playIx < 0) OR (GV.playIx > GV.playlist.Count - 1);
 end;
 
 initialization
