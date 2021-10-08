@@ -35,7 +35,7 @@ Control | Action
 `L`						| re[L]oad the list of supported video files from the current folder
 `M`						| [M]aximize / restore window
 `N`						| mi[N]imize window to the Windows taskbar
-`O`						| zoom [O]ut by 10% of video's height and width
+`O`						| zoom [O]ut by 10% of the video's height and width
 `P` 					| pause the video and play it instead with [P]otplayer, if installed
 `Q`						| play the previous video in the [Q]ueue/list
 `R`						| [R]ename the current video file
