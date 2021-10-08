@@ -6999,6 +6999,7 @@ object UI: TUI
     Top = 300
     Width = 86
     Height = 13
+    Hint = 'Audio Bitrate'
     AutoSize = False
     Caption = 'AR:'
     Font.Charset = DEFAULT_CHARSET
@@ -7007,6 +7008,8 @@ object UI: TUI
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
     Transparent = True
     Visible = False
   end
@@ -7015,6 +7018,7 @@ object UI: TUI
     Top = 281
     Width = 86
     Height = 13
+    Hint = 'Overall Bitrate'
     AutoSize = False
     Caption = 'BR:'
     Font.Charset = DEFAULT_CHARSET
@@ -7023,6 +7027,8 @@ object UI: TUI
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
     Transparent = True
     Visible = False
   end
@@ -7031,6 +7037,7 @@ object UI: TUI
     Top = 351
     Width = 86
     Height = 13
+    Hint = 'File Size'
     AutoSize = False
     Caption = 'FS:'
     Font.Charset = DEFAULT_CHARSET
@@ -7039,6 +7046,8 @@ object UI: TUI
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
     Transparent = True
     Visible = False
   end
@@ -7047,6 +7056,7 @@ object UI: TUI
     Top = 266
     Width = 86
     Height = 13
+    Hint = 'Frame Rate'
     AutoSize = False
     Caption = 'FR: '
     Font.Charset = DEFAULT_CHARSET
@@ -7055,6 +7065,8 @@ object UI: TUI
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
     Transparent = True
     Visible = False
   end
@@ -7063,6 +7075,7 @@ object UI: TUI
     Top = 317
     Width = 86
     Height = 13
+    Hint = 'Video Bitrate'
     AutoSize = False
     Caption = 'VR:'
     Font.Charset = DEFAULT_CHARSET
@@ -7071,6 +7084,8 @@ object UI: TUI
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
     Transparent = True
     Visible = False
   end
@@ -7096,6 +7111,7 @@ object UI: TUI
     Top = 229
     Width = 86
     Height = 13
+    Hint = 'Video Width x Video Height'
     AutoSize = False
     Caption = 'XY:'
     Font.Charset = DEFAULT_CHARSET
@@ -7104,6 +7120,8 @@ object UI: TUI
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
     Transparent = True
     Visible = False
   end
@@ -7112,6 +7130,7 @@ object UI: TUI
     Top = 248
     Width = 86
     Height = 13
+    Hint = 'Source Width x Source Height'
     AutoSize = False
     Caption = 'XY:'
     Font.Charset = DEFAULT_CHARSET
@@ -7120,6 +7139,8 @@ object UI: TUI
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
     Transparent = True
     Visible = False
   end
@@ -7128,6 +7149,7 @@ object UI: TUI
     Top = 334
     Width = 86
     Height = 13
+    Hint = 'Pixel Aspect Ratio'
     AutoSize = False
     Caption = 'X:Y'
     Font.Charset = DEFAULT_CHARSET
@@ -7136,6 +7158,8 @@ object UI: TUI
     Font.Name = 'Tahoma'
     Font.Style = []
     ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
     Transparent = True
     Visible = False
   end
