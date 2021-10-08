@@ -107,7 +107,7 @@ A good question, considering how many other perfectly good Windows media players
 
 Pull Requests
 -------------
-If you find ``Minimalist Media Player`` useful and you have suggestions for improvements, I am willing to consider pull requests. I would be very grateful if you would follow my coding etiquette though and have CASE statements rather than IF statements.
+If you find ``Minimalist Media Player`` useful and you have suggestions for improvements, I am willing to consider pull requests. I would be very grateful if you would follow my coding etiquette though and have CASE statements rather than IF statements; they're really easy to adopt when you get used to them.
 
 MPlayer vs Windows Media Player
 --------------
