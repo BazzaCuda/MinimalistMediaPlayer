@@ -68,7 +68,7 @@ type
     procedure WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
     procedure tmrVolTimer(Sender: TObject);
     procedure applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
-    procedure WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; afX, fY: Integer);
+    procedure WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
     procedure WMDropFiles(var Msg: TWMDropFiles); message WM_DROPFILES;
   private
     procedure setupProgressBar;
@@ -210,6 +210,8 @@ var
   vHeightTitle: integer;
   vDelta:       integer;
 begin
+  case GV.files.Count = 0 of TRUE: EXIT; end;
+
   X := UI.WMP.currentMedia.imageSourceWidth;
   Y := UI.WMP.currentMedia.imageSourceHeight;
 
@@ -941,6 +943,8 @@ function TFX.updateTimeDisplay: boolean;
 // Update the video timestamp display regardless of whether it's visible or not
 // Also update the progress bar to match the current video position
 begin
+  case GV.files.Count = 0 of TRUE: EXIT; end;
+
   UI.lblTimeDisplay.Caption := UI.WMP.controls.currentPositionString + ' / ' + UI.WMP.currentMedia.durationString;
 
   UI.ProgressBar.Max        := trunc(UI.WMP.currentMedia.duration);
@@ -1309,7 +1313,7 @@ begin
 end;
 
 function TUI.repositionWMP: boolean;
-// Set WMP to be 1 pixel to the left of the window and 1-pixel too wide on the right
+// Set WMP to be 1 pixel bigger than the window on all four sides.
 // This [in theory] eliminates any chance of a border pixel on the left and right of the window
 // Windows still insists on drawing a 1-pixel border!
 // I was tempted to make the window a borderless dialog frame, but this would then make it non-resizable by the user.
@@ -1452,10 +1456,7 @@ end;
 procedure TUI.WMPClick(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
 // Standard functionality: Play/Pause a video when the user left-clicks on it
 begin
-  case WMP.playState of
-    wmppsPlaying:               WMP.controls.pause;
-    wmppsPaused, wmppsStopped:  main.FX.WMPplay;
-  end;
+  main.FX.doPausePlay;
 end;
 
 procedure TUI.WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
@@ -1474,14 +1475,15 @@ begin
   FX.UIKeyUp(Key, TShiftState(nShiftState));
 end;
 
-procedure TUI.WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; afX, fY: Integer);
+procedure TUI.WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
 // When there is no window caption you can drag the window around by holding down a CTRL key and dragging with the left mouse button on the video.
+// Edit: modified so that just dragging the window with the left mouse button now matches what happens when you do that with the title bar of any window.
+// A side effect of this change is that media files can be paused/resumed using a left double-click, but no longer with a single left click.
 const
   SC_DRAGMOVE = $F012;
 begin
-  case FX.isControlKeyDown of FALSE: EXIT; end;
+//  case main.FX.isControlKeyDown of FALSE: EXIT; end;
 
-  ReleaseCapture;
   Perform(WM_SYSCOMMAND, SC_DRAGMOVE, 0);
 end;
 

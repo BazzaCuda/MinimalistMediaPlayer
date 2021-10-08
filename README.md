@@ -10,7 +10,7 @@ A simple but very effective media player built around the Windows Media Player A
 
 Control | Action
 ------- | ------
-`SPACEBAR` 				| pause/resume playback (also left mouse click on the video)
+`SPACEBAR` 				| pause/resume playback (also left mouse double-click on the video)
 `Ctrl-Up Arrow` 		| increase playback speed 10%
 `/`						| increase playback speed 10%
 `Ctrl-Down Arrow`		| decrease playback speed 10%
@@ -68,7 +68,7 @@ Zoom|
 `Ctrl-UP ARROW`			| when zoomed in/out, move video UP inside the window
 `Ctrl-DOWN ARROW`		| when zoomed in/out, move video DOWN inside the window
 Additional |
-`Ctrl-Left Click on the video and hold`	| the window can be dragged/repositioned without a window caption title bar
+`Left Click on the video and hold`	| the window can be dragged/repositioned without a window caption title bar
 
 Media File Formats
 ------------------
