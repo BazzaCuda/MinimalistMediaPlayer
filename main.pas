@@ -74,6 +74,7 @@ type
     function  repositionLabels: boolean;
     function  repositionTimeDisplay: boolean;
     function  repositionWMP: boolean;
+    function  showInfo(aInfo: string): boolean;
     function  toggleControls(Shift: TShiftState): boolean;
   end;
 
@@ -752,6 +753,7 @@ begin
   sl.Add(FloatToStr(UI.WMP.controls.currentPosition));
   sl.SaveToFile(getINIname);
   sl.Free;
+  UI.showInfo('Bookmarked');
 end;
 
 function TFX.speedDecrease(Shift: TShiftState): boolean;
@@ -792,7 +794,7 @@ var
 begin
   case noMediaFiles of TRUE: EXIT; end;
 
-  UI.lblInfo.Caption  := '';
+  UI.showInfo('');
 
   case isShiftKeyDown of
      TRUE:  vFactor := 20;
@@ -808,12 +810,11 @@ begin
    FALSE: UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition + (UI.WMP.currentMedia.duration / vFactor);
   end;
 
-  UI.lblInfo.Caption  := format('%dth', [vFactor]);
-  case isControlKeyDown of  TRUE: UI.lblInfo.Caption := '<< ' + UI.lblInfo.Caption;
-                           FALSE: UI.lblInfo.Caption := '>> ' + UI.lblInfo.Caption;
+  var newInfo := format('%dth', [vFactor]);
+  case isControlKeyDown of  TRUE: newInfo := '<< ' + newInfo;
+                           FALSE: newInfo := '>> ' + newInfo;
   end;
-  UI.lblInfo.Visible  := TRUE;
-  UI.tmrInfo.Enabled  := TRUE;      // confirm the fraction jumped (and the direction) for the user
+  UI.showInfo(newInfo);        // confirm the fraction jumped (and the direction) for the user
 end;
 
 function TFX.UIKey(var Key: Word; Shift: TShiftState): boolean;
@@ -935,10 +936,8 @@ function TFX.updateRateLabel: boolean;
 // Confirm to the user the new playback rate/speed.
 // We briefly delay accessing the new rate so that it registers internally within WMP, otherwise we'll still get the old rate
 begin
-  delay(100);             // delay() doesn't "sleep()" the thread
-  UI.lblInfo.Caption      := IntToStr(round(UI.WMP.settings.rate * 100)) + '%';
-  UI.lblInfo.Visible      := TRUE;
-  UI.tmrInfo.Enabled      := TRUE; // briefly display the new speed
+  delay(100);             // delay() doesn't "sleep()"/suspend the thread
+  UI.showInfo(IntToStr(round(UI.WMP.settings.rate * 100)) + '%');
 end;
 
 function TFX.updateTimeDisplay: boolean;
@@ -955,9 +954,7 @@ end;
 
 function TFX.updateVolumeDisplay: boolean;
 begin
-  UI.lblInfo.Caption  := IntToStr(trunc(g_mixer.volume / 65535 * 100))  + '%';
-  UI.lblInfo.Visible  := TRUE;
-  UI.tmrInfo.Enabled  := TRUE; // briefly confirm the new volume setting for the user
+  UI.showInfo(IntToStr(trunc(g_mixer.volume / 65535 * 100))  + '%'); // briefly confirm the new volume setting for the user
 end;
 
 function TFX.windowCaption: boolean;
@@ -1149,7 +1146,7 @@ begin
   lblInfo.Parent          := WMP;
   lblTimeDisplay.Parent   := WMP;
 
-  lblInfo.Caption         := '';
+  showInfo('');
   lblTimeDisplay.Caption  := '';
 
 //  progressBar.Parent      := WMP;  // this is ok until you start zooming in: then you lose the progressBar altogether
@@ -1350,7 +1347,7 @@ function TUI.toggleControls(Shift: TShiftState): boolean;
 // Ctrl-C Show/Hide all displayed controls/metadata
 // If the timestamp and Mute/Unmute button are already being displayed, Ctrl-C will also display all the metadata info
 begin
-  lblInfo.Caption := '';      // Only valid at the time the user presses the appropriate key to change something
+  showInfo('');      // Only valid at the time the user presses the appropriate key to change something
 
   case (ssCtrl in Shift) AND lblTimeDisplay.Visible and NOT lblXY.Visible of TRUE: begin // add the metadata to the currently displayed timestamp etc
     lblXY.Visible           := TRUE;
@@ -1406,6 +1403,14 @@ begin
 
   UI.Width := UI.Width - 1; // force the progressBar to redraw. If the app is launched by clicking the EXE,
   UI.Width := UI.Width + 1; // the progressBar gets a nasty 1-pixel border, despite the above code.
+end;
+
+function TUI.showInfo(aInfo: string): boolean;
+begin
+  lblInfo.Caption := aInfo;
+  case aInfo = '' of TRUE: EXIT; end;
+  lblInfo.Visible := TRUE;
+  tmrInfo.Enabled := TRUE;
 end;
 
 procedure TUI.WMDropFiles(var Msg: TWMDropFiles);

@@ -7090,12 +7090,11 @@ object UI: TUI
     Visible = False
   end
   object lblInfo: TLabel
-    Left = 688
+    Left = 725
     Top = 375
-    Width = 66
+    Width = 29
     Height = 13
-    Alignment = taCenter
-    AutoSize = False
+    Alignment = taRightJustify
     Caption = '100%'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWhite
