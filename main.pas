@@ -93,8 +93,8 @@ type
   strict private                     // force code to use the properties
     FBlackOut: boolean;
     FClosing: boolean;
-    FFileIx:  integer;
-    FFiles:   TList<string>;
+    FplayIx:  integer;
+    Fplaylist: TList<string>;
     FInputBox: boolean;
     FMute:    boolean;
     FSampling: boolean;
@@ -108,10 +108,10 @@ type
     property    blackOut:     boolean       read FBlackOut  write FBlackOut;
     property    closing:      boolean       read FClosing   write FClosing;
     property    exePath:      string        read GetExePath;
-    property    fileIx:       integer       read FFileIx    write FFileIx;
-    property    files:        TList<string> read FFiles;
     property    inputBox:     boolean       read FInputBox  write FInputBox;
     property    mute:         boolean       read FMute      write FMute;
+    property    playIx:       integer       read FplayIx    write FplayIx;
+    property    playlist:     TList<string> read Fplaylist;
     property    sampling:     boolean       read FSampling  write FSampling;
     property    startup:      boolean       read FStartUp   write FStartUp;
     property    zoomed:       boolean       read FZoomed    write FZoomed;
@@ -266,7 +266,7 @@ end;
 function TFX.currentFilePath: string;
 // returns the current file in the list
 begin
-  result := GV.files[GV.fileIx];
+  result := GV.playlist[GV.playIx];
 end;
 
 function TFX.Delay(dwMilliseconds: DWORD): boolean;
@@ -302,8 +302,8 @@ begin
 
             case isLastFile or (ssCtrl in Shift) of TRUE: begin UI.CLOSE; EXIT; end;end;  // close app after deleting final file or deleting folder contents
 
-            GV.files.Delete(GV.fileIx);
-            GV.fileIx := GV.fileIx - 1;
+            GV.playlist.Delete(GV.playIx);
+            GV.playIx := GV.playIx - 1;
 
             playNextFile;
           end;
@@ -491,7 +491,7 @@ end;
 
 function TFX.hasMediaFiles: boolean;
 begin
-  result := GV.files.Count > 0;
+  result := GV.playlist.Count > 0;
 end;
 
 function TFX.isAltKeyDown: boolean;
@@ -523,7 +523,7 @@ end;
 function TFX.isLastFile: boolean;
 // Is the current video file the last in the list?
 begin
-  result := GV.fileIx = GV.files.Count - 1;
+  result := GV.playIx = GV.playlist.Count - 1;
 end;
 
 function TFX.isShiftKeyDown: boolean;
@@ -545,7 +545,7 @@ begin
   var vFileName := '_' + ExtractFileName(currentFilePath);
   var vFilePath := ExtractFilePath(currentFilePath) + vFileName;
   case RenameFile(currentFilePath, vFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
-                                                  TRUE: GV.files[GV.fileIx] {currentFilePath} := vFilePath; end; // reflect the new name in the list
+                                                  TRUE: GV.playlist[GV.playIx] {currentFilePath} := vFilePath; end; // reflect the new name in the list
   windowCaption;
   UI.WMP.controls.play;
 end;
@@ -562,7 +562,7 @@ end;
 
 function TFX.noMediaFiles: boolean;
 begin
-  result := GV.files.Count = 0;
+  result := GV.playlist.Count = 0;
 end;
 
 function TFX.openWithShotcut: boolean;
@@ -578,9 +578,9 @@ begin
 end;
 
 function TFX.playCurrentFile: boolean;
-// CurrentFile is the one whose index in the list equals fileIx
+// CurrentFile is the one whose index in the list equals playIx
 begin
-  case (GV.fileIx < 0) OR (GV.fileIx > GV.files.Count - 1) of TRUE: EXIT; end;  // sanity check
+  case (GV.playIx < 0) OR (GV.playIx > GV.playlist.Count - 1) of TRUE: EXIT; end;  // sanity check
 
   case FileExists(currentFilePath) of TRUE: begin                               // i.e. if file *still* exists :D
     windowCaption;
@@ -594,7 +594,7 @@ function TFX.playFirstFile: boolean;
 // [A] = play the first video in the list
 begin
   case hasMediaFiles of TRUE: begin
-                                GV.fileIx := 0;
+                                GV.playIx := 0;
                                 playCurrentFile;
                               end;end;
 end;
@@ -603,7 +603,7 @@ function TFX.playLastFile: boolean;
 // [Z] = play the last video in the list
 begin
   case hasMediaFiles of TRUE: begin
-                                GV.fileIx := GV.files.Count - 1;
+                                GV.playIx := GV.playlist.Count - 1;
                                 playCurrentFile;
                               end;end;
 end;
@@ -613,15 +613,15 @@ function TFX.playNextFile: boolean;
 begin
   case isLastFile of TRUE: begin UI.CLOSE; EXIT; end;end;
 
-  GV.fileIx := GV.fileIx + 1;
+  GV.playIx := GV.playIx + 1;
   playCurrentFile;
 end;
 
 function TFX.playPrevFile: boolean;
 // [Q] = play the previous video in the list
 begin
-  case GV.fileIx > 0 of TRUE:   begin
-                                  GV.fileIx := GV.fileIx - 1;
+  case GV.playIx > 0 of TRUE:   begin
+                                  GV.playIx := GV.playIx - 1;
                                   playCurrentFile;
                                 end;
   end;
@@ -652,7 +652,7 @@ function TFX.reloadMediaFiles: boolean;
 // Typically, this was actually because the user had launched MediaPlayer forgetting that the CAPS LOCK key was on.
 // The CAPS LOCK key has now been repurposed for something else (see FormCreate) so for the time being this function isn't called or useful
 begin
-  GV.fileIx := findMediaFilesInFolder(currentFilePath, GV.files);
+  GV.playIx := findMediaFilesInFolder(currentFilePath, GV.playlist);
   windowCaption;
 end;
 
@@ -685,7 +685,7 @@ begin
 
   vNewFilePath := ExtractFilePath(currentFilePath) + s + vExt;  // construct the full path and new filename with the original extension
   case RenameFile(currentFilePath, vNewFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
-                                                         TRUE: GV.files[GV.fileIx] {currentFilePath} := vNewFilePath; end;
+                                                         TRUE: GV.playlist[GV.playIx] {currentFilePath} := vNewFilePath; end;
   windowCaption; // update the caption with the new name
 end;
 
@@ -963,7 +963,7 @@ end;
 function TFX.windowCaption: boolean;
 begin
   case noMediaFiles of TRUE: EXIT; end;
-  UI.Caption := format('[%d/%d] %s', [GV.FileIx + 1, GV.Files.Count, ExtractFileName(currentFilePath)]);
+  UI.Caption := format('[%d/%d] %s', [GV.playIx + 1, GV.playlist.Count, ExtractFileName(currentFilePath)]);
 end;
 
 function TFX.windowMaximizeRestore: boolean;
@@ -1159,8 +1159,8 @@ begin
   case g_mixer.muted of TRUE: FX.DoMuteUnmute; end; // GV.Mute starts out FALSE; this brings it in line with the system
 
   case {FX.isCapsLockOn} TRUE = FALSE of            // CAPS LOCK repurposed to choose window size; see start of procedure
-     TRUE: GV.FileIx := FX.findMediaFilesInFolder(ParamStr(1), GV.Files, 100000000);
-    FALSE: GV.FileIx := FX.findMediaFilesInFolder(ParamStr(1), GV.Files);
+     TRUE: GV.playIx := FX.findMediaFilesInFolder(ParamStr(1), GV.playlist, 100000000);
+    FALSE: GV.playIx := FX.findMediaFilesInFolder(ParamStr(1), GV.playlist);
   end;
 
   FX.playCurrentFile;                               // automatically start the clicked video
@@ -1429,7 +1429,7 @@ begin
       var FileNameLength := DragQueryFile(hDrop, I, nil, 0);
       SetLength(vFilePath, FileNameLength);
       DragQueryFile(hDrop, I, PChar(vFilePath), FileNameLength + 1);
-      GV.FileIx := FX.findMediaFilesInFolder(vFilePath, GV.Files);
+      GV.playIx := FX.findMediaFilesInFolder(vFilePath, GV.playlist);
       FX.playCurrentFile;
       BREAK;              // we currently only process the first file if multiple files are dropped
     end;
@@ -1510,12 +1510,12 @@ end;
 constructor TGV.create;
 begin
   inherited;
-  FFiles := TList<string>.Create;
+  Fplaylist := TList<string>.Create;
 end;
 
 destructor TGV.destroy;
 begin
-  case FFiles <> NIL of TRUE: FFiles.Free; end;
+  case Fplaylist <> NIL of TRUE: Fplaylist.Free; end;
   inherited;
 end;
 
