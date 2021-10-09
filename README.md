@@ -7,25 +7,24 @@ A simple but very effective media player built around the Windows Media Player A
 
 ### Keyboard Controls
 ---------------------
+Although there are a lot of controls to remember, I have tried to use each alphabetic letter intuitively. The action description should help to associate the action with the letter.
 
 Control | Action
 ------- | ------
 `ESCape`				| exit Fullscreen mode, or exit the app if in window mode
-`TAB`					| tab forwards 1/200th the duration of the media file
-`Ctrl-TAB`				| tab backwards 1/200th the duration of the media file
 `SPACEBAR` 				| pause/resume playback (also left mouse double-click on the video)
 `Ctrl-Up Arrow` 		| increase playback speed 10%
 `/`						| increase playback speed 10%
 `Ctrl-Down Arrow`		| decrease playback speed 10%
 `\`						| decrease playback speed 10%
-`F12`					| open video in third party video editor (currently ShotCut)
-`=`						| copy video file name to clipboard
-`A`						| play first video in the list
+`F12`					| open media file in third party video editor (currently ShotCut)
+`=`						| copy media file name to clipboard
+`A`						| play the first media file in the playlist (Z plays last)
 `B`						| [B]lackout/restore progress bar
-`C`						| show/Hide on-screen [C]ontrols and video timestamp
-`Ctrl-C`				| show/Hide all on-screen controls, video timestamp and video metadata
-`D` and `DEL`			| [D]elete current video file (after confirmation)
-`Ctrl-D and Ctrl-DEL`	| [D]elete all files in the current video's folder (after confirmation)
+`C`						| show/Hide on-screen [C]ontrols and media file timestamp
+`Ctrl-C`				| show/Hide all on-screen controls, media file timestamp and media metadata
+`D` and `DEL`			| [D]elete current media file (after confirmation)
+`Ctrl-D and Ctrl-DEL`	| [D]elete all files in the current media file's folder (after confirmation)
 `E`						| [E]ars - Mute/Unmute sound
 `F`						| show/cancel [F]ullScreen mode
 `G`						| [G]reater window size
@@ -33,32 +32,34 @@ Control | Action
 `H`						| position the window [H]orizontally (and Vertically) in the center of the screen
 `I`						| zoom [I]n by 10% of the video's height and width
 `J`						| ad[J]ust the window's aspect ratio to match the video's aspect ratio
-`K`						| mark this video as [K]eep
-`L`						| re[L]oad the list of supported video files from the current folder
+`K`						| mark this media file as [K]eep
+`L`						| re[L]oad the list of supported media files from the current folder
 `M`						| [M]aximize / restore window
 `N`						| mi[N]imize window to the Windows taskbar
 `O`						| zoom [O]ut by 10% of the video's height and width
-`P` 					| pause the video and play it instead with [P]otplayer, if installed
-`Q`						| play the previous video in the [Q]ueue/list
-`R`						| [R]ename the current video file
-`S`						| re[S]tart the current video from the beginning, aka [S]tartover
-`T`						| [T]ab through the video a 200th, 100th (default), 50th, 20th or 10th of its duration (use SHIFT-ALT, ALT, SHIFT, CAPS LOCK to modify)
-`Ctrl-T`				| [T]ab back through the video a 100th (default), 50th, 20th or 10th of its duration (use ALT, SHIFT, CAPS LOCK to modify)
+`P` 					| pause the media file and play it instead with [P]otplayer, if installed
+`Q`						| play the previous media file in the [Q]ueue/playlist
+`R`						| [R]ename the current media file
+`S`						| re[S]tart the current media file from the beginning, aka [S]tartover
+`T`						| [T]ab through the media file a 200th, 100th (default), 50th, 20th or 10th of its duration (use SHIFT-ALT, ALT, SHIFT, CAPS LOCK to modify)
+`Ctrl-T`				| [T]ab back through the media file a 100th (default), 50th, 20th or 10th of its duration (use ALT, SHIFT, CAPS LOCK to modify)
+`TAB`					| tab forwards 1/200th the duration of the media file
+`Ctrl-TAB`				| tab backwards 1/200th the duration of the media file
 `U`						| [U]nzoom, i.e. re-fit the video to the window
 `V`						| maximize / restore [V]iew, same as [M]
-`W`						| [W]atch the next video in the list
+`W`						| [W]atch the next video in the list (or play the next audio)
 `X`						| e[X]it the application
-`Y`						| tr[Y]out the video by sampling it at various stages
-`Z`						| watch the last video in the list
+`Y`						| tr[Y]out the media file by sampling it at various stages
+`Z`						| play the last media file in the playlist (A plays the first)
 `Up Arrow`				| increase the volume by 1%
 `Down Arrow`			| decrease the volume by 1%
 `Ctrl-Up Arrow`			| increase the playback speed by 10%
 `Ctrl-Down Arrow`		| decrease the playback speed by 10%
 `1`						| reset the playback speed to normal, i.e. [1]00%
 `2`						| resize the window so that 2 instances of the application can be placed side-by-side
-`5`						| save/bookmark the current video timestamp to an INI file
-`6`						| retrieve a saved/bookmarked video timestamp from an INI file and continue playback from that point
-`7`						| delete any previously saved/bookmarked video timestamp
+`5`						| save/bookmark the current media file timestamp to an INI file
+`6`						| retrieve a saved/bookmarked media file timestamp from an INI file and continue playback from that point
+`7`						| delete any previously saved/bookmarked media file timestamp
 `8`						| set the video to 1-pixel larger than the window on all four sides
 `9`						| resize the window to the width of the video
 `RIGHT ARROW`			| step forwards one frame
@@ -69,7 +70,7 @@ Zoom|
 `Ctrl-UP ARROW`			| when zoomed in/out, move video UP inside the window
 `Ctrl-DOWN ARROW`		| when zoomed in/out, move video DOWN inside the window
 Additional |
-`Left Click on the video and hold`	| the window can be dragged/repositioned without a window caption title bar
+`Left Click on the window background and hold`	| the window can be dragged/repositioned without a window caption title bar
 
 Media File Formats
 ------------------
