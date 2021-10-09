@@ -90,7 +90,7 @@ uses
   FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils, ShellAPI, FormAbout;
 
 const
-  APP_VERSION = 'v1.9';
+  APP_VERSION = 'v1.10';
   MENU_ID     = 1001;
 
 type
