@@ -6,6 +6,13 @@ object UI: TUI
   ClientHeight = 430
   ClientWidth = 754
   Color = clGray
+  CustomTitleBar.Enabled = True
+  CustomTitleBar.Height = 1
+  CustomTitleBar.SystemHeight = False
+  CustomTitleBar.ShowCaption = False
+  CustomTitleBar.ShowIcon = False
+  CustomTitleBar.SystemColors = False
+  CustomTitleBar.SystemButtons = False
   CustomTitleBar.BackgroundColor = clBlack
   CustomTitleBar.ForegroundColor = clWhite
   CustomTitleBar.InactiveBackgroundColor = clBlack
@@ -23,6 +30,8 @@ object UI: TUI
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  GlassFrame.Enabled = True
+  GlassFrame.Top = 1
   Icon.Data = {
     000001000E002020100001000400E8020000E600000010101000010004002801
     0000CE0300003030000001000800A80E0000F60400002020000001000800A808

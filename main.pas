@@ -240,9 +240,9 @@ begin
   case UI.isWindowCaptionVisible of  TRUE: vDelta := vHeightTitle + 7; // magic number
                                     FALSE: vDelta := 8; end;           // magic number
 
-  UI.Height := trunc(UI.Width * vRatio) + vDelta;
+  UI.Height := trunc(UI.Width * vRatio) + vDelta - GetSystemMetrics(SM_CYCAPTION) - 6;
 
-  UI.repositionWMP;
+//  UI.repositionWMP;
 end;
 
 function TFX.blackOut: boolean;
@@ -622,7 +622,7 @@ begin
 
   case FileExists(currentFilePath) of TRUE: begin       // i.e. if file *still* exists :D
     windowCaption;
-    case UI.isWindowCaptionVisible of FALSE:  begin
+    case FALSE{UI.isWindowCaptionVisible} of FALSE:  begin
                                                 UI.lblMediaCaption.Visible  := TRUE;
                                                 UI.tmrMediaCaption.Enabled  := TRUE; end;end;
 
@@ -756,6 +756,8 @@ begin
      TRUE: SetWindowPos(UI.Handle, 0, 0, 0, UI.Width - 100, UI.Height - 60, SWP_NOZORDER + SWP_NOMOVE + SWP_NOREDRAW);
     FALSE: SetWindowPos(UI.Handle, 0, 0, 0, UI.Width + 100, UI.Height + 60, SWP_NOZORDER + SWP_NOMOVE + SWP_NOREDRAW);
   end;
+
+  adjustAspectRatio;
 
   doCentreWindow;
 
@@ -974,7 +976,7 @@ try
     ord('x'), ord('X'): UI.CLOSE;                             // X = eXit app
     ord('y'), ord('Y'): sampleVideo;                          // Y = trYout video
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
-    ord('0')          : ShowHideTitleBar;                     // 0 = Hide(zero)/show window title bar
+//    ord('0')          : ShowHideTitleBar;                     // 0 = Hide(zero)/show window title bar
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('2')          : ResizeWindow2;                        // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
     ord('5')          : saveBookmark;                         // 5 = save current media position to an INI file     (bookmark)
@@ -1330,7 +1332,7 @@ function TUI.repositionLabels: boolean;
 var
   vBase:  integer;
 begin
-  lblMediaCaption.Top   := 0;
+  lblMediaCaption.Top   := 4;
   lblMediaCaption.Left  := 4;
 
   lblXY.Left            := 4;
@@ -1344,7 +1346,7 @@ begin
 
   case progressBar.Visible of  TRUE:  vBase := progressBar.Top;
                               FALSE:  case isWindowCaptionVisible of
-                                        TRUE: vBase := UI.Height - GetSystemMetrics(SM_CYCAPTION) - 14;  // magic number;
+                                        TRUE: vBase := UI.Height - 7; //  UI.Height - GetSystemMetrics(SM_CYCAPTION) - 14;  // magic number;
                                        FALSE: vBase := UI.Height - GetSystemMetrics(SM_CYCAPTION) + 9;   // magic number;
                                       end;end;
 
@@ -1370,10 +1372,11 @@ function TUI.repositionTimeDisplay: boolean;
 begin
   lblTimeDisplay.Left := width - lblTimeDisplay.Width - 20; // NB: text aignment is taRightJustify in the Object Inspector
   case progressBar.Visible of  TRUE:  lblTimeDisplay.Top := progressBar.Top - lblTimeDisplay.Height;
-                              FALSE:  case isWindowCaptionVisible of
-                                         TRUE: lblTimeDisplay.Top := UI.Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) - 14; // magic number
-                                        FALSE: lblTimeDisplay.Top := UI.Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) + 9;  // magic number
-                                      end;end;
+//                              FALSE:  case isWindowCaptionVisible of
+//                                         TRUE: lblTimeDisplay.Top := UI.Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) - 14; // magic number
+//                                        FALSE: lblTimeDisplay.Top := UI.Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) + 9;  // magic number
+//                                      end;end;
+                              FALSE:  lblTimeDisplay.Top := UI.Height - lblTimeDisplay.Height - 7; end;
 end;
 
 function TUI.repositionWMP: boolean;
