@@ -75,7 +75,6 @@ type
   public
     // UI Functions only - application logic is in TFX
     function  hideLabels: boolean;
-    function  isWindowCaptionVisible: boolean;
     function  repositionLabels: boolean;
     function  repositionTimeDisplay: boolean;
     function  repositionWMP: boolean;
@@ -608,9 +607,9 @@ begin
 
   case FileExists(currentFilePath) of TRUE: begin       // i.e. if file *still* exists :D
     windowCaption;
-    case FALSE{UI.isWindowCaptionVisible} of FALSE:  begin
-                                                UI.lblMediaCaption.Visible  := TRUE;
-                                                UI.tmrMediaCaption.Enabled  := TRUE; end;end;
+
+    UI.lblMediaCaption.Visible  := TRUE;
+    UI.tmrMediaCaption.Enabled  := TRUE;
 
     UI.WMP.URL := 'file://' + currentFilePath;
     unZoom;
@@ -1039,7 +1038,6 @@ begin
   case noMediaFiles of TRUE: EXIT; end;
 
   try
-    UI.tmrMetaData.Enabled := FALSE; // prevent the display of invalid metadata while we [potentially] switch videos
     clearMediaMetaData;              // "Out with the old..."
     UI.WMP.controls.play;
     UI.tmrMetaData.Enabled := TRUE;  // necessary delay before trying to access video metadata from WMP
@@ -1226,11 +1224,6 @@ function TUI.hideLabels: boolean;
 // called from ZoomIn and ZoomOut
 begin
   case lblTimeDisplay.Visible of TRUE: toggleControls([]); end;
-end;
-
-function TUI.isWindowCaptionVisible: boolean;
-begin
-  result := GetWindowLong(UI.Handle, GWL_STYLE) AND WS_CAPTION = WS_CAPTION;
 end;
 
 procedure TUI.lblMuteUnmuteClick(Sender: TObject);
