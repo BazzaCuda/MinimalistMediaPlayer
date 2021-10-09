@@ -7191,7 +7191,6 @@ object UI: TUI
   end
   object tmrMetaData: TTimer
     Enabled = False
-    Interval = 5000
     OnTimer = tmrMetaDataTimer
     Left = 400
     Top = 160

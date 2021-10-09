@@ -96,36 +96,40 @@ const
 type
   TGV = class                        // Global [application-wide] Variables
   strict private                     // force code to use the properties
-    FBlackOut: boolean;
-    FClosing: boolean;
-    FplayIx:  integer;
-    Fplaylist: TList<string>;
-    FInputBox: boolean;
-    FMute:    boolean;
-    FSampling: boolean;
-    FStartUp: boolean;
-    FZoomed: boolean;
-    function  GetExePath: string;
+    FBlackOut:      boolean;
+    FClosing:       boolean;
+    FplayIx:        integer;
+    Fplaylist:      TList<string>;
+    FInputBox:      boolean;
+    FmetaDataCount: integer;
+    FMute:          boolean;
+    FnewMediaFile:  boolean;
+    FSampling:      boolean;
+    FStartUp:       boolean;
+    FZoomed:        boolean;
+    function  getExePath: string;
+    function  getAppBuildVersion: string;
+    function  getAppReleaseVersion: string;
+    function  getFileVersion(const aFilePath: string = ''; const fmt: string = '%d.%d.%d.%d'): string;
   private
-    function getAppBuildVersion: string;
-    function getAppReleaseVersion: string;
-    function getFileVersion(const aFilePath: string = ''; const fmt: string = '%d.%d.%d.%d'): string;
   public
     constructor create;
     destructor  destroy;  override;
     function    invalidPlayIx: boolean;
     property    appBuildVersion:    string        read getAppBuildVersion;
     property    appReleaseVersion:  string        read getAppReleaseVersion;
-    property    blackOut:           boolean       read FBlackOut  write FBlackOut;
-    property    closing:            boolean       read FClosing   write FClosing;
+    property    blackOut:           boolean       read FBlackOut      write FBlackOut;
+    property    closing:            boolean       read FClosing       write FClosing;
     property    exePath:            string        read GetExePath;
-    property    inputBox:           boolean       read FInputBox  write FInputBox;
-    property    mute:               boolean       read FMute      write FMute;
-    property    playIx:             integer       read FplayIx    write FplayIx;
+    property    inputBox:           boolean       read FInputBox      write FInputBox;
+    property    mute:               boolean       read FMute          write FMute;
+    property    metaDataCount:      integer       read FmetaDataCount write FmetaDataCount;
+    property    newMediaFile:       boolean       read FnewMediaFile  write FnewMediaFile;
+    property    playIx:             integer       read FplayIx        write FplayIx;
     property    playlist:           TList<string> read Fplaylist;
-    property    sampling:           boolean       read FSampling  write FSampling;
-    property    startup:            boolean       read FStartUp   write FStartUp;
-    property    zoomed:             boolean       read FZoomed    write FZoomed;
+    property    sampling:           boolean       read FSampling      write FSampling;
+    property    startup:            boolean       read FStartUp       write FStartUp;
+    property    zoomed:             boolean       read FZoomed        write FZoomed;
   end;
 
   TFX = class                        // application Functions aka program/business logic
@@ -154,6 +158,7 @@ type
     function goRight: boolean;
     function goUp: boolean;
     function hasMediaFiles: boolean;
+    function hasMetaData: boolean;
     function isAltKeyDown: boolean;
     function isCapsLockOn: boolean;
     function isControlKeyDown: boolean;
@@ -233,7 +238,6 @@ begin
                                     FALSE: vDelta := 8; end;           // magic number
 
   UI.Height := trunc(UI.Width * vRatio) + vDelta;
-  UI.Width  := UI.Width - 1; // experimental
 
   UI.repositionWMP;
 end;
@@ -513,6 +517,12 @@ begin
   result := GV.playlist.Count > 0;
 end;
 
+function TFX.hasMetaData: boolean;
+// is the media file's meta data ready to be accessed from WMP
+begin
+  result := (UI.WMP.currentMedia.imageSourceWidth <> 0) AND (UI.WMP.currentMedia.imageSourceHeight <> 0);
+end;
+
 function TFX.isAltKeyDown: boolean;
 // Did the user hold down the ALT key while pressing another key?
 begin
@@ -612,6 +622,7 @@ begin
     UI.WMP.URL := 'file://' + currentFilePath;
     unZoom;
     WMPplay;
+    GV.newMediaFile := TRUE;
   end;end;
 end;
 
@@ -1065,6 +1076,8 @@ function TFX.showHideTitleBar: boolean;
 // Part of this application's attempt to provide an entirely borderless window for the video without displaying fullScreen.
 // Unfortunately, this is only partially successful as WMP insists on showing a 7-pixel (approx.) black border along the top of every video
 // I mitigate this myself by having a Windows desktop wallpaper image* which is almost entirely black, and a desktop that contains no icons at all.
+// However, you can get a nice effect by turning off the window caption (press 0) but keeping the progressBar as they're almost identical in height, and
+//      the progressBar starts off entirely black, the same as the top border that WMP draws above the video.
 // *https://c4.wallpaperflare.com/wallpaper/68/50/540/lamborghini-car-vehicle-wallpaper-preview.jpg
 begin
   var vStyle := GetWindowLong(UI.Handle, GWL_STYLE);
@@ -1414,8 +1427,19 @@ end;
 
 procedure TUI.tmrMetaDataTimer(Sender: TObject);
 // We used this timer to delay fetching the video metadata from WMP. Trying to access it too soon after playback commences can cause WMP internal problems.
+// Some metadata is available quickly, like the source dimensions. Other bits take longer, like the various bitrates, which can take up to 3 seconds.
+// As soon as we have the source dimensions, we can call adjustAspectRatio.
+// We then allow the timer to fire 3 more times (Interval = 1000ms), then we disable the timer so it's not firing all the way through playback.
 begin
   FX.FetchMediaMetaData;
+  case FX.hasMetaData of  TRUE: begin
+                                  case GV.newMediaFile of  TRUE:  begin
+                                                                    FX.adjustAspectRatio;
+                                                                    GV.newMediaFile := FALSE; end;end;end;end;
+
+                                  GV.metaDataCount := GV.metaDataCount + 1;                               // fire 3 more times to get the rest of the metadata
+                                  case GV.metaDataCount >= 3 of  TRUE: tmrMetaData.Enabled := FALSE; end; // WMP should have determined all the metadata by now.
+
   WMP.Cursor := crNone;
 end;
 
