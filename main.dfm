@@ -6950,8 +6950,6 @@ object UI: TUI
   OnActivate = FormActivate
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
-  OnKeyDown = FormKeyDown
-  OnKeyUp = FormKeyUp
   OnMouseMove = FormMouseMove
   OnResize = FormResize
   DesignSize = (

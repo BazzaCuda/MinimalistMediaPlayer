@@ -46,7 +46,6 @@ type
     applicationEvents: TApplicationEvents;
     procedure FormCreate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure progressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure tmrPlayNextTimer(Sender: TObject);
@@ -57,7 +56,6 @@ type
     procedure tmrMetaDataTimer(Sender: TObject);
     procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
-    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure tmrInfoTimer(Sender: TObject);
     procedure FormResize(Sender: TObject);
     procedure WMPKeyUp(ASender: TObject; nKeyCode, nShiftState: SmallInt);
@@ -1214,18 +1212,6 @@ begin
   GV.startup := TRUE;                               // used in FormResize to initially left-justify the application window if required
 end;
 
-procedure TUI.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
-// superseded by ApplicationEventsMessage
-begin
-//  FX.UIKeyDown(Key, Shift);
-end;
-
-procedure TUI.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
-// superseded by ApplicationEventsMessage
-begin
-//  FX.UIKeyUp(Key, Shift);
-end;
-
 procedure TUI.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
   WMP.cursor := crDefault;
@@ -1508,14 +1494,12 @@ begin
 end;
 
 procedure TUI.WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
-// When there is no window caption you can drag the window around by holding down a CTRL key and dragging with the left mouse button on the video.
-// Edit: modified so that just dragging the window with the left mouse button now matches what happens when you do that with the title bar of any window.
+// If there is no window caption you can still drag the window around by holding down a CTRL key and dragging with the left mouse button on the video.
+// Edit: Removed CTRL key so that just dragging the window with the left mouse button now matches what happens when you do that with the title bar of any window.
 // A side effect of this change is that media files can be paused/resumed using a left double-click, but no longer with a single left click.
 const
   SC_DRAGMOVE = $F012;
 begin
-//  case main.FX.isControlKeyDown of FALSE: EXIT; end;
-
   Perform(WM_SYSCOMMAND, SC_DRAGMOVE, 0);
 end;
 
