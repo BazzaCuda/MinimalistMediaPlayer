@@ -1133,11 +1133,11 @@ begin
 
   setupProgressBar;
 
-  case ParamCount = 0 of TRUE: begin
-                                FX.ShowOKCancelMsgDlg('Typically, you would use "Open with..." in your File Explorer / Manager, to open a media file'#13#10
-                                            + 'or to permanently associate media file types with this application.'#13#10#13#10
-                                            + 'Alternatively, you can drag and drop a media file onto the window background',
-                                            mtInformation, [MBOK]);
+  case ParamCount = 0 of TRUE:  begin
+                                  FX.ShowOKCancelMsgDlg('Typically, you would use "Open with..." in your File Explorer / Manager, to open a media file'#13#10
+                                                      + 'or to permanently associate media file types with this application.'#13#10#13#10
+                                                      + 'Alternatively, you can drag and drop a media file onto the window background',
+                                                        mtInformation, [MBOK]);
                                 end;end;
 
   WMP.uiMode          := 'none';
@@ -1164,9 +1164,9 @@ begin
 
   case g_mixer.muted of TRUE: FX.DoMuteUnmute; end; // GV.Mute starts out FALSE; this brings it in line with the system
 
-  case {FX.isCapsLockOn} TRUE = FALSE of            // CAPS LOCK repurposed to choose window size; see start of procedure
+  case {FX.isCapsLockOn} TRUE = FALSE of            // CAPS LOCK repurposed to choose window size on startup; see start of procedure
      TRUE: GV.playIx := FX.findMediaFilesInFolder(ParamStr(1), GV.playlist, 100000000);
-    FALSE: GV.playIx := FX.findMediaFilesInFolder(ParamStr(1), GV.playlist);
+    FALSE: GV.playIx := FX.findMediaFilesInFolder(ParamStr(1), GV.playlist); // <==  Always executed
   end;
 
   FX.playCurrentFile;                               // automatically start the clicked video
@@ -1176,7 +1176,7 @@ end;
 
 procedure TUI.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
-  WMP.cursor := crDefault;
+  WMP.cursor := crDefault;  // gets reset to crNone in tmrTimeDisplay event
 end;
 
 procedure TUI.FormResize(Sender: TObject);
@@ -1184,10 +1184,9 @@ begin
   FX.windowCaption;
 
   case GV.startup AND FX.isCapsLockOn of  TRUE: SetWindowPos(UI.Handle, 0, -6, 200, 0, 0, SWP_NOZORDER + SWP_NOSIZE); end; // left justify on screen
-  GV.startup := FALSE;
+  GV.startup := FALSE;  // don't left justify the window on the screen every time the user resizes it
 
   repositionLabels;
-
   repositionWMP;
 end;
 
@@ -1499,7 +1498,7 @@ end;
 procedure TUI.WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
 // Handle a MouseMove message from the media player: display the standard mouse cursor
 begin
-  WMP.cursor := crDefault; // this is changed back to crNone when tmrMetaData fires
+  WMP.cursor := crDefault; // this is changed back to crNone when tmrTimeDisplay fires
 end;
 
 procedure TUI.WMPPlayStateChange(ASender: TObject; NewState: Integer);

@@ -90,8 +90,8 @@ Notes concerning the code - a warning for the overly sensitive :D
 -------------------------
 Rather than following the herd, I like to experiment with different ways to layout my code and make it more readable and more easily understood by those looking at it for the first time, and for myself when returning to it months or even years later.
 
-1. I use a Delphi IDE with a 160-character-wide code editor. It strikes me as daft that we seem not to make full use of our high-resolution widescreen monitors when editing code (Delphi still automatically wraps event handler procedure signatures at column 56, regardless of how I have defined the margins!), and we all seem loathe to exceed column 80, which dates back to Fortran coding sheets and punched cards!! :D 
-So, firstly, I make full use of all 160 columns of my editor.
+1. I use a Delphi IDE with a 180-character-wide code editor. It strikes me as daft that we seem not to make full use of our high-resolution widescreen monitors when editing code (Delphi still automatically wraps event handler procedure signatures at column 56, regardless of how I have defined the margins!), and we all seem loathe to exceed column 80, which dates back to Fortran coding sheets and punched cards!! :D 
+So, firstly, I make full use of all 180 columns of my editor.
 
 2. I don't like nested IF statements. I think they're ugly, difficult to follow and very prone to human error when modifying/extending them. Consequently, I don't use IF statements at all and always use CASE statements instead. I consider them much neater and more elegant-looking, significantly easier to follow and amend, and altogether far superior to their nested-IF equivalents. I have no doubt many will disagree.
 
