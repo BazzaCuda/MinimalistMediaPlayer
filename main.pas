@@ -78,6 +78,9 @@ type
     function  repositionLabels: boolean;
     function  repositionTimeDisplay: boolean;
     function  repositionWMP: boolean;
+    function  resizeWindow1: boolean;
+    function  resizeWindow2: boolean;
+    function  resizeWindow3(Shift: TShiftState): boolean;
     function  showInfo(aInfo: string): boolean;
     function  toggleControls(Shift: TShiftState): boolean;
   end;
@@ -159,6 +162,7 @@ type
     function goLeft: boolean;
     function goRight: boolean;
     function goUp: boolean;
+    function greaterWindow(Shift: TShiftState): boolean;
     function hasMediaFiles: boolean;
     function hasMetaData: boolean;
     function isAltKeyDown: boolean;
@@ -179,9 +183,6 @@ type
     function rateReset: boolean;
     function reloadMediaFiles: boolean;
     function renameCurrentFile: boolean;
-    function resizeWindow1: boolean;
-    function resizeWindow2: boolean;
-    function resizeWindow3: boolean;
     function resumeBookmark: boolean;
     function sampleVideo: boolean;
     function saveBookmark: boolean;
@@ -720,40 +721,13 @@ begin
   windowCaption; // update the caption with the new name
 end;
 
-function TFX.resizeWindow1: boolean;
-// default window size, called by FormCreate when the CAPS LOCK key isn't down
-begin
-  UI.Width   := trunc(780 * 1.5);
-  UI.Height  := trunc(460 * 1.5);
-end;
-
-function TFX.resizeWindow2: boolean;
-// [2] = resize so that two videos can be positioned side-by-side horizontally by the user on a 1920-width screen
-// If the user opens two video files simultaneously from Explorer with the CAPS LOCK key on, two instances of MediaPlayer will be launched.
-// FormCreate will call resizeWindow2 to allow both videos to be positioned by the user alongside each other on a 1920-pixel-width monitor.
-// FormResize will left-justify both windows on the monitor, leaving the user to drag one window to the right of the other.
-// This allows two seemingly identical videos to be compared for picture quality, duration, etc., so the user can decide which to keep.
-// This is also useful when Handbrake* has been used to reduce the resolution of a video to free up disk space, to ensure that the lower-resolution
-// video is of sufficient quality to warrant deleting the original.
-// *https://handbrake.fr/
-begin
-  UI.width   := 970;
-  UI.height  := 640;
-end;
-
-function TFX.resizeWindow3: boolean;
+function TFX.greaterWindow(Shift: TShiftState): boolean;
 // [G]reater  = increase size of window
 // Ctrl-G     = decrease size of window
 begin
-  case isControlKeyDown of
-     TRUE: SetWindowPos(UI.Handle, 0, 0, 0, UI.Width - 100, UI.Height - 60, SWP_NOZORDER + SWP_NOMOVE + SWP_NOREDRAW);
-    FALSE: SetWindowPos(UI.Handle, 0, 0, 0, UI.Width + 100, UI.Height + 60, SWP_NOZORDER + SWP_NOMOVE + SWP_NOREDRAW);
-  end;
-
+  UI.resizeWindow3(Shift);
   adjustAspectRatio;
-
   doCentreWindow;
-
   windowCaption;
 end;
 
@@ -949,7 +923,7 @@ try
     ord('d'), ord('D'), VK_DELETE: deleteCurrentFile(Shift);  // D = Delete File                    Mods: Ctrl-D / Ctrl-DEL
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): fullScreen;                           // F = Fullscreen
-    ord('g'), ord('G'): ResizeWindow3;                        // G = Greater window size            Mods: Ctrl-G
+    ord('g'), ord('G'): greaterWindow(Shift);                 // G = Greater window size            Mods: Ctrl-G
     ord('h'), ord('H'): doCentreWindow;                       // H = centre window Horizontally
                                                               // I = zoom In
     ord('j'), ord('J'): adjustAspectRatio;                    // J = adJust aspect ratio
@@ -970,7 +944,7 @@ try
     ord('y'), ord('Y'): sampleVideo;                          // Y = trYout video
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
-    ord('2')          : ResizeWindow2;                        // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
+    ord('2')          : UI.ResizeWindow2;                     // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
     ord('5')          : saveBookmark;                         // 5 = save current media position to an INI file     (bookmark)
     ord('6')          : resumeBookmark;                       // 6 = resume video from saved media position         (bookmark)
     ord('7')          : deleteBookmark;                       // 7 = delete INI file containing bookmarked position (bookmark)
@@ -1154,8 +1128,8 @@ begin
   SetWindowLong(UI.Handle, GWL_STYLE, GetWindowLong(UI.Handle, GWL_STYLE) OR WS_CAPTION AND (NOT (WS_BORDER)));
   DragAcceptFiles(UI.Handle, TRUE);
 
-  case FX.isCapsLockOn of    TRUE:  FX.resizeWindow2; // size so that two videos can be positioned side-by-side horizontally by the user
-                            FALSE:  FX.resizeWindow1; // otherwise, default size
+  case FX.isCapsLockOn of    TRUE:  resizeWindow2; // size so that two videos can be positioned side-by-side horizontally by the user
+                            FALSE:  resizeWindow1; // otherwise, default size
   end;
 
   color := clBlack; // background color of the window's client area, so zooming-out doesn't show the design-time color
@@ -1322,6 +1296,38 @@ begin
   WMP.Width   := UI.Width + 2;
   WMP.Left    := -1;
   WMP.Top     := -1;
+end;
+
+function TUI.resizeWindow1: boolean;
+// default window size, called by FormCreate when the CAPS LOCK key isn't down
+begin
+  UI.Width   := trunc(780 * 1.5);
+  UI.Height  := trunc(460 * 1.5);
+end;
+
+function TUI.resizeWindow2: boolean;
+// [2] = resize so that two videos can be positioned side-by-side horizontally by the user on a 1920-width screen
+// If the user opens two video files simultaneously from Explorer with the CAPS LOCK key on, two instances of MediaPlayer will be launched.
+// FormCreate will call resizeWindow2 to allow both videos to be positioned by the user alongside each other on a 1920-pixel-width monitor.
+// FormResize will left-justify both windows on the monitor, leaving the user to drag one window to the right of the other.
+// This allows two seemingly identical videos to be compared for picture quality, duration, etc., so the user can decide which to keep.
+// This is also useful when Handbrake* has been used to reduce the resolution of a video to free up disk space, to ensure that the lower-resolution
+// video is of sufficient quality to warrant deleting the original.
+// *https://handbrake.fr/
+begin
+  UI.width   := 970;
+  UI.height  := 640;
+end;
+
+function TUI.resizeWindow3(Shift: TShiftState): boolean;
+// [G]reater  = increase size of window
+// Ctrl-G     = decrease size of window
+// Called from TFX.greaterWindow
+begin
+  case ssCtrl in Shift of
+     TRUE: SetWindowPos(UI.Handle, 0, 0, 0, UI.Width - 100, UI.Height - 60, SWP_NOZORDER + SWP_NOMOVE + SWP_NOREDRAW);
+    FALSE: SetWindowPos(UI.Handle, 0, 0, 0, UI.Width + 100, UI.Height + 60, SWP_NOZORDER + SWP_NOMOVE + SWP_NOREDRAW);
+  end;
 end;
 
 function TUI.setupProgressBar: boolean;
