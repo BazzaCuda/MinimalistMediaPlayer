@@ -145,6 +145,7 @@ type
     function doPausePlay: boolean;
     function fetchMediaMetaData: boolean;
     function findMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
+    function formatSeconds(seconds: integer): string;
     function fullScreen: boolean;
     function getFileSize(const aFilePath: string): int64;
     function getINIname: string;
@@ -444,6 +445,13 @@ begin
 
   aFileList.Sort;
   result := aFileList.IndexOf(aFilePath);
+end;
+
+function TFX.formatSeconds(seconds: integer): string;
+begin
+  case seconds < 60 of  TRUE: result := format('%ds', [seconds]);
+                       FALSE: result := format('%d:%.2d', [seconds div 60, seconds mod 60]);
+  end;
 end;
 
 function TFX.fullScreen: boolean;
@@ -842,7 +850,7 @@ begin
    FALSE: UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition + (UI.WMP.currentMedia.duration / vFactor);
   end;
 
-  var newInfo := format('%dth', [vFactor]);
+  var newInfo := format('%dth = %s', [vFactor, formatSeconds(round(UI.WMP.currentMedia.duration / vFactor))]);
   case isControlKeyDown of  TRUE: newInfo := '<< ' + newInfo;
                            FALSE: newInfo := '>> ' + newInfo;
   end;

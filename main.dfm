@@ -7198,7 +7198,6 @@ object UI: TUI
   end
   object tmrInfo: TTimer
     Enabled = False
-    Interval = 750
     OnTimer = tmrInfoTimer
     Left = 400
     Top = 112
