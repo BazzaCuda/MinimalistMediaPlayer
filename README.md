@@ -11,6 +11,8 @@ A simple but very effective media player built around the Windows Media Player A
 Control | Action
 ------- | ------
 `ESCape`				| exit Fullscreen mode, or exit the app if in window mode
+`TAB`					| tab forwards 1/200th the duration of the media file
+`Ctrl-TAB`				| tab backwards 1/200th the duration of the media file
 `SPACEBAR` 				| pause/resume playback (also left mouse double-click on the video)
 `Ctrl-Up Arrow` 		| increase playback speed 10%
 `/`						| increase playback speed 10%
