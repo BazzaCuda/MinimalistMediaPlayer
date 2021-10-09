@@ -186,7 +186,6 @@ type
     function resumeBookmark: boolean;
     function sampleVideo: boolean;
     function saveBookmark: boolean;
-    function showHideTitleBar: boolean;
     function ShowOKCancelMsgDlg(aMsg: string;
                                 msgDlgType: TMsgDlgType = mtConfirmation;
                                 msgDlgButtons: TMsgDlgButtons = MBOKCANCEL;
@@ -236,29 +235,16 @@ begin
 
   vRatio := Y / X;
 
-  vHeightTitle := GetSystemMetrics(SM_CYCAPTION);
-  case UI.isWindowCaptionVisible of  TRUE: vDelta := vHeightTitle + 7; // magic number
-                                    FALSE: vDelta := 8; end;           // magic number
-
-  UI.Height := trunc(UI.Width * vRatio) + vDelta - GetSystemMetrics(SM_CYCAPTION) - 6;
-
-//  UI.repositionWMP;
+  UI.Height := trunc(UI.Width * vRatio);
 end;
 
 function TFX.blackOut: boolean;
-// [B] = [B]lackout i.e. Show/Hide ProgressBar
-// Ctrl-B = total [B]lackOut: i.e. also show/hide the window title bar and adjust the window's aspect ratio
+// [B] = [B]lackout i.e. Show/Hide Progress[B]ar
 begin
   GV.blackOut             := NOT GV.blackOut;
   UI.progressBar.Visible  := NOT GV.blackOut;
   UI.repositionWMP;
-
-  case isControlKeyDown of TRUE:  begin
-                                    case UI.isWindowCaptionVisible XOR GV.blackOut of FALSE: showHideTitleBar; end; // has user has already hidden title bar?
-                                    adjustAspectRatio;
-                                  end;end;
   UI.repositionLabels;
-  UI.repositionTimeDisplay;
 end;
 
 function TFX.clearMediaMetaData: boolean;
@@ -628,8 +614,9 @@ begin
 
     UI.WMP.URL := 'file://' + currentFilePath;
     unZoom;
+    GV.newMediaFile   := TRUE;
+    GV.metaDataCount  := 0;
     WMPplay;
-    GV.newMediaFile := TRUE;
   end;end;
 end;
 
@@ -743,6 +730,13 @@ end;
 
 function TFX.resizeWindow2: boolean;
 // [2] = resize so that two videos can be positioned side-by-side horizontally by the user on a 1920-width screen
+// If the user opens two video files simultaneously from Explorer with the CAPS LOCK key on, two instances of MediaPlayer will be launched.
+// FormCreate will call resizeWindow2 to allow both videos to be positioned by the user alongside each other on a 1920-pixel-width monitor.
+// FormResize will left-justify both windows on the monitor, leaving the user to drag one window to the right of the other.
+// This allows two seemingly identical videos to be compared for picture quality, duration, etc., so the user can decide which to keep.
+// This is also useful when Handbrake* has been used to reduce the resolution of a video to free up disk space, to ensure that the lower-resolution
+// video is of sufficient quality to warrant deleting the original.
+// *https://handbrake.fr/
 begin
   UI.width   := 970;
   UI.height  := 640;
@@ -976,7 +970,6 @@ try
     ord('x'), ord('X'): UI.CLOSE;                             // X = eXit app
     ord('y'), ord('Y'): sampleVideo;                          // Y = trYout video
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
-//    ord('0')          : ShowHideTitleBar;                     // 0 = Hide(zero)/show window title bar
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('2')          : ResizeWindow2;                        // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
     ord('5')          : saveBookmark;                         // 5 = save current media position to an INI file     (bookmark)
@@ -1080,43 +1073,6 @@ begin
   UI.WMP.Left     := -(UI.WMP.Width - UI.ClientWidth) div 2;
 
   UI.hideLabels;  // now that WMP's dimensions bear no relation to the window's, label positioning gets too complicated
-end;
-
-function TFX.showHideTitleBar: boolean;
-// [0] = Show or Hide(i.e. zero) the window title bar
-// Part of this application's attempt to provide an entirely borderless window for the video without displaying fullScreen.
-// Unfortunately, this is only partially successful as WMP insists on showing a 7-pixel (approx.) black border along the top of every video
-// I mitigate this myself by having a Windows desktop wallpaper image* which is almost entirely black, and a desktop that contains no icons at all.
-// However, you can get a nice effect by turning off the window caption (press 0) but keeping the progressBar as they're almost identical in height, and
-//      the progressBar starts off entirely black, the same as the top border that WMP draws above the video.
-// *https://c4.wallpaperflare.com/wallpaper/68/50/540/lamborghini-car-vehicle-wallpaper-preview.jpg
-begin
-  var vStyle := GetWindowLong(UI.Handle, GWL_STYLE);
-
-  case (vStyle and WS_CAPTION) = WS_CAPTION of TRUE: begin
-    case UI.BorderStyle of
-      bsSingle, bsSizeable:
-        SetWindowLong(UI.Handle, GWL_STYLE, vStyle AND (NOT (WS_CAPTION)) and (NOT (WS_BORDER))); //  or WS_BORDER);
-      bsDialog:
-        SetWindowLong(UI.Handle, GWL_STYLE, vStyle AND (NOT (WS_CAPTION)) OR DS_MODALFRAME OR WS_DLGFRAME);
-    end;
-    UI.Refresh;
-  end;end;
-
-  case (vStyle and WS_CAPTION) = WS_CAPTION of FALSE: begin
-    case UI.BorderStyle of
-      bsSingle, bsSizeable:
-        SetWindowLong(UI.Handle, GWL_STYLE, vStyle OR WS_CAPTION OR WS_BORDER);
-      bsDialog:
-        SetWindowLong(UI.Handle, GWL_STYLE, vStyle OR WS_CAPTION OR DS_MODALFRAME OR WS_DLGFRAME);
-    end;
-    UI.Height := UI.Height + 1;  // fix Windows bug and force title bar to repaint properly
-    UI.Height := UI.Height - 1;  // fix Windows bug and force title bar to repaint properly
-    UI.Refresh;
-  end;end;
-
-  adjustAspectRatio;             // save the user the effort of doing this manually
-  windowCaption;
 end;
 
 function TFX.showOKCancelMsgDlg(aMsg: string;
@@ -1235,8 +1191,6 @@ begin
 
   lblTimeDisplay.Caption  := '';
 
-//  progressBar.Parent      := WMP;  // this is ok until you start zooming in: then you lose the progressBar altogether
-
   repositionLabels;
 
   case g_mixer.muted of TRUE: FX.DoMuteUnmute; end; // GV.Mute starts out FALSE; this brings it in line with the system
@@ -1257,13 +1211,6 @@ begin
 end;
 
 procedure TUI.FormResize(Sender: TObject);
-// If the user opens two video files simultaneously from Explorer with the CAPS LOCK key on, two instances of MediaPlayer will be launched.
-// FormCreate will call resizeWindow2 to allow both videos to be positioned by the user alongside each other on a 1920-pixel-width monitor.
-// FormResize will left-justify both windows on the monitor, leaving the user to drag one window to the right of the other.
-// This allows two seemingly identical videos to be compared for picture quality, duration, etc., so the user can decide which to keep.
-// This is also useful when Handbrake* has been used to reduce the resolution of a video to free up disk space, to ensure that the lower-resolution
-// video is of sufficient quality to warrant deleting the original.
-// *https://handbrake.fr/
 begin
   FX.windowCaption;
 
@@ -1345,10 +1292,7 @@ begin
   lblFileSize.Left      := 4;
 
   case progressBar.Visible of  TRUE:  vBase := progressBar.Top;
-                              FALSE:  case isWindowCaptionVisible of
-                                        TRUE: vBase := UI.Height - 7; //  UI.Height - GetSystemMetrics(SM_CYCAPTION) - 14;  // magic number;
-                                       FALSE: vBase := UI.Height - GetSystemMetrics(SM_CYCAPTION) + 9;   // magic number;
-                                      end;end;
+                              FALSE:  vBase := UI.Height - 7; end;    // magic number
 
   lblXY.Top             := vBase - 125;
   lblXY2.Top            := vBase - 109;
@@ -1372,11 +1316,7 @@ function TUI.repositionTimeDisplay: boolean;
 begin
   lblTimeDisplay.Left := width - lblTimeDisplay.Width - 20; // NB: text aignment is taRightJustify in the Object Inspector
   case progressBar.Visible of  TRUE:  lblTimeDisplay.Top := progressBar.Top - lblTimeDisplay.Height;
-//                              FALSE:  case isWindowCaptionVisible of
-//                                         TRUE: lblTimeDisplay.Top := UI.Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) - 14; // magic number
-//                                        FALSE: lblTimeDisplay.Top := UI.Height - lblTimeDisplay.Height - GetSystemMetrics(SM_CYCAPTION) + 9;  // magic number
-//                                      end;end;
-                              FALSE:  lblTimeDisplay.Top := UI.Height - lblTimeDisplay.Height - 7; end;
+                              FALSE:  lblTimeDisplay.Top := UI.Height - lblTimeDisplay.Height - 7; end; // magic number
 end;
 
 function TUI.repositionWMP: boolean;
@@ -1402,15 +1342,6 @@ begin
   var vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_EXSTYLE);
   vProgressBarStyle := vProgressBarStyle - WS_EX_STATICEDGE;
   SetWindowLong(ProgressBar.Handle, GWL_EXSTYLE, vProgressBarStyle);
-
-// add thin border to fix redraw problems.
-// However, in keeping with the minimalist nature of the app, this border isn't necessary:
-//        the bar becomes more pronounced as the video progresses
-//        the change of cursor in progressBarMouseMove makes its presence and location obvious
-//
-//  vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_STYLE);
-//  vProgressBarStyle := vProgressBarStyle - WS_BORDER;
-//  SetWindowLong(ProgressBar.Handle, GWL_STYLE, vProgressBarStyle);
 
   UI.Width := UI.Width - 1; // force the progressBar to redraw. If the app is launched by clicking the EXE,
   UI.Width := UI.Width + 1; // the progressBar gets a nasty 1-pixel border, despite the above code.
@@ -1462,8 +1393,6 @@ begin
 
                                   GV.metaDataCount := GV.metaDataCount + 1;                               // fire 3 more times to get the rest of the metadata
                                   case GV.metaDataCount >= 3 of  TRUE: tmrMetaData.Enabled := FALSE; end; // WMP should have determined all the metadata by now.
-
-  WMP.Cursor := crNone;
 end;
 
 procedure TUI.tmrPlayNextTimer(Sender: TObject);
@@ -1477,6 +1406,7 @@ procedure TUI.tmrTimeDisplayTimer(Sender: TObject);
 // update the video timestamp display
 begin
   FX.UpdateTimeDisplay;
+  WMP.Cursor := crNone;
 end;
 
 function TUI.toggleControls(Shift: TShiftState): boolean;

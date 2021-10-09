@@ -22,7 +22,6 @@ Control | Action
 `=`						| copy video file name to clipboard
 `A`						| play first video in the list
 `B`						| [B]lackout/restore progress bar
-`Ctrl-B`				| [B]lackout/restore window caption/title bar and all on-screen artifacts
 `C`						| show/Hide on-screen [C]ontrols and video timestamp
 `Ctrl-C`				| show/Hide all on-screen controls, video timestamp and video metadata
 `D` and `DEL`			| [D]elete current video file (after confirmation)
