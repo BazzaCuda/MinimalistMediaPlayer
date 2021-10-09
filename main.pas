@@ -885,8 +885,8 @@ begin
   case Key in [VK_RIGHT, VK_LEFT, ord('i'), ord('I'), ord('o'), ord('O')] of
      TRUE:  begin
               case Key of
-                VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards
-                VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards
+                VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards   - generally, yes
+                VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards  - WMP goes back about 1 second not 1 frame!
                 ord('i'), ord('I'): FX.ZoomIn;                           // Zoom [I]n
                 ord('o'), ord('O'): FX.ZoomOut;                          // Zoom [O]ut
               end;
@@ -904,8 +904,6 @@ end;
 
 function TFX.UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
 begin
-  case UIKey(Key, Shift) of TRUE: EXIT; end;  // Keys that can be pressed singly or held down for repeat action
-
   case Key of
 //    VK_ESCAPE: case UI.WMP.fullScreen of FALSE: UI.CLOSE; end; // eXit app  - WMP doesn't allow this key to be re-used
 
@@ -1219,13 +1217,13 @@ end;
 procedure TUI.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 // superseded by ApplicationEventsMessage
 begin
-  FX.UIKeyDown(Key, Shift);
+//  FX.UIKeyDown(Key, Shift);
 end;
 
 procedure TUI.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 // superseded by ApplicationEventsMessage
 begin
-  FX.UIKeyUp(Key, Shift);
+//  FX.UIKeyUp(Key, Shift);
 end;
 
 procedure TUI.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
