@@ -3,7 +3,7 @@ object AboutForm: TAboutForm
   Top = 0
   BorderStyle = bsDialog
   Caption = 'About'
-  ClientHeight = 261
+  ClientHeight = 281
   ClientWidth = 636
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -19,7 +19,7 @@ object AboutForm: TAboutForm
     Left = 120
     Top = 8
     Width = 489
-    Height = 201
+    Height = 223
   end
   object Image1: TImage
     Left = 8
@@ -2240,7 +2240,7 @@ object AboutForm: TAboutForm
     Top = 47
     Width = 67
     Height = 25
-    Caption = 'Version:'
+    Caption = 'Release:'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -19
@@ -2248,7 +2248,7 @@ object AboutForm: TAboutForm
     Font.Style = []
     ParentFont = False
   end
-  object lblAppVersion: TLabel
+  object lblReleaseVersion: TLabel
     Left = 209
     Top = 47
     Width = 33
@@ -2263,7 +2263,7 @@ object AboutForm: TAboutForm
   end
   object Label3: TLabel
     Left = 136
-    Top = 78
+    Top = 107
     Width = 309
     Height = 25
     Caption = 'Copyright (c) Baz "Cap'#39'n" Cuda, 2021'
@@ -2276,7 +2276,7 @@ object AboutForm: TAboutForm
   end
   object Label4: TLabel
     Left = 136
-    Top = 109
+    Top = 137
     Width = 187
     Height = 25
     Caption = 'License: GNU GPL v2.0'
@@ -2289,7 +2289,7 @@ object AboutForm: TAboutForm
   end
   object Label5: TLabel
     Left = 136
-    Top = 140
+    Top = 167
     Width = 71
     Height = 25
     Caption = 'Website:'
@@ -2302,7 +2302,7 @@ object AboutForm: TAboutForm
   end
   object lblWebsiteURL: TLabel
     Left = 136
-    Top = 171
+    Top = 197
     Width = 455
     Height = 25
     Cursor = crHandPoint
@@ -2319,13 +2319,39 @@ object AboutForm: TAboutForm
   end
   object Bevel2: TBevel
     Left = 4
-    Top = 219
+    Top = 237
     Width = 628
     Height = 2
   end
+  object Label6: TLabel
+    Left = 136
+    Top = 77
+    Width = 47
+    Height = 25
+    Caption = 'Build:'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -19
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
+  end
+  object lblBuildVersion: TLabel
+    Left = 209
+    Top = 78
+    Width = 33
+    Height = 25
+    Caption = 'v1.0'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -19
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentFont = False
+  end
   object btnOK: TButton
     Left = 281
-    Top = 228
+    Top = 248
     Width = 75
     Height = 25
     Caption = 'OK'

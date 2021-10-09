@@ -67,6 +67,7 @@ type
   private
     function  addMenuItem: boolean;
     function  setupProgressBar: boolean;
+    function  showAboutBox: boolean;
   protected
   public
     // UI Functions only - application logic is in TFX
@@ -90,7 +91,6 @@ uses
   FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils, ShellAPI, FormAbout;
 
 const
-  APP_VERSION = 'v1.11';
   MENU_ID     = 1001;
 
 type
@@ -107,22 +107,25 @@ type
     FZoomed: boolean;
     function  GetExePath: string;
   private
-    function getAppVersion: string;
+    function getAppBuildVersion: string;
+    function getAppReleaseVersion: string;
+    function getFileVersion(const aFilePath: string = ''; const fmt: string = '%d.%d.%d.%d'): string;
   public
     constructor create;
     destructor  destroy;  override;
     function    invalidPlayIx: boolean;
-    property    appVersion:   string        read getAppVersion;
-    property    blackOut:     boolean       read FBlackOut  write FBlackOut;
-    property    closing:      boolean       read FClosing   write FClosing;
-    property    exePath:      string        read GetExePath;
-    property    inputBox:     boolean       read FInputBox  write FInputBox;
-    property    mute:         boolean       read FMute      write FMute;
-    property    playIx:       integer       read FplayIx    write FplayIx;
-    property    playlist:     TList<string> read Fplaylist;
-    property    sampling:     boolean       read FSampling  write FSampling;
-    property    startup:      boolean       read FStartUp   write FStartUp;
-    property    zoomed:       boolean       read FZoomed    write FZoomed;
+    property    appBuildVersion:    string        read getAppBuildVersion;
+    property    appReleaseVersion:  string        read getAppReleaseVersion;
+    property    blackOut:           boolean       read FBlackOut  write FBlackOut;
+    property    closing:            boolean       read FClosing   write FClosing;
+    property    exePath:            string        read GetExePath;
+    property    inputBox:           boolean       read FInputBox  write FInputBox;
+    property    mute:               boolean       read FMute      write FMute;
+    property    playIx:             integer       read FplayIx    write FplayIx;
+    property    playlist:           TList<string> read Fplaylist;
+    property    sampling:           boolean       read FSampling  write FSampling;
+    property    startup:            boolean       read FStartUp   write FStartUp;
+    property    zoomed:             boolean       read FZoomed    write FZoomed;
   end;
 
   TFX = class                        // application Functions aka program/business logic
@@ -821,8 +824,6 @@ var
 begin
   case noMediaFiles of TRUE: EXIT; end;
 
-  UI.showInfo('');
-
   case isShiftKeyDown AND isAltKeyDown of  TRUE:  vFactor := 200;
                                           FALSE:  case isShiftKeyDown of
                                                     TRUE: vFactor := 20;
@@ -1145,7 +1146,7 @@ end;
 
 procedure TUI.FormActivate(Sender: TObject);
 begin
-  showInfo(GV.appVersion);
+  showInfo(GV.appReleaseVersion);
 end;
 
 procedure TUI.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -1194,7 +1195,6 @@ begin
   lblInfo.Parent          := WMP;
   lblTimeDisplay.Parent   := WMP;
 
-  showInfo('');
   lblTimeDisplay.Caption  := '';
 
 //  progressBar.Parent      := WMP;  // this is ok until you start zooming in: then you lose the progressBar altogether
@@ -1374,10 +1374,21 @@ begin
   UI.Width := UI.Width + 1; // the progressBar gets a nasty 1-pixel border, despite the above code.
 end;
 
+function TUI.showAboutBox: boolean;
+begin
+  with TAboutForm.Create(NIL) do
+  try
+    setReleaseVersion('v' + GV.appReleaseVersion);
+    setBuildVersion('v' + GV.appBuildVersion);
+    ShowModal;
+  finally
+    Free;
+  end;
+end;
+
 function TUI.showInfo(aInfo: string): boolean;
 begin
   lblInfo.Caption := aInfo;
-  case aInfo = '' of TRUE: EXIT; end;
   lblInfo.Visible := TRUE;
   tmrInfo.Enabled := TRUE;
 end;
@@ -1414,8 +1425,6 @@ function TUI.toggleControls(Shift: TShiftState): boolean;
 // Ctrl-C Show/Hide all displayed controls/metadata
 // If the timestamp and Mute/Unmute button are already being displayed, Ctrl-C will also display all the metadata info
 begin
-  showInfo('');      // Only valid at the time the user presses the appropriate key to change something
-
   case (ssCtrl in Shift) AND lblTimeDisplay.Visible and NOT lblXY.Visible of TRUE: begin // add the metadata to the currently displayed timestamp etc
     lblXY.Visible           := TRUE;
     lblXY2.Visible          := TRUE;
@@ -1537,15 +1546,7 @@ end;
 procedure TUI.WMSysCommand(var Message: TWMSysCommand);
 begin
   inherited;
-  case Message.CmdType of
-    MENU_ID:  with TAboutForm.Create(NIL) do
-                try
-                  setAppVersion(GV.appVersion);
-                  ShowModal;
-                finally
-                  Free;
-                end;
-  end;
+  case Message.CmdType of MENU_ID:  showAboutBox; end;
 end;
 
 { TGV }
@@ -1562,14 +1563,60 @@ begin
   inherited;
 end;
 
-function TGV.getAppVersion: string;
+function TGV.getAppBuildVersion: string;
 begin
-  result := APP_VERSION;
+  result :=  getFileVersion;
+end;
+
+function TGV.getAppReleaseVersion: string;
+begin
+  result :=  getFileVersion('', '%d.%d');
 end;
 
 function TGV.getExePath: string;
 begin
   result := IncludeTrailingBackslash(ExtractFilePath(ParamStr(0)));
+end;
+
+function TGV.getFileVersion(const aFilePath: string = ''; const fmt: string = '%d.%d.%d.%d'): string;
+var
+  vFilePath: string;
+  iBufferSize: DWORD;
+  iDummy: DWORD;
+  pBuffer: Pointer;
+  pFileInfo: Pointer;
+  iVer: array[1..4] of Word;
+begin
+  // set default value
+  Result := '';
+  // get filename of exe/dll if no filename is specified
+  vFilePath := aFilePath;
+  if (vFilePath = '') then begin
+    // prepare buffer for path and terminating #0
+    SetLength(vFilePath, MAX_PATH + 1);
+    SetLength(vFilePath, GetModuleFileName(hInstance, PChar(vFilePath), MAX_PATH + 1));
+  end;
+
+  // get size of version info (0 if no version info exists)
+  iBufferSize := GetFileVersionInfoSize(PChar(vFilePath), iDummy);
+
+  if (iBufferSize > 0) then begin
+    GetMem(pBuffer, iBufferSize);
+    try
+      // get fixed file info (language independent)
+      GetFileVersionInfo(PChar(vFilePath), 0, iBufferSize, pBuffer);
+      VerQueryValue(pBuffer, '\', pFileInfo, iDummy);
+      // read version blocks
+      iVer[1] := HiWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionMS);
+      iVer[2] := LoWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionMS);
+      iVer[3] := HiWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionLS);
+      iVer[4] := LoWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionLS);
+    finally
+      FreeMem(pBuffer);
+    end;
+    // format result string
+    Result := Format(Fmt, [iVer[1], iVer[2], iVer[3], iVer[4]]);
+  end;
 end;
 
 function TGV.invalidPlayIx: boolean;

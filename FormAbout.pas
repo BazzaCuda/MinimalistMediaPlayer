@@ -30,7 +30,7 @@ type
     Image1: TImage;
     Label1: TLabel;
     Label2: TLabel;
-    lblAppVersion: TLabel;
+    lblReleaseVersion: TLabel;
     Label3: TLabel;
     Label4: TLabel;
     Label5: TLabel;
@@ -38,12 +38,15 @@ type
     Bevel1: TBevel;
     btnOK: TButton;
     Bevel2: TBevel;
+    Label6: TLabel;
+    lblBuildVersion: TLabel;
     procedure lblWebsiteURLClick(Sender: TObject);
     procedure btnOKClick(Sender: TObject);
   private
     { Private declarations }
   public
-    function setAppVersion(aVersion: string): boolean;
+    function setBuildVersion(aBuild: string): boolean;
+    function setReleaseVersion(aRelease: string): boolean;
   end;
 
 var
@@ -65,9 +68,14 @@ begin
   ShellExecute(0, 'open', 'https://github.com/BazzaCuda/MinimalistMediaPlayer', '', '', SW_SHOW);
 end;
 
-function TAboutForm.setAppVersion(aVersion: string): boolean;
+function TAboutForm.setBuildVersion(aBuild: string): boolean;
 begin
-  lblAppVersion.Caption := aVersion;
+  lblBuildVersion.Caption := aBuild;
+end;
+
+function TAboutForm.setReleaseVersion(aRelease: string): boolean;
+begin
+  lblReleaseVersion.Caption := aRelease;
 end;
 
 end.
