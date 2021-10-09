@@ -26,44 +26,43 @@ uses
 
 type
   TUI = class(TForm)
+    applicationEvents: TApplicationEvents;
+    lblAudioBitRate: TLabel;
+    lblBitRate: TLabel;
+    lblFileSize: TLabel;
+    lblFrameRate: TLabel;
+    lblInfo: TLabel;
+    lblTimeDisplay: TLabel;
+    lblVideoBitRate: TLabel;
+    lblXY: TLabel;
+    lblXY2: TLabel;
+    lblXYRatio: TLabel;
     progressBar: TProgressBar;
+    tmrInfo: TTimer;
+    tmrMetaData: TTimer;
     tmrPlayNext: TTimer;
     tmrTimeDisplay: TTimer;
     WMP: TWindowsMediaPlayer;
-    tmrMetaData: TTimer;
-    tmrInfo: TTimer;
-    lblMuteUnmute: TLabel;
-    lblTimeDisplay: TLabel;
-    lblXY: TLabel;
-    lblFrameRate: TLabel;
-    lblBitRate: TLabel;
-    lblAudioBitRate: TLabel;
-    lblVideoBitRate: TLabel;
-    lblXYRatio: TLabel;
-    lblFileSize: TLabel;
-    lblXY2: TLabel;
-    lblInfo: TLabel;
-    applicationEvents: TApplicationEvents;
-    procedure FormCreate(Sender: TObject);
+    procedure applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
+    procedure FormActivate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure FormCreate(Sender: TObject);
+    procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure FormResize(Sender: TObject);
+    procedure lblMuteUnmuteClick(Sender: TObject);
     procedure progressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure tmrInfoTimer(Sender: TObject);
+    procedure tmrMetaDataTimer(Sender: TObject);
     procedure tmrPlayNextTimer(Sender: TObject);
     procedure tmrTimeDisplayTimer(Sender: TObject);
     procedure WMPClick(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
-    procedure WMPPlayStateChange(ASender: TObject; NewState: Integer);
-    procedure lblMuteUnmuteClick(Sender: TObject);
-    procedure tmrMetaDataTimer(Sender: TObject);
-    procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-    procedure WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
-    procedure tmrInfoTimer(Sender: TObject);
-    procedure FormResize(Sender: TObject);
-    procedure WMPKeyUp(ASender: TObject; nKeyCode, nShiftState: SmallInt);
-    procedure WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
-    procedure applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
-    procedure WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
     procedure WMDropFiles(var Msg: TWMDropFiles); message WM_DROPFILES;
-    procedure FormActivate(Sender: TObject);
+    procedure WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
+    procedure WMPKeyUp(ASender: TObject; nKeyCode, nShiftState: SmallInt);
+    procedure WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
+    procedure WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
+    procedure WMPPlayStateChange(ASender: TObject; NewState: Integer);
     procedure WMSysCommand(var Message : TWMSysCommand); Message WM_SYSCOMMAND;
   private
     function  addMenuItem: boolean;
@@ -371,10 +370,6 @@ function TFX.doMuteUnmute: boolean;
 begin
   GV.mute       := NOT GV.mute;
   g_mixer.muted := GV.mute;
-  case GV.mute of
-     TRUE:  UI.lblMuteUnmute.Caption  := 'Unmute';
-    FALSE:  UI.lblMuteUnmute.Caption  := 'Mute';
-  end;
 end;
 
 function TFX.doPausePlay: boolean;
@@ -1174,15 +1169,12 @@ begin
                                             mtInformation, [MBOK]);
                                 end;end;
 
-  lblMuteUnmute.Visible := FALSE; // I suddenly took a dislike to this being displayed when all I really want is the video timestamp.
-
   WMP.uiMode          := 'none';
   WMP.windowlessVideo := TRUE;
   WMP.stretchToFit    := TRUE;
   WMP.settings.volume := 100;
 
-  lblMuteUnmute.Parent    := WMP;    // the only way for these to display is to make them child controls of WMP
-  lblXY.Parent            := WMP;
+  lblXY.Parent            := WMP;    // the only way for these to display is to make them child controls of WMP
   lblXY2.Parent           := WMP;
   lblFrameRate.Parent     := WMP;
   lblBitRate.Parent       := WMP;
@@ -1258,7 +1250,7 @@ procedure TUI.progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: In
 // When a SHIFT key is held down, calculate a new video position based on where the mouse is on the prograss bar.
 // This *was* intended to allow dragging/scrubbing through the video.
 // Unfortunately, WMP can't cope. It doesn't react to the new positions fast enough and gets itself in a right pickle.
-// Consequently, this functionality is unusable while WMP is used as the media playing component. 
+// Consequently, this functionality is unusable while WMP is used as the media playing component.
 begin
   progressBar.Cursor := crHandPoint;
 
@@ -1293,8 +1285,6 @@ function TUI.repositionLabels: boolean;
 var
   vBase:  integer;
 begin
-  lblMuteUnmute.Left := UI.Width - lblMuteUnmute.Width - 16;       // NB: text alignment is taCenter in the Object Inspector
-
   lblXY.Left            := 4;
   lblXY2.Left           := 4;
   lblFrameRate.Left     := 4;
@@ -1383,6 +1373,13 @@ begin
   tmrInfo.Enabled := TRUE;
 end;
 
+procedure TUI.tmrInfoTimer(Sender: TObject);
+// We want the feedback info to only be shown briefly. So, we use a timer to hide it again.
+begin
+  tmrInfo.Enabled := FALSE;
+  lblInfo.Visible := FALSE;
+end;
+
 procedure TUI.tmrMetaDataTimer(Sender: TObject);
 // We used this timer to delay fetching the video metadata from WMP. Trying to access it too soon after playback commences can cause WMP internal problems.
 begin
@@ -1395,13 +1392,6 @@ procedure TUI.tmrPlayNextTimer(Sender: TObject);
 begin
   tmrPlayNext.Enabled := FALSE;
   FX.PlayNextFile;
-end;
-
-procedure TUI.tmrInfoTimer(Sender: TObject);
-// We want the feedback info to only be shown briefly. So, we use a timer to hide it again.
-begin
-  tmrInfo.Enabled := FALSE;
-  lblInfo.Visible := FALSE;
 end;
 
 procedure TUI.tmrTimeDisplayTimer(Sender: TObject);

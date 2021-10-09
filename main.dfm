@@ -6952,30 +6952,8 @@ object UI: TUI
   OnCreate = FormCreate
   OnMouseMove = FormMouseMove
   OnResize = FormResize
-  DesignSize = (
-    754
-    430)
   PixelsPerInch = 96
   TextHeight = 13
-  object lblMuteUnmute: TLabel
-    Left = 664
-    Top = 17
-    Width = 73
-    Height = 23
-    Alignment = taCenter
-    Anchors = [akTop, akRight]
-    AutoSize = False
-    Caption = 'Mute'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clTeal
-    Font.Height = -19
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
-    Transparent = True
-    Visible = False
-    OnClick = lblMuteUnmuteClick
-  end
   object lblTimeDisplay: TLabel
     Left = 656
     Top = 394
