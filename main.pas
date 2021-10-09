@@ -90,7 +90,7 @@ uses
   FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils, ShellAPI, FormAbout;
 
 const
-  APP_VERSION = 'v1.10';
+  APP_VERSION = 'v1.11';
   MENU_ID     = 1001;
 
 type
@@ -183,7 +183,7 @@ type
     function speedIncrease(Shift: TShiftState): boolean;
     function startOver: boolean;
     function tabForwardsBackwards: boolean;
-    function UIKey(var Key: Word; Shift: TShiftState): boolean;
+    function UIKey(var Key: Word; Shift: TShiftState; KeyUp: boolean = FALSE): boolean;
     function UIKeyDown(var Key: Word; Shift: TShiftState): boolean;
     function UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
     function unZoom: boolean;
@@ -279,7 +279,7 @@ begin
 end;
 
 function TFX.Delay(dwMilliseconds: DWORD): boolean;
-// Used to delay an operation; "sleep()" would pause the thread, which is not what is required
+// Used to delay an operation; "sleep()" would suspend the thread, which is not what is required
 var
   iStart, iStop: DWORD;
 begin
@@ -322,14 +322,14 @@ begin
 end;
 
 function TFX.deleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
-// performs the actual file/folder deletion initiated by deleteCurrentFile
+// performs (in a separate process) the actual file/folder deletion initiated by deleteCurrentFile
 begin
   case ssCtrl in Shift of  TRUE: doCommandLine('rot -nobanner -p 1 -r "' + ExtractFilePath(AFilePath) + '*.* "'); // folder contents but not subfolders
                           FALSE: doCommandLine('rot -nobanner -p 1 -r "' + AFilePath + '"'); end;                 // one individual file
 end;
 
 function TFX.doCentreWindow: boolean;
-// H = [H]orizontal
+// [H] = [H]orizontal
 // Position the window centrally, both horizontally and vertically.
 // Originally, the window was only positioned horizontally, hence [H].
 // Later, this was changed to centre the window on the screen.
@@ -562,7 +562,7 @@ end;
 
 function TFX.matchVideoWidth: boolean;
 // [9] = resize the width of the window to match the video width.
-// Judicious use of [9], [J], [H] and [G] can be used to obtain the optimum window to match the video.
+// Judicious use of [9], ad[J]ust, [H]orizontal and [G]reater can be used to obtain the optimum window to match the video.
 begin
   case noMediaFiles of TRUE: EXIT; end;
 
@@ -661,10 +661,10 @@ function TFX.reloadMediaFiles: boolean;
 // Previously, a facility existed whereby if MediaPlayer was launched with the CAPS LOCK key on,
 //    only video files greater than 100MB in size would be loaded into the file list.
 // This allowed folders to be examined to quicly keep or delete the largest videos.
-// This reloadMediaFiles function could than be used to find all files in the current folder regardless of size,
+// This reloadMediaFiles function could than be used to re-find all files in the current folder regardless of size,
 //    without having to close and restart the app *without* the CAPS LOCK key on.
 // Typically, this was actually because the user had launched MediaPlayer forgetting that the CAPS LOCK key was on.
-// The CAPS LOCK key has now been repurposed for something else (see FormCreate) so for the time being this function isn't called or useful
+// The CAPS LOCK key has now been repurposed for something else (see FormCreate) so for the time being this function isn't as useful as it was.
 begin
   GV.playIx := findMediaFilesInFolder(currentFilePath, GV.playlist);
   windowCaption;
@@ -713,7 +713,7 @@ begin
 end;
 
 function TFX.resizeWindow2: boolean;
-// [2] = resize so that two videos can be positioned side-by-side horizontally by the user
+// [2] = resize so that two videos can be positioned side-by-side horizontally by the user on a 1920-width screen
 begin
   UI.width   := 970;
   UI.height  := 640;
@@ -845,7 +845,7 @@ begin
   UI.showInfo(newInfo);        // confirm the fraction jumped (and the direction) for the user
 end;
 
-function TFX.UIKey(var Key: Word; Shift: TShiftState): boolean;
+function TFX.UIKey(var Key: Word; Shift: TShiftState; KeyUp: boolean = FALSE): boolean;
 // Keys that can be pressed singly or held down for repeat action
 begin
   result := TRUE;
@@ -853,6 +853,7 @@ begin
   case (ssCtrl in Shift) AND GV.zoomed of                                // when zoomed, Ctrl-up/down/left/right moves the video around the window
      TRUE:  case key in [VK_RIGHT, VK_LEFT, VK_UP, VK_DOWN] of
                TRUE:  begin
+                        case KeyUp of TRUE: EXIT; end;                  // don't allow KeyUp to repeat the KeyDown action
                         case Key of
                           VK_RIGHT:     FX.GoRight;                      // Move zoomed WMP right
                           VK_LEFT:      FX.GoLeft;                       // Move zoomed WMP left
@@ -866,6 +867,7 @@ begin
   case NOT (ssCtrl in Shift) and NOT GV.zoomed of                        // when not zoomed, up/down increases or decreases the volume by 1%
      TRUE:  case Key in [VK_UP, VK_DOWN] of
                TRUE:  begin
+                        case KeyUp of TRUE: EXIT; end;                   // don't allow KeyUp to repeat the KeyDown action
                         case Key of
                           VK_UP:   g_mixer.Volume := g_mixer.Volume + (65535 div 100);  // volume up 1%
                           VK_DOWN: g_mixer.Volume := g_mixer.Volume - (65535 div 100);  // volume down 1%
@@ -877,6 +879,7 @@ begin
 
   case Key in [VK_RIGHT, VK_LEFT, ord('i'), ord('I'), ord('o'), ord('O')] of
      TRUE:  begin
+              case KeyUp of TRUE: EXIT; end;                             // don't allow KeyUp to repeat the KeyDown action
               case Key of
                 VK_RIGHT: IWMPControls2(UI.WMP.controls).step(1);        // Frame forwards   - generally, yes
                 VK_LEFT:  IWMPControls2(UI.WMP.controls).step(-1);       // Frame backwards  - WMP goes back about 1 second not 1 frame!
@@ -897,6 +900,9 @@ end;
 
 function TFX.UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
 begin
+try
+  case UIKey(Key, Shift, TRUE) of TRUE: EXIT; end;  // Keys that can be pressed singly or held down for repeat action: don't process the KeyUp as well as the KeyDown
+
   case Key of
 //    VK_ESCAPE: case UI.WMP.fullScreen of FALSE: UI.CLOSE; end; // eXit app  - WMP doesn't allow this key to be re-used
 
@@ -945,8 +951,10 @@ begin
     ord('8')          : UI.repositionWMP;                     // 8 = reposition WMP to eliminate border pixels
     ord('9')          : matchVideoWidth;                      // 9 = match window width to video width
   end;
+finally
   UpdateTimeDisplay;
   Key := 0;
+end;
 end;
 
 function TFX.unZoom: boolean;
