@@ -55,7 +55,6 @@ Control | Action
 `Down Arrow`			| decrease the volume by 1%
 `Ctrl-Up Arrow`			| increase the playback speed by 10%
 `Ctrl-Down Arrow`		| decrease the playback speed by 10%
-`0`						| hide(zero) or show the window title bar / caption
 `1`						| reset the playback speed to normal, i.e. [1]00%
 `2`						| resize the window so that 2 instances of the application can be placed side-by-side
 `5`						| save/bookmark the current video timestamp to an INI file
