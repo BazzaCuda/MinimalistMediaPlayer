@@ -43,6 +43,8 @@ type
     tmrPlayNext: TTimer;
     tmrTimeDisplay: TTimer;
     WMP: TWindowsMediaPlayer;
+    lblMediaCaption: TLabel;
+    tmrMediaCaption: TTimer;
     procedure applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
     procedure FormActivate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -64,6 +66,7 @@ type
     procedure WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
     procedure WMPPlayStateChange(ASender: TObject; NewState: Integer);
     procedure WMSysCommand(var Message : TWMSysCommand); Message WM_SYSCOMMAND;
+    procedure tmrMediaCaptionTimer(Sender: TObject);
   private
     function  addMenuItem: boolean;
     function  setupProgressBar: boolean;
@@ -613,12 +616,16 @@ begin
 end;
 
 function TFX.playCurrentFile: boolean;
-// CurrentFile is the one whose index in the list equals playIx
+// CurrentFile is the one whose index in the playList equals playIx
 begin
   case GV.invalidPlayIx of TRUE: EXIT; end;             // sanity check
 
   case FileExists(currentFilePath) of TRUE: begin       // i.e. if file *still* exists :D
     windowCaption;
+    case UI.isWindowCaptionVisible of FALSE:  begin
+                                                UI.lblMediaCaption.Visible  := TRUE;
+                                                UI.tmrMediaCaption.Enabled  := TRUE; end;end;
+
     UI.WMP.URL := 'file://' + currentFilePath;
     unZoom;
     WMPplay;
@@ -1019,7 +1026,9 @@ end;
 function TFX.windowCaption: boolean;
 begin
   case noMediaFiles of TRUE: EXIT; end;
-  UI.Caption := format('[%d/%d] %s', [GV.playIx + 1, GV.playlist.Count, ExtractFileName(currentFilePath)]);
+
+  UI.Caption                  := format('[%d/%d] %s', [GV.playIx + 1, GV.playlist.Count, ExtractFileName(currentFilePath)]);
+  UI.lblMediaCaption.Caption  := UI.Caption;
 end;
 
 function TFX.windowMaximizeRestore: boolean;
@@ -1209,7 +1218,9 @@ begin
   WMP.stretchToFit    := TRUE;
   WMP.settings.volume := 100;
 
-  lblXY.Parent            := WMP;    // the only way for these to display is to make them child controls of WMP
+// the only way for these to display is to make them child controls of WMP
+  lblMediaCaption.Parent  := WMP;
+  lblXY.Parent            := WMP;
   lblXY2.Parent           := WMP;
   lblFrameRate.Parent     := WMP;
   lblBitRate.Parent       := WMP;
@@ -1319,6 +1330,9 @@ function TUI.repositionLabels: boolean;
 var
   vBase:  integer;
 begin
+  lblMediaCaption.Top   := 0;
+  lblMediaCaption.Left  := 4;
+
   lblXY.Left            := 4;
   lblXY2.Left           := 4;
   lblFrameRate.Left     := 4;
@@ -1423,6 +1437,12 @@ procedure TUI.tmrInfoTimer(Sender: TObject);
 begin
   tmrInfo.Enabled := FALSE;
   lblInfo.Visible := FALSE;
+end;
+
+procedure TUI.tmrMediaCaptionTimer(Sender: TObject);
+begin
+  tmrMediaCaption.Enabled := FALSE;
+  lblMediaCaption.Visible := FALSE;
 end;
 
 procedure TUI.tmrMetaDataTimer(Sender: TObject);

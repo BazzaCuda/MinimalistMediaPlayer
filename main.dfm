@@ -6,6 +6,18 @@ object UI: TUI
   ClientHeight = 430
   ClientWidth = 754
   Color = clGray
+  CustomTitleBar.BackgroundColor = clBlack
+  CustomTitleBar.ForegroundColor = clWhite
+  CustomTitleBar.InactiveBackgroundColor = clBlack
+  CustomTitleBar.InactiveForegroundColor = clWhite
+  CustomTitleBar.ButtonForegroundColor = clWhite
+  CustomTitleBar.ButtonBackgroundColor = clBlack
+  CustomTitleBar.ButtonHoverForegroundColor = clWhite
+  CustomTitleBar.ButtonHoverBackgroundColor = 1381653
+  CustomTitleBar.ButtonPressedForegroundColor = clWhite
+  CustomTitleBar.ButtonPressedBackgroundColor = 3487029
+  CustomTitleBar.ButtonInactiveForegroundColor = clWhite
+  CustomTitleBar.ButtonInactiveBackgroundColor = clBlack
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
@@ -6947,6 +6959,7 @@ object UI: TUI
     0000000000000000000000000000E0070000E0070000F00F0000F81F0000}
   OldCreateOrder = False
   Position = poScreenCenter
+  StyleElements = [seFont, seClient]
   OnActivate = FormActivate
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
@@ -7139,6 +7152,20 @@ object UI: TUI
     Transparent = True
     Visible = False
   end
+  object lblMediaCaption: TLabel
+    Left = 24
+    Top = 16
+    Width = 127
+    Height = 15
+    Caption = '[10/10] Media file.m4v'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clTeal
+    Font.Height = -12
+    Font.Name = 'Segoe UI'
+    Font.Style = [fsBold]
+    ParentFont = False
+    Visible = False
+  end
   object WMP: TWindowsMediaPlayer
     Left = 73
     Top = 44
@@ -7205,5 +7232,12 @@ object UI: TUI
     OnMessage = applicationEventsMessage
     Left = 504
     Top = 48
+  end
+  object tmrMediaCaption: TTimer
+    Enabled = False
+    Interval = 3000
+    OnTimer = tmrMediaCaptionTimer
+    Left = 400
+    Top = 304
   end
 end
