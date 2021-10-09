@@ -808,11 +808,11 @@ end;
 function TFX.tabForwardsBackwards(aFactor: integer = 0): boolean;
 // [T] = Tab Forward or Ctrl-T = Tab Backward through a fraction of the video.
 // The fraction to jump can be modified using the following keys:
-//    SHIFT-ALT = 200th
-//    Default   = 100th
-//    ALT       = 50th
-//    SHIFT     = 20th
-//    CAPS LOCK = 10th
+//    TAB key             = 200th
+//    T (default)         = 100th
+//    ALT-T               = 50th
+//    SHIFT-T             = 20th
+//    T with CAPS LOCK on = 10th
 //  CTRL = reverse
 var
   vFactor: integer;
@@ -820,17 +820,14 @@ begin
   case noMediaFiles of TRUE: EXIT; end;
 
   case aFactor <> 0 of  TRUE: vFactor := aFactor;
-                       FALSE:
-
-  case isShiftKeyDown AND isAltKeyDown of  TRUE:  vFactor := 200;
-                                          FALSE:  case isShiftKeyDown of
-                                                    TRUE: vFactor := 20;
-                                                   FALSE: case isAltKeyDown of
-                                                            TRUE: vFactor := 50;
-                                                           FALSE: case isCapsLockOn of
-                                                                    TRUE: vFactor := 10;
-                                                                   FALSE: vFactor := 100;
-  end;end;end;end;end;
+                       FALSE: case isShiftKeyDown of
+                                 TRUE: vFactor := 20;
+                                FALSE: case isAltKeyDown of
+                                          TRUE: vFactor := 50;
+                                         FALSE: case isCapsLockOn of
+                                                  TRUE: vFactor := 10;
+                                                 FALSE: vFactor := 100;
+  end;end;end;end;
 
   case isControlKeyDown of
     TRUE: UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition - (UI.WMP.currentMedia.duration / vFactor);
