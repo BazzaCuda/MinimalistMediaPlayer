@@ -83,7 +83,7 @@ WMP has problems playing some FLV files which, bizarrely, go away if you rename 
 
 WMPLib_TLB.pas
 --------------
-In order for you to be able to open the project and display the main form containing the Windows Media Player ActiveX component, in RAD Studio/Delphi you will first need to do "Component / Import Component... / Import ActiveX Control, and select the Windows Media Player from the list, for RAD Studio to generate this unit automatically and install the component to the ActiveX palette.
+In order for you to be able to open the project and display the main form containing the Windows Media Player ActiveX component, in RAD Studio/Delphi you will first need to do "Component / Import Component... / Import ActiveX Control, and select the Windows Media Player from the list; RAD Studio will then generate this unit automatically and install the component to the ActiveX palette.
 
 Notes concerning the code - a warning for the overly sensitive :D
 -------------------------
