@@ -185,7 +185,7 @@ type
     function speedDecrease(Shift: TShiftState): boolean;
     function speedIncrease(Shift: TShiftState): boolean;
     function startOver: boolean;
-    function tabForwardsBackwards: boolean;
+    function tabForwardsBackwards(aFactor: integer = 0): boolean;
     function UIKey(var Key: Word; Shift: TShiftState; KeyUp: boolean = FALSE): boolean;
     function UIKeyDown(var Key: Word; Shift: TShiftState): boolean;
     function UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
@@ -810,7 +810,7 @@ begin
   UI.WMP.controls.play;
 end;
 
-function TFX.tabForwardsBackwards: boolean;
+function TFX.tabForwardsBackwards(aFactor: integer = 0): boolean;
 // [T] = Tab Forward or Ctrl-T = Tab Backward through a fraction of the video.
 // The fraction to jump can be modified using the following keys:
 //    SHIFT-ALT = 200th
@@ -824,6 +824,9 @@ var
 begin
   case noMediaFiles of TRUE: EXIT; end;
 
+  case aFactor <> 0 of  TRUE: vFactor := aFactor;
+                       FALSE:
+
   case isShiftKeyDown AND isAltKeyDown of  TRUE:  vFactor := 200;
                                           FALSE:  case isShiftKeyDown of
                                                     TRUE: vFactor := 20;
@@ -832,7 +835,7 @@ begin
                                                            FALSE: case isCapsLockOn of
                                                                     TRUE: vFactor := 10;
                                                                    FALSE: vFactor := 100;
-  end;end;end;end;
+  end;end;end;end;end;
 
   case isControlKeyDown of
     TRUE: UI.WMP.controls.currentPosition := UI.WMP.controls.currentPosition - (UI.WMP.currentMedia.duration / vFactor);
@@ -917,6 +920,7 @@ try
 
     VK_F12: openWithShotcut;
 
+    9:                  tabForwardsBackwards(200);            // TAB tab forwards/backwards 1/200th   Mods: Ctrl-TAB
     187               : clipboardCurrentFileName;             // =   copy current filename to clipboard
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
     ord('b'), ord('B'): BlackOut;                             // B = Blackout                       Mods: Ctrl-B
