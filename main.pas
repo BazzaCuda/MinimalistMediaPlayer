@@ -383,16 +383,20 @@ function TFX.fetchMediaMetaData: boolean;
 // Called from the tmrMetaDataTimer event handler.
 // There is a delay after a video starts playing before its metadata becomes available.
 // Consequently, when a video starts playing, tmrMetaData is started to delay an attempt to access it.
+// For some very large media files, e.g. 7GB, WMP doesn't report a file size(!), so we do it ourselves.
 begin
   UI.lblXY.Caption                := format('XY:  %s x %s', [UI.WMP.currentMedia.getItemInfo('WM/VideoWidth'), UI.WMP.currentMedia.getItemInfo('WM/VideoHeight')]);
+  case trim(UI.lblXY.Caption) = 'XY:   x' of TRUE: UI.lblXY.Caption := 'XY:'; end;
   UI.lblXY2.Caption               := format('XY:  %d x %d', [UI.WMP.currentMedia.imageSourceWidth, UI.WMP.currentMedia.imageSourceHeight]);
   try UI.lblFrameRate.Caption     := format('FR:  %f fps', [StrToFloat(UI.WMP.currentMedia.getItemInfo('FrameRate')) / 1000]); except end;
   try UI.lblBitRate.Caption       := format('BR:  %d Kb/s', [trunc(StrToFloat(UI.WMP.currentMedia.getItemInfo('BitRate')) / 1024)]); except end;
   try UI.lblAudioBitRate.Caption  := format('AR:  %d Kb/s', [trunc(StrToFloat(UI.WMP.currentMedia.getItemInfo('AudioBitRate')) / 1024)]); except end;
   try UI.lblVideoBitRate.Caption  := format('VR:  %d Kb/s', [trunc(StrToFloat(UI.WMP.currentMedia.getItemInfo('VideoBitRate')) / 1024)]); except end;
   try UI.lblXYRatio.Caption       := format('XY:  %s:%s', [UI.WMP.currentMedia.getItemInfo('PixelAspectRatioX'), UI.WMP.currentMedia.getItemInfo('PixelAspectRatioY')]); except end;
-  try UI.lblFileSize.Caption      := format('FS:  %d MB', [trunc(StrToFloat(UI.WMP.currentMedia.getItemInfo('FileSize')) / 1024 / 1024)]); except end;
-  case trim(UI.lblXY.Caption) = 'XY:   x' of TRUE: UI.lblXY.Caption := 'XY:'; end;
+
+  var vSize := getFileSize(currentFilePath);
+  case vSize >= 1047552 of  TRUE:   try UI.lblFileSize.Caption      := format('FS:  %.2f GB', [vSize / 1024 / 1024 / 1024]); except end;
+                           FALSE:   try UI.lblFileSize.Caption      := format('FS:  %.2f MB', [vSize / 1024 / 1024]); except end;end;
 end;
 
 function TFX.findMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
@@ -552,7 +556,7 @@ begin
 end;
 
 function TFX.keepCurrentFile: boolean;
-// K = [K]eep current file
+// [K] = [K]eep current file
 // When examining a folder to determine which videos to keep or delete,
 //    this provides a convenient way to mark a video to be kept by renaming the file, prefixing an underscore to its filename.
 // This causes all such files to gravitate to the top of the displayed folder thus making it easy to select all the other files and delete them.
@@ -616,7 +620,7 @@ begin
     UI.WMP.URL := 'file://' + currentFilePath;
     unZoom;
     GV.newMediaFile   := TRUE;
-    GV.metaDataCount  := 0;
+    GV.metaDataCount  := 0;     // tmrMetaData will be enabled in WMPplay after playback commences
     WMPplay;
   end;end;
 end;
@@ -957,7 +961,7 @@ end;
 end;
 
 function TFX.unZoom: boolean;
-// U = [U]nzoom; re-fit the video to the window
+// [U] = [U]nzoom; re-fit the video to the window
 begin
   GV.zoomed := FALSE;
   UI.repositionWMP;
@@ -999,7 +1003,7 @@ begin
 end;
 
 function TFX.windowMaximizeRestore: boolean;
-// M = [M]aximize/Restore window
+// [M] = [M]aximize/Restore window
 begin
   case UI.WindowState = wsMaximized of TRUE: UI.WindowState := wsNormal;
                                       FALSE: UI.WindowState := wsMaximized; end;
@@ -1021,7 +1025,7 @@ begin
 end;
 
 function TFX.zoomIn: boolean;
-// I = Zoom [I]n by 10%
+// [I] = Zoom [I]n by 10%
 begin
   GV.zoomed := TRUE;
 
@@ -1034,7 +1038,7 @@ begin
 end;
 
 function TFX.zoomOut: boolean;
-// O = Zoom [O]ut by 10%
+// [O] = Zoom [O]ut by 10%
 begin
   GV.zoomed := TRUE;
 
@@ -1387,6 +1391,7 @@ procedure TUI.tmrMetaDataTimer(Sender: TObject);
 // Some metadata is available quickly, like the source dimensions. Other bits take longer, like the various bitrates, which can take up to 3 seconds.
 // As soon as we have the source dimensions, we can call adjustAspectRatio.
 // We then allow the timer to fire 3 more times (Interval = 1000ms), then we disable the timer so it's not firing all the way through playback.
+// The timer will be enabled for one event when playback is resumed after being paused.
 begin
   FX.FetchMediaMetaData;
   case FX.hasMetaData of  TRUE: begin
@@ -1583,32 +1588,32 @@ begin
   Result := '';
   // get filename of exe/dll if no filename is specified
   vFilePath := aFilePath;
-  if (vFilePath = '') then begin
-    // prepare buffer for path and terminating #0
-    SetLength(vFilePath, MAX_PATH + 1);
-    SetLength(vFilePath, GetModuleFileName(hInstance, PChar(vFilePath), MAX_PATH + 1));
-  end;
+  case vFilePath = '' of TRUE:  begin
+                                  // prepare buffer for path and terminating #0
+                                  SetLength(vFilePath, MAX_PATH + 1);
+                                  SetLength(vFilePath, GetModuleFileName(hInstance, PChar(vFilePath), MAX_PATH + 1));
+                                end;end;
 
   // get size of version info (0 if no version info exists)
   iBufferSize := GetFileVersionInfoSize(PChar(vFilePath), iDummy);
 
-  if (iBufferSize > 0) then begin
-    GetMem(pBuffer, iBufferSize);
-    try
-      // get fixed file info (language independent)
-      GetFileVersionInfo(PChar(vFilePath), 0, iBufferSize, pBuffer);
-      VerQueryValue(pBuffer, '\', pFileInfo, iDummy);
-      // read version blocks
-      iVer[1] := HiWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionMS);
-      iVer[2] := LoWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionMS);
-      iVer[3] := HiWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionLS);
-      iVer[4] := LoWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionLS);
-    finally
-      FreeMem(pBuffer);
-    end;
-    // format result string
-    Result := Format(Fmt, [iVer[1], iVer[2], iVer[3], iVer[4]]);
-  end;
+  case iBufferSize > 0 of TRUE:   begin
+                                    GetMem(pBuffer, iBufferSize);
+                                    try
+                                      // get fixed file info (language independent)
+                                      GetFileVersionInfo(PChar(vFilePath), 0, iBufferSize, pBuffer);
+                                      VerQueryValue(pBuffer, '\', pFileInfo, iDummy);
+                                      // read version blocks
+                                      iVer[1] := HiWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionMS);
+                                      iVer[2] := LoWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionMS);
+                                      iVer[3] := HiWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionLS);
+                                      iVer[4] := LoWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionLS);
+                                    finally
+                                      FreeMem(pBuffer);
+                                    end;
+                                    // format result string
+                                    Result := Format(Fmt, [iVer[1], iVer[2], iVer[3], iVer[4]]);
+                                  end;end;
 end;
 
 function TGV.invalidPlayIx: boolean;
