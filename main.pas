@@ -395,8 +395,8 @@ begin
   try UI.lblXYRatio.Caption       := format('XY:  %s:%s', [UI.WMP.currentMedia.getItemInfo('PixelAspectRatioX'), UI.WMP.currentMedia.getItemInfo('PixelAspectRatioY')]); except end;
 
   var vSize := getFileSize(currentFilePath);
-  case vSize >= 1047552 of  TRUE:   try UI.lblFileSize.Caption      := format('FS:  %.2f GB', [vSize / 1024 / 1024 / 1024]); except end;
-                           FALSE:   try UI.lblFileSize.Caption      := format('FS:  %.2f MB', [vSize / 1024 / 1024]); except end;end;
+  case vSize >= 1052266987 of  TRUE:   try UI.lblFileSize.Caption      := format('FS:  %.2f GB', [vSize / 1024 / 1024 / 1024]); except end;  // 0.98 of 1GB
+                              FALSE:   try UI.lblFileSize.Caption      := format('FS:  %d MB', [trunc(vSize / 1024 / 1024)]); except end;end;
 end;
 
 function TFX.findMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
@@ -615,6 +615,10 @@ begin
     windowCaption;
 
     UI.lblMediaCaption.Visible  := TRUE;
+
+    // If the user switches several media files quickly in succession, we need to cancel the previous timer event and re-enable the timer,
+    // otherwise tmrMediaCaptionTimer will prematurely cancel the display of this media file's caption.
+    UI.tmrMediaCaption.Enabled  := FALSE;
     UI.tmrMediaCaption.Enabled  := TRUE;
 
     UI.WMP.URL := 'file://' + currentFilePath;
@@ -1370,6 +1374,7 @@ function TUI.showInfo(aInfo: string): boolean;
 begin
   lblInfo.Caption := aInfo;
   lblInfo.Visible := TRUE;
+  tmrInfo.Enabled := FALSE; // prevent a previous timer event from cancelling this one prematurely
   tmrInfo.Enabled := TRUE;
 end;
 
@@ -1390,8 +1395,9 @@ procedure TUI.tmrMetaDataTimer(Sender: TObject);
 // We used this timer to delay fetching the video metadata from WMP. Trying to access it too soon after playback commences can cause WMP internal problems.
 // Some metadata is available quickly, like the source dimensions. Other bits take longer, like the various bitrates, which can take up to 3 seconds.
 // As soon as we have the source dimensions, we can call adjustAspectRatio.
-// We then allow the timer to fire 3 more times (Interval = 1000ms), then we disable the timer so it's not firing all the way through playback.
-// The timer will be enabled for one event when playback is resumed after being paused.
+// We allow the timer to fire 3 more times (Interval = 1000ms), then we disable the timer so it's not firing all the way through playback.
+// The timer will be enabled for one firing of the event when playback is resumed after being paused.
+// metaDataCount only gets reset in playCurrentFile when the media file changes.
 begin
   FX.FetchMediaMetaData;
   case FX.hasMetaData of  TRUE: begin
@@ -1436,7 +1442,6 @@ begin
 
   var vVisible := NOT lblTimeDisplay.Visible;
 
-//  lblMuteUnmute.Visible   := vVisible;      // toggle their display status
   lblTimeDisplay.Visible  := vVisible;
 
   case (ssCtrl in Shift) or NOT vVisible of TRUE: begin // toggle the metadata display status if CTRL-C was pressed

@@ -30,7 +30,6 @@ object UI: TUI
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  GlassFrame.Enabled = True
   GlassFrame.Top = 1
   Icon.Data = {
     000001000E002020100001000400E8020000E600000010101000010004002801
@@ -6968,7 +6967,6 @@ object UI: TUI
     0000000000000000000000000000E0070000E0070000F00F0000F81F0000}
   OldCreateOrder = False
   Position = poScreenCenter
-  StyleElements = [seFont, seClient]
   OnActivate = FormActivate
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
@@ -7008,7 +7006,8 @@ object UI: TUI
     Font.Style = []
     ParentFont = False
     ParentShowHint = False
-    ShowHint = True
+    ShowAccelChar = False
+    ShowHint = False
     Transparent = True
     Visible = False
   end
@@ -7027,7 +7026,8 @@ object UI: TUI
     Font.Style = []
     ParentFont = False
     ParentShowHint = False
-    ShowHint = True
+    ShowAccelChar = False
+    ShowHint = False
     Transparent = True
     Visible = False
   end
@@ -7046,7 +7046,8 @@ object UI: TUI
     Font.Style = []
     ParentFont = False
     ParentShowHint = False
-    ShowHint = True
+    ShowAccelChar = False
+    ShowHint = False
     Transparent = True
     Visible = False
   end
@@ -7065,7 +7066,8 @@ object UI: TUI
     Font.Style = []
     ParentFont = False
     ParentShowHint = False
-    ShowHint = True
+    ShowAccelChar = False
+    ShowHint = False
     Transparent = True
     Visible = False
   end
@@ -7084,7 +7086,8 @@ object UI: TUI
     Font.Style = []
     ParentFont = False
     ParentShowHint = False
-    ShowHint = True
+    ShowAccelChar = False
+    ShowHint = False
     Transparent = True
     Visible = False
   end
@@ -7119,7 +7122,8 @@ object UI: TUI
     Font.Style = []
     ParentFont = False
     ParentShowHint = False
-    ShowHint = True
+    ShowAccelChar = False
+    ShowHint = False
     Transparent = True
     Visible = False
   end
@@ -7138,7 +7142,8 @@ object UI: TUI
     Font.Style = []
     ParentFont = False
     ParentShowHint = False
-    ShowHint = True
+    ShowAccelChar = False
+    ShowHint = False
     Transparent = True
     Visible = False
   end
@@ -7157,7 +7162,8 @@ object UI: TUI
     Font.Style = []
     ParentFont = False
     ParentShowHint = False
-    ShowHint = True
+    ShowAccelChar = False
+    ShowHint = False
     Transparent = True
     Visible = False
   end
