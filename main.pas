@@ -82,6 +82,7 @@ type
     function  resizeWindow2: boolean;
     function  resizeWindow3(Shift: TShiftState): boolean;
     function  showInfo(aInfo: string): boolean;
+    function  showMediaCaption: boolean;
     function  toggleControls(Shift: TShiftState): boolean;
   end;
 
@@ -940,6 +941,7 @@ try
     ord('x'), ord('X'): UI.CLOSE;                             // X = eXit app
     ord('y'), ord('Y'): sampleVideo;                          // Y = trYout video
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
+    ord('0')          : UI.showMediaCaption;                  // 0 = briefly show media caption
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('2')          : UI.ResizeWindow2;                     // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
     ord('5')          : saveBookmark;                         // 5 = save current media position to an INI file     (bookmark)
@@ -1352,6 +1354,12 @@ begin
   finally
     Free;
   end;
+end;
+
+function TUI.showMediaCaption: boolean;
+begin
+  lblMediaCaption.Visible := TRUE;
+  tmrMediaCaption.Enabled := TRUE;
 end;
 
 function TUI.showInfo(aInfo: string): boolean;

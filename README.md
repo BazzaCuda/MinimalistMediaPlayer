@@ -11,6 +11,7 @@ Although there are a lot of controls to remember, I have tried to use each alpha
 
 Control | Action
 ------- | ------
+ALT-SPACEBAR			| Activate the system menu to get to the About Box
 `ESCape`				| exit Fullscreen mode, or exit the app if in window mode
 `SPACEBAR` 				| pause/resume playback (also left mouse double-click on the video)
 `Ctrl-Up Arrow` 		| increase playback speed 10%
@@ -55,6 +56,7 @@ Control | Action
 `Down Arrow`			| decrease the volume by 1%
 `Ctrl-Up Arrow`			| increase the playback speed by 10%
 `Ctrl-Down Arrow`		| decrease the playback speed by 10%
+`0`						| briefly show media caption
 `1`						| reset the playback speed to normal, i.e. [1]00%
 `2`						| resize the window so that 2 instances of the application can be placed side-by-side
 `5`						| save/bookmark the current media file timestamp to an INI file
