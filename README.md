@@ -11,7 +11,7 @@ Although there are a lot of controls to remember, I have tried to use each alpha
 
 Control | Action
 ------- | ------
-ALT-SPACEBAR			| Activate the system menu to get to the About Box
+`ALT-SPACEBAR`			| Activate the system menu to get to the About Box
 `ESCape`				| exit Fullscreen mode, or exit the app if in window mode
 `SPACEBAR` 				| pause/resume playback (also left mouse double-click on the video)
 `Ctrl-Up Arrow` 		| increase playback speed 10%
