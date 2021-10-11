@@ -395,8 +395,8 @@ begin
   try UI.lblXYRatio.Caption       := format('XY:  %s:%s', [UI.WMP.currentMedia.getItemInfo('PixelAspectRatioX'), UI.WMP.currentMedia.getItemInfo('PixelAspectRatioY')]); except end;
 
   var vSize := getFileSize(currentFilePath);
-  case vSize >= 1052266987 of  TRUE:   try UI.lblFileSize.Caption      := format('FS:  %.2f GB', [vSize / 1024 / 1024 / 1024]); except end;  // 0.98 of 1GB
-                              FALSE:   try UI.lblFileSize.Caption      := format('FS:  %d MB', [trunc(vSize / 1024 / 1024)]); except end;end;
+  case vSize >= 1052266987 of  TRUE:   try UI.lblFileSize.Caption := format('FS:  %.3f GB', [vSize / 1024 / 1024 / 1024]); except end;  // >= 0.98 of 1GB
+                              FALSE:   try UI.lblFileSize.Caption := format('FS:  %d MB', [trunc(vSize / 1024 / 1024)]); except end;end;
 end;
 
 function TFX.findMediaFilesInFolder(aFilePath: string; aFileList: TList<string>; MinFileSize: int64 = 0): integer;
