@@ -21,7 +21,7 @@ Control | Action
 `F12`					| open media file in third party video editor (currently ShotCut)
 `=`						| copy media file name to clipboard
 `A`						| play the first media file in the playlist (Z plays last)
-`B`						| [B]lackout/restore progress bar
+`B`						| [B]lackout/restore progress [B]ar
 `C`						| show/Hide on-screen [C]ontrols and media file timestamp
 `Ctrl-C`				| show/Hide all on-screen controls, media file timestamp and media metadata
 `D` and `DEL`			| [D]elete current media file (after confirmation)
