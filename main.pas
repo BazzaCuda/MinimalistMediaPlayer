@@ -365,7 +365,7 @@ begin
 end;
 
 function TFX.doMiniWindow: boolean;
-// [4] = Mini Window top right corner of screen, of the the [4] corners
+// [4] = Mini Window top right corner of screen, to one of the [4] corners
 var
   vR: TRect;
 begin
