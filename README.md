@@ -3,7 +3,7 @@ Minimalist Media Player
 
 A simple but very effective media player built around the Windows Media Player ActiveX control.
 
-``Minimalist Media Player`` provides both a minimalist/keyboard-operated user interface (so that on-screen controls don't detract from the video) and the controls with which to view the video in a minimalist window with no borders, window title bar/caption, progress bar, video timestamp, etc, and with the window resized to fit the video perfectly, eliminating ugly black borders/bands around the video, particularly above and below. This provides an immersive viewing experience even when played in window mode rather than full-screen.
+``Minimalist Media Player`` provides both a minimalist/keyboard-operated user interface (so that on-screen controls don't detract from the video) and the controls with which to view the video in a minimalist window with the option to have no borders, window title bar/caption, progress bar, video timestamp, etc, and with the window resized to fit the video perfectly, eliminating ugly black borders/bands around the video, particularly above and below. This provides an immersive viewing experience even when played in window mode rather than full-screen.
 
 ### Keyboard Controls
 ---------------------
@@ -21,7 +21,7 @@ Control | Action
 `F12`					| open media file in third party video editor (currently ShotCut)
 `=`						| copy media file name to clipboard
 `A`						| play the first media file in the playlist (Z plays last)
-`B`						| [B]lackout/restore progress bar
+`B`						| [B]lackout/restore progress [B]ar
 `C`						| show/Hide on-screen [C]ontrols and media file timestamp
 `Ctrl-C`				| show/Hide all on-screen controls, media file timestamp and media metadata
 `D` and `DEL`			| [D]elete current media file (after confirmation)
