@@ -151,6 +151,7 @@ type
     function deleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
     function doCentreWindow: boolean;
     function doCommandLine(aCommandLIne: string): boolean;
+    function doMiniWindow: boolean;
     function doMuteUnmute: boolean;
     function doPausePlay: boolean;
     function fetchMediaMetaData: boolean;
@@ -361,6 +362,21 @@ begin
 
   result := CreateProcess(PWideChar(vCmd), PWideChar(vParams), nil, nil, FALSE,
                           CREATE_NEW_PROCESS_GROUP + NORMAL_PRIORITY_CLASS, nil, PWideChar(GV.exePath), vStartInfo, vProcInfo);
+end;
+
+function TFX.doMiniWindow: boolean;
+// [4] = Mini Window top right corner of screen, of the the [4] corners
+var
+  vR: TRect;
+begin
+  GetWindowRect(UI.Handle, vR);
+  SetWindowPos(UI.Handle, 0,  (GetSystemMetrics(SM_CXVIRTUALSCREEN) - (vR.Right - vR.Left)) div 2,
+                              (GetSystemMetrics(SM_CYVIRTUALSCREEN) - (vR.Bottom - vR.Top)) div 2, 400, 400, SWP_NOZORDER);
+  adjustAspectRatio;
+
+  GetWindowRect(UI.Handle, vR);
+  SetWindowPos(UI.Handle, 0,  (GetSystemMetrics(SM_CXVIRTUALSCREEN) - UI.Width - 18),
+                              (0 + 30), 0, 0, SWP_NOZORDER + SWP_NOSIZE);
 end;
 
 function TFX.doMuteUnmute: boolean;
@@ -952,6 +968,7 @@ try
     ord('0')          : UI.showMediaCaption;                  // 0 = briefly show media caption
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('2')          : UI.ResizeWindow2;                     // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
+    ord('4')          : doMiniWindow;                         // 4 = mini window top right corner of screen
     ord('5')          : saveBookmark;                         // 5 = save current media position to an INI file     (bookmark)
     ord('6')          : resumeBookmark;                       // 6 = resume video from saved media position         (bookmark)
     ord('7')          : deleteBookmark;                       // 7 = delete INI file containing bookmarked position (bookmark)
@@ -1008,6 +1025,7 @@ end;
 
 function TFX.windowMaximizeRestore: boolean;
 // [M] = [M]aximize/Restore window
+// [V] = Maximize/Restore window/[V]iew
 begin
   case UI.WindowState = wsMaximized of TRUE: UI.WindowState := wsNormal;
                                       FALSE: UI.WindowState := wsMaximized; end;
