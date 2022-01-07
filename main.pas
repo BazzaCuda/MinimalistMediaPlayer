@@ -1432,7 +1432,7 @@ begin
   case FX.hasMetaData of  TRUE: begin
                                   case GV.newMediaFile of  TRUE:  begin
                                                                     FX.adjustAspectRatio;
-                                                                    // case FX.isCapsLockOn of FALSE: FX.doCentreWindow; end;
+                                                                    // case FX.isCapsLockOn of FALSE: FX.doCentreWindow; end; // will override [4] mini-window position
                                                                     GV.newMediaFile := FALSE; end;end;end;end;
 
                                   GV.metaDataCount := GV.metaDataCount + 1;                               // fire 3 more times to get the rest of the metadata
