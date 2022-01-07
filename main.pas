@@ -885,7 +885,7 @@ begin
                         EXIT;
                       end;end;end;
 
-  case NOT (ssCtrl in Shift) and NOT GV.zoomed of                        // when not zoomed, up/down increases or decreases the volume by 1%
+  case (NOT (ssCtrl in Shift)) AND (NOT GV.zoomed) of                    // when not zoomed, up/down increases or decreases the volume by 1%
      TRUE:  case Key in [VK_UP, VK_DOWN] of
                TRUE:  begin
                         case KeyUp of TRUE: EXIT; end;                   // don't allow KeyUp to repeat the KeyDown action
@@ -922,6 +922,7 @@ end;
 function TFX.UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
 begin
 try
+//  case key = 18 of TRUE: tabForwardsBackwards(50); end;
   case UIKey(Key, Shift, TRUE) of TRUE: EXIT; end;  // Keys that can be pressed singly or held down for repeat action: don't process the KeyUp as well as the KeyDown
 
   case Key of
@@ -1420,7 +1421,7 @@ begin
 end;
 
 procedure TUI.tmrMetaDataTimer(Sender: TObject);
-// We used this timer to delay fetching the video metadata from WMP. Trying to access it too soon after playback commences can cause WMP internal problems.
+// We use this timer to delay fetching the video metadata from WMP. Trying to access it too soon after playback commences can cause WMP internal problems.
 // Some metadata is available quickly, like the source dimensions. Other bits take longer, like the various bitrates, which can take up to 3 seconds.
 // As soon as we have the source dimensions, we can call adjustAspectRatio.
 // We allow the timer to fire 3 more times (Interval = 1000ms), then we disable the timer so it's not firing all the way through playback.
@@ -1431,6 +1432,7 @@ begin
   case FX.hasMetaData of  TRUE: begin
                                   case GV.newMediaFile of  TRUE:  begin
                                                                     FX.adjustAspectRatio;
+                                                                    // case FX.isCapsLockOn of FALSE: FX.doCentreWindow; end;
                                                                     GV.newMediaFile := FALSE; end;end;end;end;
 
                                   GV.metaDataCount := GV.metaDataCount + 1;                               // fire 3 more times to get the rest of the metadata

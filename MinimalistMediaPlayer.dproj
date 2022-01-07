@@ -105,7 +105,7 @@
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
-        <Debugger_RunParams>&quot;B:\MoviesToGo\Brooklyn 99 Season 7\Brooklyn.Nine-Nine.S07E12.m4v&quot;</Debugger_RunParams>
+        <Debugger_RunParams>&quot;B:\Movies\Conan The Destroyer (1984).mkv&quot;</Debugger_RunParams>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
