@@ -106,7 +106,6 @@ type
     FClosing:       boolean;
     FplayIx:        integer;
     Fplaylist:      TList<string>;
-    FinitialVideo:  boolean;
     FInputBox:      boolean;
     FmetaDataCount: integer;
     FMute:          boolean;
@@ -128,7 +127,6 @@ type
     property    blackOut:           boolean       read FBlackOut      write FBlackOut;
     property    closing:            boolean       read FClosing       write FClosing;
     property    exePath:            string        read GetExePath;
-    property    initialVideo:       boolean       read FinitialVideo  write FinitialVideo;
     property    inputBox:           boolean       read FInputBox      write FInputBox;
     property    mute:               boolean       read FMute          write FMute;
     property    metaDataCount:      integer       read FmetaDataCount write FmetaDataCount;
@@ -174,6 +172,7 @@ type
     function isControlKeyDown: boolean;
     function isLastFile: boolean;
     function isShiftKeyDown: boolean;
+    function isVideoOffscreen: boolean;
     function keepCurrentFile: boolean;
     function matchVideoWidth: boolean;
     function noMediaFiles: boolean;
@@ -571,6 +570,18 @@ function TFX.isShiftKeyDown: boolean;
 // Did the user hold down a SHIFT key while pressing another key?
 begin
   result := (GetKeyState(VK_SHIFT) AND $80) <> 0;
+end;
+
+function TFX.isVideoOffscreen: boolean;
+var
+  vR: TRect;
+  vS: TRect;
+begin
+  GetWindowRect(UI.Handle, vR);
+
+  vS :=  UI.ClientToScreen(vR);
+
+  result := vS.Bottom > GetSystemMetrics(SM_CYVIRTUALSCREEN);
 end;
 
 function TFX.keepCurrentFile: boolean;
@@ -1210,7 +1221,6 @@ begin
     FALSE: GV.playIx := FX.findMediaFilesInFolder(ParamStr(1), GV.playlist); // <==  Always executed
   end;
 
-  GV.initialVideo := TRUE;
   FX.playCurrentFile;                               // automatically start the clicked video
 
   GV.startup := TRUE;                               // used in FormResize to initially left-justify the application window if required
@@ -1439,8 +1449,8 @@ begin
 
                                   GV.metaDataCount := GV.metaDataCount + 1;                                   // fire 3 more times to get the rest of the metadata
                                   case GV.metaDataCount >= 3 of TRUE: tmrMetaData.Enabled := FALSE; end;      // WMP should have determined all the metadata by now.
-                                  case GV.initialVideo AND FX.isCapsLockOn of FALSE: FX.doCentreWindow; end;  // Mainly because the lower part of a 4:3 video can be off the screen
-                                  GV.initialVideo := FALSE;
+
+                                  case NOT FX.isCapsLockOn AND FX.isVideoOffscreen of TRUE: FX.doCentreWindow; end;  // Mainly because the lower part of a 4:3 video can be off the screen
   end;end;
 end;
 
