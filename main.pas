@@ -106,6 +106,7 @@ type
     FClosing:       boolean;
     FplayIx:        integer;
     Fplaylist:      TList<string>;
+    FinitialVideo:  boolean;
     FInputBox:      boolean;
     FmetaDataCount: integer;
     FMute:          boolean;
@@ -127,6 +128,7 @@ type
     property    blackOut:           boolean       read FBlackOut      write FBlackOut;
     property    closing:            boolean       read FClosing       write FClosing;
     property    exePath:            string        read GetExePath;
+    property    initialVideo:       boolean       read FinitialVideo  write FinitialVideo;
     property    inputBox:           boolean       read FInputBox      write FInputBox;
     property    mute:               boolean       read FMute          write FMute;
     property    metaDataCount:      integer       read FmetaDataCount write FmetaDataCount;
@@ -1208,6 +1210,7 @@ begin
     FALSE: GV.playIx := FX.findMediaFilesInFolder(ParamStr(1), GV.playlist); // <==  Always executed
   end;
 
+  GV.initialVideo := TRUE;
   FX.playCurrentFile;                               // automatically start the clicked video
 
   GV.startup := TRUE;                               // used in FormResize to initially left-justify the application window if required
@@ -1432,11 +1435,13 @@ begin
   case FX.hasMetaData of  TRUE: begin
                                   case GV.newMediaFile of  TRUE:  begin
                                                                     FX.adjustAspectRatio;
-                                                                    // case FX.isCapsLockOn of FALSE: FX.doCentreWindow; end; // will override [4] mini-window position
-                                                                    GV.newMediaFile := FALSE; end;end;end;end;
+                                                                    GV.newMediaFile := FALSE; end;end;
 
-                                  GV.metaDataCount := GV.metaDataCount + 1;                               // fire 3 more times to get the rest of the metadata
-                                  case GV.metaDataCount >= 3 of  TRUE: tmrMetaData.Enabled := FALSE; end; // WMP should have determined all the metadata by now.
+                                  GV.metaDataCount := GV.metaDataCount + 1;                                   // fire 3 more times to get the rest of the metadata
+                                  case GV.metaDataCount >= 3 of TRUE: tmrMetaData.Enabled := FALSE; end;      // WMP should have determined all the metadata by now.
+                                  case GV.initialVideo AND FX.isCapsLockOn of FALSE: FX.doCentreWindow; end;  // Mainly because the lower part of a 4:3 video can be off the screen
+                                  GV.initialVideo := FALSE;
+  end;end;
 end;
 
 procedure TUI.tmrPlayNextTimer(Sender: TObject);
