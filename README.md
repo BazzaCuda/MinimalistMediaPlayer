@@ -13,7 +13,7 @@ Control | Action
 ------- | ------
 `ALT-SPACEBAR`			| Activate the system menu to get to the About Box
 `ESCape`				| exit Fullscreen mode, or exit the app if in window mode
-`SPACEBAR` 				| pause/resume playback (also left mouse double-click on the video)
+`SPACEBAR` 				| pause/resume playback (also left mouse double-click on the video, or right mouse single click)
 `Ctrl-Up Arrow` 		| increase playback speed 10%
 `/`						| increase playback speed 10%
 `Ctrl-Down Arrow`		| decrease playback speed 10%
@@ -74,6 +74,8 @@ Zoom|
 `Ctrl-DOWN ARROW`		| when zoomed in/out, move video DOWN inside the window
 Additional |
 `Left Click on the window background and hold`	| the window can be dragged/repositioned without a window caption title bar
+`Left double-click video` | pause / resume playback
+`Right single-click video` | pause / resume playback
 
 Media File Formats
 ------------------

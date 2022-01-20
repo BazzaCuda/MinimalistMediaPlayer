@@ -3,8 +3,8 @@ object UI: TUI
   Top = 0
   BorderIcons = [biSystemMenu]
   Caption = 'MinimalistMediaPlayer'
-  ClientHeight = 430
-  ClientWidth = 754
+  ClientHeight = 384
+  ClientWidth = 614
   Color = clGray
   CustomTitleBar.Enabled = True
   CustomTitleBar.Height = 1
@@ -6977,8 +6977,8 @@ object UI: TUI
   PixelsPerInch = 96
   TextHeight = 13
   object lblTimeDisplay: TLabel
-    Left = 656
-    Top = 394
+    Left = 464
+    Top = 300
     Width = 98
     Height = 13
     Alignment = taRightJustify
@@ -7094,8 +7094,8 @@ object UI: TUI
     Visible = False
   end
   object lblInfo: TLabel
-    Left = 725
-    Top = 375
+    Left = 533
+    Top = 281
     Width = 29
     Height = 13
     Alignment = taRightJustify
@@ -7210,14 +7210,16 @@ object UI: TUI
   end
   object progressBar: TProgressBar
     Left = 0
-    Top = 420
-    Width = 754
+    Top = 374
+    Width = 614
     Height = 10
     Align = alBottom
     BackgroundColor = clBlack
     TabOrder = 1
     OnMouseMove = progressBarMouseMove
     OnMouseUp = progressBarMouseUp
+    ExplicitTop = 420
+    ExplicitWidth = 754
   end
   object tmrTimeDisplay: TTimer
     Enabled = False
@@ -7247,8 +7249,8 @@ object UI: TUI
   end
   object applicationEvents: TApplicationEvents
     OnMessage = applicationEventsMessage
-    Left = 504
-    Top = 48
+    Left = 400
+    Top = 40
   end
   object tmrMediaCaption: TTimer
     Enabled = False

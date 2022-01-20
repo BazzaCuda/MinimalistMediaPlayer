@@ -1349,8 +1349,11 @@ end;
 function TUI.resizeWindow1: boolean;
 // default window size, called by FormCreate when the CAPS LOCK key isn't down
 begin
-  UI.Width   := trunc(780 * 1.5);
-  UI.Height  := trunc(460 * 1.5);
+//  UI.Width   := trunc(780 * 1.5);
+//  UI.Height  := trunc(460 * 1.5);
+  UI.Width   := trunc(1170);
+//  UI.Height  := trunc(200);
+  FX.doCentreWindow;
 end;
 
 function TUI.resizeWindow2: boolean;
