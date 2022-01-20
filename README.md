@@ -13,7 +13,7 @@ Control | Action
 ------- | ------
 `ALT-SPACEBAR`			| Activate the system menu to get to the About Box
 `ESCape`				| exit Fullscreen mode, or exit the app if in window mode
-`SPACEBAR` 				| pause/resume playback (also left mouse double-click on the video, or right mouse single click)
+`SPACEBAR` 				| pause/resume playback (also left mouse double-click on the video, or right mouse single-click)
 `Ctrl-Up Arrow` 		| increase playback speed 10%
 `/`						| increase playback speed 10%
 `Ctrl-Down Arrow`		| decrease playback speed 10%
