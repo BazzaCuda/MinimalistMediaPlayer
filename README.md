@@ -60,6 +60,7 @@ Control | Action
 `1`						| reset the playback speed to normal, i.e. [1]00%
 `2`						| resize the window so that 2 instances of the application can be placed side-by-side
 `4`						| resize to a mini-window in the top-right corner of the screen
+`Ctrl-4`				| move to top-right corner of the screen but maintain current window size
 `5`						| save/bookmark the current media file timestamp to an INI file
 `6`						| retrieve a saved/bookmarked media file timestamp from an INI file and continue playback from that point
 `7`						| delete any previously saved/bookmarked media file timestamp
