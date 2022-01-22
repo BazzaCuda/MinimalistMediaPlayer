@@ -160,6 +160,8 @@ type
     function fullScreen: boolean;
     function getFileSize(const aFilePath: string): int64;
     function getINIname: string;
+    function getScreenHeight: integer;
+    function getScreenWidth: integer;
     function goDown: boolean;
     function goLeft: boolean;
     function goRight: boolean;
@@ -338,8 +340,8 @@ var
 begin
   GetWindowRect(UI.Handle, vR);
 
-  SetWindowPos(UI.Handle, 0,  (GetSystemMetrics(SM_CXVIRTUALSCREEN) - (vR.Right - vR.Left)) div 2,
-                              (GetSystemMetrics(SM_CYVIRTUALSCREEN) - (vR.Bottom - vR.Top)) div 2, 0, 0, SWP_NOZORDER + SWP_NOSIZE);
+  SetWindowPos(UI.Handle, 0,  (getScreenWidth - (vR.Right - vR.Left)) div 2,
+                              (getScreenHeight - (vR.Bottom - vR.Top)) div 2, 0, 0, SWP_NOZORDER + SWP_NOSIZE);
 end;
 
 function TFX.doCommandLine(aCommandLIne: string): boolean;
@@ -366,18 +368,23 @@ begin
 end;
 
 function TFX.doMiniWindow: boolean;
-// [4] = Mini Window top right corner of screen, to one of the [4] corners
+// [4] = Mini Window top right corner of screen, i.e. to one of the [4] corners
+// Ctrl-[4] will maintain the current size of the window
 var
   vR: TRect;
 begin
   GetWindowRect(UI.Handle, vR);
-  SetWindowPos(UI.Handle, 0,  (GetSystemMetrics(SM_CXVIRTUALSCREEN) - (vR.Right - vR.Left)) div 2,
-                              (GetSystemMetrics(SM_CYVIRTUALSCREEN) - (vR.Bottom - vR.Top)) div 2, 400, 400, SWP_NOZORDER);
-  adjustAspectRatio;
 
-  GetWindowRect(UI.Handle, vR);
-  SetWindowPos(UI.Handle, 0,  (GetSystemMetrics(SM_CXVIRTUALSCREEN) - UI.Width - 18),
-                              (0 + 30), 0, 0, SWP_NOZORDER + SWP_NOSIZE);
+  case isControlKeyDown of FALSE: begin
+                                    SetWindowPos(UI.Handle, 0, (getScreenWidth - (vR.Right - vR.Left)) div 2,
+                                                               (getScreenHeight - (vR.Bottom - vR.Top)) div 2, 400, 400, SWP_NOZORDER);
+                                    adjustAspectRatio;
+
+                                    GetWindowRect(UI.Handle, vR); // reposition the window after adjusting the aspect ratio
+                                  end;end;
+
+  //  Right - 18 to avoid the scrollbars of other [maximized] windows; Top + 30 to avoid the system icons of other [maximized] windows;.
+  SetWindowPos(UI.Handle, 0, (getScreenWidth - UI.Width - 18), (0 + 30), 0, 0, SWP_NOZORDER + SWP_NOSIZE);
 end;
 
 function TFX.doMuteUnmute: boolean;
@@ -499,6 +506,16 @@ begin
   result := ExtractFilePath(currentFilePath) + result;
 end;
 
+function TFX.getScreenHeight: integer;
+begin
+  result := GetSystemMetrics(SM_CYVIRTUALSCREEN);
+end;
+
+function TFX.getScreenWidth: integer;
+begin
+  result := GetSystemMetrics(SM_CXVIRTUALSCREEN);
+end;
+
 // When the video is zoomed in or out, the CTRL key plus the UP, DOWN, LEFT, RIGHT arrow keys can be used to reposition the video
 // Bizarrely, if WMP is paused and repositioned, it will revert its position when playback is resumed;
 //            if WMP is repositioned during zoomed playback then paused, it will revert its position.
@@ -581,7 +598,7 @@ begin
 
   vS :=  UI.ClientToScreen(vR);
 
-  result := vS.Bottom > GetSystemMetrics(SM_CYVIRTUALSCREEN);
+  result := vS.Bottom > getScreenHeight;
 end;
 
 function TFX.keepCurrentFile: boolean;
@@ -607,6 +624,7 @@ end;
 function TFX.matchVideoWidth: boolean;
 // [9] = resize the width of the window to match the video width.
 // Judicious use of [9], ad[J]ust, [H]orizontal and [G]reater can be used to obtain the optimum window to match the video.
+// [4], [H], [G] can alos be very useful.
 begin
   case noMediaFiles of TRUE: EXIT; end;
 
@@ -706,7 +724,7 @@ end;
 function TFX.rateReset: boolean;
 // [1] = reset the playback rate to 100%
 begin
-  UI.WMP.settings.rate    := 1;
+  UI.WMP.settings.rate := 1;
   FX.updateRateLabel;
 end;
 
@@ -714,7 +732,7 @@ function TFX.reloadMediaFiles: boolean;
 // [L] = re[L]oad the list of video files from the current folder
 // Previously, a facility existed whereby if MediaPlayer was launched with the CAPS LOCK key on,
 //    only video files greater than 100MB in size would be loaded into the file list.
-// This allowed folders to be examined to quicly keep or delete the largest videos.
+// This allowed folders to be examined to quickly keep or delete the largest videos.
 // This reloadMediaFiles function could than be used to re-find all files in the current folder regardless of size,
 //    without having to close and restart the app *without* the CAPS LOCK key on.
 // Typically, this was actually because the user had launched MediaPlayer forgetting that the CAPS LOCK key was on.
@@ -1348,6 +1366,7 @@ end;
 
 function TUI.resizeWindow1: boolean;
 // default window size, called by FormCreate when the CAPS LOCK key isn't down
+// Modified to just set a default width for the window. Playing the initial video clip and automatically adjusting the aspect ratio will set the height.
 begin
 //  UI.Width   := trunc(780 * 1.5);
 //  UI.Height  := trunc(460 * 1.5);
@@ -1466,6 +1485,7 @@ end;
 
 procedure TUI.tmrTimeDisplayTimer(Sender: TObject);
 // update the video timestamp display
+// This is also a convenient time and place to hide the cursor
 begin
   FX.UpdateTimeDisplay;
   WMP.Cursor := crNone;
