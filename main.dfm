@@ -6972,6 +6972,7 @@ object UI: TUI
   OnActivate = FormActivate
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
+  OnKeyUp = FormKeyUp
   OnMouseMove = FormMouseMove
   OnResize = FormResize
   PixelsPerInch = 96

@@ -67,6 +67,7 @@ type
     procedure WMPPlayStateChange(ASender: TObject; NewState: Integer);
     procedure WMSysCommand(var Message : TWMSysCommand); Message WM_SYSCOMMAND;
     procedure tmrMediaCaptionTimer(Sender: TObject);
+    procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     function  addMenuItem: boolean;
     function  setupProgressBar: boolean;
@@ -953,7 +954,6 @@ end;
 function TFX.UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
 begin
 try
-//  case key = 18 of TRUE: tabForwardsBackwards(50); end;
   case UIKey(Key, Shift, TRUE) of TRUE: EXIT; end;  // Keys that can be pressed singly or held down for repeat action: don't process the KeyUp as well as the KeyDown
 
   case Key of
@@ -1242,6 +1242,11 @@ begin
   FX.playCurrentFile;                               // automatically start the clicked video
 
   GV.startup := TRUE;                               // used in FormResize to initially left-justify the application window if required
+end;
+
+procedure TUI.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  case (ssAlt in Shift) and ((Key = 84) or (Key = 116)) of TRUE: begin FX.tabForwardsBackwards; Key := 0; end;end; // alt-t or alt-T = Tab forwards/backwards n%      Mods: ALT-T, SHIFT-T, CAPSLOCK, Ctrl-T
 end;
 
 procedure TUI.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
