@@ -245,7 +245,6 @@ begin
   UI.Height := trunc(UI.Width * vRatio);
 
   checkScreenLimits;
-  doCentreWindow;
 end;
 
 function TFX.blackOut: boolean;
@@ -273,12 +272,19 @@ end;
 
 function TFX.checkScreenLimits: boolean;
 // checks whether the UI window is taller than the height of the screen and readjusts until it isn't
-// this can happen with some phone videos which were filmed in portrait.
+// this can happen with some phone videos which were filmed in portrait, e.g. Vines and Tiktoks.
+// Purely for completeness, we also check the width.
 begin
   var rect := screen.WorkAreaRect; // the screen minus the taskbar, which we assume is at the bottom of the desktop
   case UI.Height > rect.bottom - rect.top of TRUE:  begin
+                                                      UI.width := trunc(UI.width * 0.90);   // Yes, adjust the width!!...
+                                                      adjustAspectRatio;                    // ...then let adjustAspectRatio do the rest
+                                                      doCentreWindow; end;end;
+
+  case UI.Width > rect.right - rect.left of TRUE:  begin
                                                       UI.width := trunc(UI.width * 0.90);
-                                                      adjustAspectRatio; end;end;
+                                                      adjustAspectRatio;
+                                                      doCentreWindow; end;end;
 end;
 
 function TFX.clipboardCurrentFileName: boolean;
