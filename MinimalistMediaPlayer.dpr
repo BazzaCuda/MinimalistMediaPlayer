@@ -26,7 +26,8 @@ uses
   Vcl.Styles,
   Mixer in 'Mixer.pas',
   MMDevApi_tlb in 'MMDevApi_tlb.pas',
-  FormAbout in 'FormAbout.pas' {AboutForm};
+  FormAbout in 'FormAbout.pas' {AboutForm},
+  WMPLib_TLB in 'B:\Documents\Embarcadero\Studio\21.0\Imports\WMPLib_TLB.pas';
 
 {$R *.res}
 

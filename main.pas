@@ -143,6 +143,7 @@ type
   private
     function adjustAspectRatio: boolean;
     function blackOut: boolean;
+    function checkScreenLimits: boolean;
     function clearMediaMetaData: boolean;
     function clipboardCurrentFileName: boolean;
     function currentFilePath: string;
@@ -242,6 +243,9 @@ begin
   vRatio := Y / X;
 
   UI.Height := trunc(UI.Width * vRatio);
+
+  checkScreenLimits;
+  doCentreWindow;
 end;
 
 function TFX.blackOut: boolean;
@@ -265,6 +269,16 @@ begin
   UI.lblVideoBitRate.Caption  := format('VR:', []);
   UI.lblXYRatio.Caption       := format('XY:', []);
   UI.lblFileSize.Caption      := format('FS:', []);
+end;
+
+function TFX.checkScreenLimits: boolean;
+// checks whether the UI window is taller than the height of the screen and readjusts until it isn't
+// this can happen with some phone videos which were filmed in portrait.
+begin
+  var rect := screen.WorkAreaRect; // the screen minus the taskbar, which we assume is at the bottom of the desktop
+  case UI.Height > rect.bottom - rect.top of TRUE:  begin
+                                                      UI.width := trunc(UI.width * 0.90);
+                                                      adjustAspectRatio; end;end;
 end;
 
 function TFX.clipboardCurrentFileName: boolean;
@@ -509,12 +523,13 @@ end;
 
 function TFX.getScreenHeight: integer;
 begin
-  result := GetSystemMetrics(SM_CYVIRTUALSCREEN);
+  var rect := screen.WorkAreaRect; // the screen minus the taskbar
+  result := rect.Bottom - rect.Top;
 end;
 
 function TFX.getScreenWidth: integer;
 begin
-  result := GetSystemMetrics(SM_CXVIRTUALSCREEN);
+  result := GetSystemMetrics(SM_CXVIRTUALSCREEN); // we'll assume that the taskbar is in it's usual place at the bottom of the screen
 end;
 
 // When the video is zoomed in or out, the CTRL key plus the UP, DOWN, LEFT, RIGHT arrow keys can be used to reposition the video
