@@ -69,12 +69,11 @@ type
     procedure WMSysCommand(var Message : TWMSysCommand); Message WM_SYSCOMMAND;
     procedure tmrMediaCaptionTimer(Sender: TObject);
   private
-    function  addMenuItem: boolean;
-    function  setupProgressBar: boolean;
-    function  showAboutBox: boolean;
   protected
   public
     // UI Functions only - application logic is in TFX
+    function  addMenuItem: boolean;
+    function  fakeSystemMenu: boolean;
     function  hideLabels: boolean;
     function  repositionLabels: boolean;
     function  repositionTimeDisplay: boolean;
@@ -82,6 +81,10 @@ type
     function  resizeWindow1: boolean;
     function  resizeWindow2: boolean;
     function  resizeWindow3(Shift: TShiftState): boolean;
+    function  setupProgressBar: boolean;
+    function  showAboutBox: boolean;
+    function  showHelpWindow(create: boolean = TRUE): boolean;
+    function  showHideHelp: boolean;
     function  showInfo(aInfo: string): boolean;
     function  showMediaCaption: boolean;
     function  toggleControls(Shift: TShiftState): boolean;
@@ -95,10 +98,11 @@ implementation
 uses
   WinApi.CommCtrl,  WinApi.uxTheme,
   System.SysUtils, System.Generics.Collections, System.Math, System.Variants,
-  FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils, ShellAPI, FormAbout;
+  FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils, ShellAPI, FormAbout, FormHelp;
 
 const
-  MENU_ID     = 1001;
+  MENU_ABOUT_ID = 1001;
+  MENU_HELP_ID  = 1002;
 
 type
   TGV = class                        // Global [application-wide] Variables
@@ -112,6 +116,7 @@ type
     FMute:          boolean;
     FnewMediaFile:  boolean;
     FSampling:      boolean;
+    FShowingHelp:   boolean;
     FStartUp:       boolean;
     FZoomed:        boolean;
     function  getExePath: string;
@@ -135,6 +140,7 @@ type
     property    playIx:             integer       read FplayIx        write FplayIx;
     property    playlist:           TList<string> read Fplaylist;
     property    sampling:           boolean       read FSampling      write FSampling;
+    property    showingHelp:        boolean       read FShowingHelp   write FShowingHelp;
     property    startup:            boolean       read FStartUp       write FStartUp;
     property    zoomed:             boolean       read FZoomed        write FZoomed;
   end;
@@ -245,6 +251,7 @@ begin
   UI.Height := trunc(UI.Width * vRatio);
 
   checkScreenLimits;
+  UI.showHelpWindow(FALSE);
 end;
 
 function TFX.blackOut: boolean;
@@ -285,6 +292,8 @@ begin
                                                       UI.width := trunc(UI.width * 0.90);
                                                       adjustAspectRatio;
                                                       doCentreWindow; end;end;
+
+  UI.showHelpWindow(FALSE);
 end;
 
 function TFX.clipboardCurrentFileName: boolean;
@@ -363,6 +372,8 @@ begin
 
   SetWindowPos(UI.Handle, 0,  (getScreenWidth - (vR.Right - vR.Left)) div 2,
                               (getScreenHeight - (vR.Bottom - vR.Top)) div 2, 0, 0, SWP_NOZORDER + SWP_NOSIZE);
+
+  UI.showHelpWindow(FALSE);
 end;
 
 function TFX.doCommandLine(aCommandLIne: string): boolean;
@@ -668,11 +679,12 @@ function TFX.openWithShotcut: boolean;
 // This can simpifly things when multiple nested double quotes and apostrophes are being used to construct a command line
 // At some point, the user's preferred video editor needs to be configurable via an application INI file.
 // *https://shotcut.org/
+// Amended to use ShellExecute. It handles the space in "Program Files" just fine, which the current implementation of doCommandLine doesn't.
 begin
   case noMediaFiles of TRUE: EXIT; end;
 
   UI.WMP.controls.pause;
-  doCommandLine('C:\ProgramFiles\Shotcut\shotcut.exe "' + currentFilePath + '"');
+  shellExecute(0, 'open', 'C:\Program Files\Shotcut\shotcut.exe', pchar('"' + currentFilePath + '"'), '', SW_SHOW);
 end;
 
 function TFX.playCurrentFile: boolean;
@@ -737,10 +749,12 @@ end;
 
 function TFX.playWithPotPlayer: boolean;
 // [P] = Play with [P]otPlayer
-// At some point, the user's preferred alternative media player needs to be picked up from a mediaplayer.ini file
+// At some point, the user's preferred alternative media player needs to be picked up from a .ini file
+// Amended to use ShellExecute. It handles the space in "Program Files" just fine, which the current implementation of doCommandLine doesn't.
+// Amended to use the default PotPlayer installation location
 begin
   UI.WMP.controls.pause;
-  doCommandLine('B:\Tools\Pot\PotPlayerMini64.exe "' + currentFilePath + '"');
+  ShellExecute(0, 'open', 'C:\Program Files\DAUM\PotPlayer\PotPlayerMini64.exe', pchar('"' + currentFilePath + '"'), '', SW_SHOW);
 end;
 
 function TFX.rateReset: boolean;
@@ -757,8 +771,8 @@ function TFX.reloadMediaFiles: boolean;
 // This allowed folders to be examined to quickly keep or delete the largest videos.
 // This reloadMediaFiles function could than be used to re-find all files in the current folder regardless of size,
 //    without having to close and restart the app *without* the CAPS LOCK key on.
-// Typically, this was actually because the user had launched MediaPlayer forgetting that the CAPS LOCK key was on.
-// The CAPS LOCK key has now been repurposed for something else (see FormCreate) so for the time being this function isn't as useful as it was.
+// Typically, this was actually because the user had launched MediaPlayer forgetting that the CAPS LOCK key was on!
+// The CAPS LOCK key has now been repurposed for something else (see FormCreate) so for the time being this function isn't as useful as it once was - sic transit gloria mundi!
 begin
   GV.playIx := findMediaFilesInFolder(currentFilePath, GV.playlist);
   windowCaption;
@@ -806,6 +820,7 @@ begin
   UI.resizeWindow3(Shift);
   adjustAspectRatio;
   doCentreWindow;
+  UI.showHelpWindow(FALSE);
   windowCaption;
 end;
 
@@ -1027,6 +1042,7 @@ try
     ord('7')          : deleteBookmark;                       // 7 = delete INI file containing bookmarked position (bookmark)
     ord('8')          : UI.repositionWMP;                     // 8 = reposition WMP to eliminate border pixels
     ord('9')          : matchVideoWidth;                      // 9 = match window width to video width
+    VK_SHIFT          : UI.showHideHelp;                      // Either [SHIFT] key = show the help panel with all these keyboard controls
   end;
 finally
   UpdateTimeDisplay;
@@ -1161,7 +1177,8 @@ var vSysMenu: HMENU;
 begin
   vSysMenu := GetSystemMenu(Handle, False);
   AppendMenu(vSysMenu, MF_SEPARATOR, 0, '');
-  AppendMenu(vSysMenu, MF_STRING, MENU_ID, '&About Minimalist Media Player…');
+  AppendMenu(vSysMenu, MF_STRING, MENU_ABOUT_ID, '&About Minimalist Media Player…');
+  AppendMenu(vSysMenu, MF_STRING, MENU_HELP_ID, 'Show &Keyboard functions');
 end;
 
 procedure TUI.applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
@@ -1186,9 +1203,20 @@ begin
                                             end;end;
 end;
 
+function TUI.fakeSystemMenu: boolean;
+// There's a problem with showing additional Delphi forms in applications with an active Windows Media Player component.
+// The forms will flash up momentarily but will then disappear.
+// The only solution I have found so far is to add menu items for the windows in the System Menu (alt-space) of the application (see TUI.addMenuItem).
+// We can then show the window by sending the menu id, thereby mimicking the user selecting it.
+// We do this both for the About Box and the Help Window.
+// fakeSystemMenu allows the user to trigger the menu item for the Help Window using the [SHIFT] keyboard shortcut in TFX.UIKeyUp
+begin
+  SendMessage(Handle, WM_SYSCOMMAND, MENU_HELP_ID, 0);
+end;
+
 procedure TUI.FormActivate(Sender: TObject);
 begin
-  showInfo(GV.appReleaseVersion);
+//  showInfo(GV.appReleaseVersion);
 end;
 
 procedure TUI.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -1284,6 +1312,7 @@ begin
 
   repositionLabels;
   repositionWMP;
+  showHelpWindow(FALSE); // reposition the help window if it's open but don't create it if it's not
 end;
 
 function TUI.hideLabels: boolean;
@@ -1393,11 +1422,11 @@ end;
 function TUI.resizeWindow1: boolean;
 // default window size, called by FormCreate when the CAPS LOCK key isn't down
 // Modified to just set a default width for the window. Playing the initial video clip and automatically adjusting the aspect ratio will set the height.
+// NB HKEY_CURRENT_USER\SOFTWARE\Classes\Applications\MinimalistMediaPlayer.exe\shell\open\command
 begin
-//  UI.Width   := trunc(780 * 1.5);
-//  UI.Height  := trunc(460 * 1.5);
-  UI.Width   := trunc(1170);
-//  UI.Height  := trunc(200);
+  var vWidth: integer;
+  case TryStrToInt(paramStr(2), vWidth) of FALSE: vWidth := 1170; end;
+  UI.Width   := trunc(vWidth);
   FX.doCentreWindow;
 end;
 
@@ -1454,10 +1483,23 @@ begin
   end;
 end;
 
+function TUI.showHelpWindow(create: boolean = TRUE): boolean;
+begin
+  var vPt := ClientToScreen(point(WMP.left + WMP.width - 17, WMP.top + 1)); // screen position of the top right corner of the application window, roughly.
+  showHelp(vPt, create);
+end;
+
 function TUI.showMediaCaption: boolean;
 begin
   lblMediaCaption.Visible := TRUE;
   tmrMediaCaption.Enabled := TRUE;
+end;
+
+function TUI.showHideHelp: boolean;
+begin
+  GV.showingHelp := NOT GV.showingHelp;
+  case GV.showingHelp of  TRUE: fakeSystemMenu;
+                         FALSE: shutHelp; end;
 end;
 
 function TUI.showInfo(aInfo: string): boolean;
@@ -1605,6 +1647,7 @@ const
   SC_DRAGMOVE = $F012;
 begin
   Perform(WM_SYSCOMMAND, SC_DRAGMOVE, 0);
+  showHelpWindow(FALSE); // move the help window, if any, with the main window, but don't create one
 end;
 
 procedure TUI.WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
@@ -1642,7 +1685,8 @@ end;
 procedure TUI.WMSysCommand(var Message: TWMSysCommand);
 begin
   inherited;
-  case Message.CmdType of MENU_ID:  showAboutBox; end;
+  case Message.CmdType of MENU_ABOUT_ID:  showAboutBox; end;
+  case Message.CmdType of MENU_HELP_ID:   showHelpWindow; end;
 end;
 
 { TGV }
