@@ -77,6 +77,7 @@ Additional |
 `Left Click on the window background and hold`	| the window can be dragged/repositioned without a window caption title bar
 `Left double-click video` | pause / resume playback
 `Right single-click video` | pause / resume playback
+`SHIFT key (either)` | show or hide the Help window listing all the keyboard functions
 
 Media File Formats
 ------------------
