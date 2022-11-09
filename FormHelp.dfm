@@ -28,10 +28,6 @@ object HelpForm: THelpForm
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitLeft = 384
-    ExplicitTop = 200
-    ExplicitWidth = 185
-    ExplicitHeight = 41
     object buttonPanel: TPanel
       Left = 0
       Top = 867
@@ -87,8 +83,6 @@ object HelpForm: THelpForm
       TabOrder = 1
       TabWidth = 50
       OnDrawItem = lbDrawItem
-      ExplicitWidth = 508
-      ExplicitHeight = 817
     end
   end
 end

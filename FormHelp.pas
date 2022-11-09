@@ -50,7 +50,7 @@ function shutHelp: boolean;
 
 implementation
 
-uses ShellAPI;
+uses ShellAPI, main;
 
 const
   COL_GAP1 = 24;
@@ -63,8 +63,11 @@ function showHelp(Pt: TPoint; createNew: boolean = TRUE): boolean;
 begin
   case (helpForm = NIL) and createNew of TRUE: helpForm := THelpForm.create(NIL); end;
   case helpForm = NIL of TRUE: EXIT; end; // createNew = FALSE and there isn't a current help window. Used for repositioning the window when the main UI moves or resizes.
+
   helpForm.show;
   WinAPI.Windows.setWindowPos(helpForm.handle, HWND_TOP, Pt.X, Pt.Y, 0, 0, SWP_SHOWWINDOW + SWP_NOSIZE);
+  EnableWindow(helpForm.handle, FALSE);  // this window won't get any keyboard or mouse messages, etc.
+  setForegroundWindow(UI.handle);        // so the UI keyboard functions can still be used when this form is open.
 end;
 
 function shutHelp: boolean;
