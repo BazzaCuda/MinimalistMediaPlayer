@@ -98,7 +98,7 @@ implementation
 uses
   WinApi.CommCtrl,  WinApi.uxTheme,
   System.SysUtils, System.Generics.Collections, System.Math, System.Variants,
-  FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils, ShellAPI, FormAbout, FormHelp;
+  FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils, ShellAPI, FormAbout, FormHelp, _debugWindow;
 
 const
   MENU_ABOUT_ID = 1001;
@@ -118,6 +118,7 @@ type
     FSampling:      boolean;
     FShowingHelp:   boolean;
     FStartUp:       boolean;
+    FUserMoved:     boolean;
     FZoomed:        boolean;
     function  getExePath: string;
     function  getAppBuildVersion: string;
@@ -142,6 +143,7 @@ type
     property    sampling:           boolean       read FSampling      write FSampling;
     property    showingHelp:        boolean       read FShowingHelp   write FShowingHelp;
     property    startup:            boolean       read FStartUp       write FStartUp;
+    property    userMoved:          boolean       read FUserMoved     write FUserMoved;
     property    zoomed:             boolean       read FZoomed        write FZoomed;
   end;
 
@@ -153,7 +155,7 @@ type
     function clearMediaMetaData: boolean;
     function clipboardCurrentFileName: boolean;
     function currentFilePath: string;
-    function Delay(dwMilliseconds:DWORD): boolean;
+    function delay(dwMilliseconds:DWORD): boolean;
     function deleteBookmark: boolean;
     function deleteCurrentFile(Shift: TShiftState): boolean;
     function deleteThisFile(AFilePath: string; Shift: TShiftState): boolean;
@@ -286,12 +288,14 @@ begin
   case UI.Height > rect.bottom - rect.top of TRUE:  begin
                                                       UI.width := trunc(UI.width * 0.90);   // Yes, adjust the width!!...
                                                       adjustAspectRatio;                    // ...then let adjustAspectRatio do the rest
-                                                      doCentreWindow; end;end;
+                                                      end;end;
 
   case UI.Width > rect.right - rect.left of TRUE:  begin
                                                       UI.width := trunc(UI.width * 0.90);
                                                       adjustAspectRatio;
-                                                      doCentreWindow; end;end;
+                                                      end;end;
+
+  case NOT GV.userMoved of TRUE: doCentreWindow; end; // re-centre the window unless the user has deliberately positioned it somewhere
 
   UI.showHelpWindow(FALSE);
 end;
@@ -417,6 +421,7 @@ begin
 
   //  Right - 18 to avoid the scrollbars of other [maximized] windows; Top + 30 to avoid the system icons of other [maximized] windows;.
   SetWindowPos(UI.Handle, 0, (getScreenWidth - UI.Width - 18), (0 + 30), 0, 0, SWP_NOZORDER + SWP_NOSIZE);
+  GV.userMoved := TRUE;
 end;
 
 function TFX.doMuteUnmute: boolean;
@@ -623,15 +628,25 @@ begin
 end;
 
 function TFX.isVideoOffscreen: boolean;
+// adjustAspectRatio and its call to checkScreenLimits ensures that the video will fit on the screen.
+// isVideoOffScreen ensures that the entire video actually is on the screen.
 var
   vR: TRect;
-  vS: TRect;
 begin
-  GetWindowRect(UI.Handle, vR);
+  GetWindowRect(UI.handle, vR);
 
-  vS :=  UI.ClientToScreen(vR);
+  result := (vR.bottom > getScreenHeight) or (vR.right > getScreenWidth) or (vR.left < 0) or (vR.top < 0);
+  case result of FALSE: EXIT; end;
 
-  result := vS.Bottom > getScreenHeight;
+  case (vR.left < 0) of TRUE: setWindowPos(UI.handle, 0, 0, UI.top, 0, 0, SWP_SHOWWINDOW + SWP_NOSIZE); end;
+
+  case (vR.top < 0) of TRUE: setWindowPos(UI.handle, 0, UI.left, 0, 0, 0, SWP_SHOWWINDOW + SWP_NOSIZE); end;
+
+  case (vR.bottom > getScreenHeight) of TRUE: begin var newTop := UI.top - (vR.bottom - getScreenHeight);
+                                                    setWindowPos(UI.handle, 0, UI.left, newTop, 0, 0, SWP_SHOWWINDOW + SWP_NOSIZE); end;end;
+
+  case (vR.right > getScreenWidth)   of TRUE: begin var newLeft := UI.left - (vR.right - getScreenWidth);
+                                                    setWindowPos(UI.handle, 0, newLeft, UI.top, 0, 0, SWP_SHOWWINDOW + SWP_NOSIZE); end;end;
 end;
 
 function TFX.keepCurrentFile: boolean;
@@ -648,8 +663,10 @@ begin
   delay(250);   // give WMP time to register internally that the video has been paused (delay() doesn't "sleep()" the thread).
   var vFileName := '_' + ExtractFileName(currentFilePath);
   var vFilePath := ExtractFilePath(currentFilePath) + vFileName;
-  case RenameFile(currentFilePath, vFilePath) of FALSE: ShowMessage('Rename failed:' + #13#10 +  SysErrorMessage(getlasterror));
-                                                  TRUE: GV.playlist[GV.playIx] {currentFilePath} := vFilePath; end; // reflect the new name in the list
+  case RenameFile(currentFilePath, vFilePath) of FALSE: ShowMessage('Keep failed:' + #13#10 +  SysErrorMessage(getlasterror));
+                                                  TRUE: begin
+                                                          GV.playlist[GV.playIx] {currentFilePath} := vFilePath; // reflect the new name in the list
+                                                          UI.showInfo('Kept'); end;end; // reassure the user
   windowCaption;
   UI.WMP.controls.play;
 end;
@@ -819,7 +836,8 @@ function TFX.greaterWindow(Shift: TShiftState): boolean;
 begin
   UI.resizeWindow3(Shift);
   adjustAspectRatio;
-  doCentreWindow;
+  isVideoOffscreen;
+  case NOT GV.userMoved of TRUE: doCentreWindow; end;
   UI.showHelpWindow(FALSE);
   windowCaption;
 end;
@@ -1422,7 +1440,7 @@ end;
 function TUI.resizeWindow1: boolean;
 // default window size, called by FormCreate when the CAPS LOCK key isn't down
 // Modified to just set a default width for the window. Playing the initial video clip and automatically adjusting the aspect ratio will set the height.
-// NB HKEY_CURRENT_USER\SOFTWARE\Classes\Applications\MinimalistMediaPlayer.exe\shell\open\command
+// NB gets the param from HKEY_CURRENT_USER\SOFTWARE\Classes\Applications\MinimalistMediaPlayer.exe\shell\open\command
 begin
   var vWidth: integer;
   case TryStrToInt(paramStr(2), vWidth) of FALSE: vWidth := 1170; end;
@@ -1534,13 +1552,15 @@ begin
   FX.FetchMediaMetaData;
   case FX.hasMetaData of  TRUE: begin
                                   case GV.newMediaFile of  TRUE:  begin
-                                                                    FX.adjustAspectRatio;
+                                                                    FX.adjustAspectRatio; // 1. this and its call to checkScreenLimts ensures that the video will fit on the screen.
                                                                     GV.newMediaFile := FALSE; end;end;
 
                                   GV.metaDataCount := GV.metaDataCount + 1;                                   // fire 3 more times to get the rest of the metadata
                                   case GV.metaDataCount >= 3 of TRUE: tmrMetaData.Enabled := FALSE; end;      // WMP should have determined all the metadata by now.
 
-                                  case NOT FX.isCapsLockOn AND FX.isVideoOffscreen of TRUE: FX.doCentreWindow; end;  // Mainly because the lower part of a 4:3 video can be off the screen
+                                  FX.isVideoOffScreen;                                    // 2. this ensures none of the video is off the screen.
+
+                                  case NOT FX.isCapsLockOn AND NOT GV.userMoved of TRUE: FX.doCentreWindow; end;
   end;end;
 end;
 
@@ -1639,6 +1659,14 @@ begin
   FX.UIKeyUp(Key, TShiftState(nShiftState));
 end;
 
+function isVideoOffScreen: boolean;
+// I currently have no idea why this can't be called directly in WMPMouseDown, below,
+// but it can from WMPKeyUp, above.
+// No doubt the penny will drop at some point.
+begin
+  FX.isVideoOffscreen;
+end;
+
 procedure TUI.WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
 // If there is no window caption you can still drag the window around by holding down a CTRL key and dragging with the left mouse button on the video.
 // Edit: Removed CTRL key so that just dragging the window with the left mouse button now matches what happens when you do that with the title bar of any window.
@@ -1647,6 +1675,8 @@ const
   SC_DRAGMOVE = $F012;
 begin
   Perform(WM_SYSCOMMAND, SC_DRAGMOVE, 0);
+  isVideoOffScreen;
+  GV.userMoved := TRUE;  // we do less auto-positioning of the next video if the user has deliberately moved the window somewhere.
   showHelpWindow(FALSE); // move the help window, if any, with the main window, but don't create one
 end;
 
