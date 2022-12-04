@@ -1674,10 +1674,24 @@ procedure TUI.WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; fX,
 // A side effect of this change is that media files can be paused/resumed using a left double-click, but no longer with a single left click.
 const
   SC_DRAGMOVE = $F012;
+  L_BTN = 1;
+  R_BTN = 2;
+var
+  vR1: TRect;
+  vR2: TRect;
 begin
+  case nButton = R_BTN of TRUE: EXIT; end;
+
+  GetWindowRect(UI.Handle, vR1);
+
   Perform(WM_SYSCOMMAND, SC_DRAGMOVE, 0);
+
+  GetWindowRect(UI.Handle, vR2);
+
+  // we do less auto-positioning of the next video if the user has deliberately moved the window somewhere.
+  GV.userMoved := (vR1.left <> vR2.left) and (vR1.top <> vR2.top);
+
   isVideoOffScreen;
-//  GV.userMoved := TRUE;  // we do less auto-positioning of the next video if the user has deliberately moved the window somewhere. {experimental: is clicking the progressbar coming here?}
   showHelpWindow(FALSE); // move the help window, if any, with the main window, but don't create one
 end;
 
