@@ -295,7 +295,7 @@ begin
                                                       adjustAspectRatio;
                                                       end;end;
 
-  case NOT GV.userMoved of TRUE: doCentreWindow; end; // re-centre the window unless the user has deliberately positioned it somewhere
+  case GV.userMoved of FALSE: doCentreWindow; end; // re-centre the window unless the user has deliberately positioned it somewhere
 
   UI.showHelpWindow(FALSE);
 end;
@@ -378,6 +378,7 @@ begin
                               (getScreenHeight - (vR.Bottom - vR.Top)) div 2, 0, 0, SWP_NOZORDER + SWP_NOSIZE);
 
   UI.showHelpWindow(FALSE);
+  GV.userMoved := FALSE;
 end;
 
 function TFX.doCommandLine(aCommandLIne: string): boolean;
@@ -416,7 +417,7 @@ begin
                                                                (getScreenHeight - (vR.Bottom - vR.Top)) div 2, 400, 400, SWP_NOZORDER);
                                     adjustAspectRatio;
 
-                                    GetWindowRect(UI.Handle, vR); // reposition the window after adjusting the aspect ratio
+                                    // now reposition the window after having adjusted the size and the aspect ratio
                                   end;end;
 
   //  Right - 18 to avoid the scrollbars of other [maximized] windows; Top + 30 to avoid the system icons of other [maximized] windows;.
@@ -674,7 +675,7 @@ end;
 function TFX.matchVideoWidth: boolean;
 // [9] = resize the width of the window to match the video width.
 // Judicious use of [9], ad[J]ust, [H]orizontal and [G]reater can be used to obtain the optimum window to match the video.
-// [4], [H], [G] can alos be very useful.
+// [4], [H], [G] can also be very useful.
 begin
   case noMediaFiles of TRUE: EXIT; end;
 
@@ -837,7 +838,7 @@ begin
   UI.resizeWindow3(Shift);
   adjustAspectRatio;
   isVideoOffscreen;
-  case NOT GV.userMoved of TRUE: doCentreWindow; end;
+  case GV.userMoved of FALSE: doCentreWindow; end;
   UI.showHelpWindow(FALSE);
   windowCaption;
 end;
@@ -1560,7 +1561,7 @@ begin
 
                                   FX.isVideoOffScreen;                                    // 2. this ensures none of the video is off the screen.
 
-                                  case NOT FX.isCapsLockOn AND NOT GV.userMoved of TRUE: FX.doCentreWindow; end;
+                                  case FX.isCapsLockOn or GV.userMoved of FALSE: FX.doCentreWindow; end;
   end;end;
 end;
 
@@ -1676,7 +1677,7 @@ const
 begin
   Perform(WM_SYSCOMMAND, SC_DRAGMOVE, 0);
   isVideoOffScreen;
-  GV.userMoved := TRUE;  // we do less auto-positioning of the next video if the user has deliberately moved the window somewhere.
+//  GV.userMoved := TRUE;  // we do less auto-positioning of the next video if the user has deliberately moved the window somewhere. {experimental: is clicking the progressbar coming here?}
   showHelpWindow(FALSE); // move the help window, if any, with the main window, but don't create one
 end;
 
