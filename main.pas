@@ -153,6 +153,7 @@ type
     function blackOut: boolean;
     function checkScreenLimits: boolean;
     function clearMediaMetaData: boolean;
+    function closeApp: boolean;
     function clipboardCurrentFileName: boolean;
     function currentFilePath: string;
     function delay(dwMilliseconds:DWORD): boolean;
@@ -188,6 +189,7 @@ type
     function keepCurrentFile: boolean;
     function matchVideoWidth: boolean;
     function noMediaFiles: boolean;
+    function openWithLosslessCut: boolean;
     function openWithShotcut: boolean;
     function playCurrentFile: boolean;
     function playFirstFile: boolean;
@@ -305,6 +307,13 @@ function TFX.clipboardCurrentFileName: boolean;
 // This can be useful, before opening the file in ShotCut, for naming the edited video
 begin
   clipboard.AsText := TPath.GetFileNameWithoutExtension(currentFilePath);
+end;
+
+function TFX.closeApp: boolean;
+begin
+  UI.tmrMetaData.Enabled := FALSE;
+  UI.WMP.controls.stop;
+  UI.CLOSE;
 end;
 
 function TFX.currentFilePath: string;
@@ -690,6 +699,13 @@ begin
   result := GV.playlist.Count = 0;
 end;
 
+function TFX.openWithLosslessCut: boolean;
+// [F11] = open with LosslessCut
+begin
+  UI.WMP.controls.pause;
+  ShellExecute(0, 'open', 'B:\Tools\LosslessCut-win-x64\LosslessCut.exe', pchar('"' + currentFilePath + '"'), '', SW_SHOW);
+end;
+
 function TFX.openWithShotcut: boolean;
 // [F12] = open the video in the ShotCut* video editor
 // mklink C:\ProgramFiles "C:\Program Files"
@@ -1012,6 +1028,9 @@ try
   case UIKey(Key, Shift, TRUE) of TRUE: EXIT; end;  // Keys that can be pressed singly or held down for repeat action: don't process the KeyUp as well as the KeyDown
 
   case Key of
+      VK_F11: begin openWithLosslessCut; EXIT; end;end;
+
+  case Key of
     VK_ESCAPE: case UI.WMP.fullScreen of  TRUE: fullScreen;    // eXit fullscreen mode, or...
                                          FALSE: UI.CLOSE; end; // eXit app
 
@@ -1049,12 +1068,13 @@ try
     ord('u'), ord('U'): UnZoom;                               // U = Unzoom
     ord('v'), ord('V'): WindowMaximizeRestore;                // V = View Maximize/Restore
     ord('w'), ord('W'): PlayNextFile;                         // W = Watch next in folder
-    ord('x'), ord('X'): UI.CLOSE;                             // X = eXit app
+    ord('x'), ord('X'): closeApp;                             // X = eXit app
     ord('y'), ord('Y'): sampleVideo;                          // Y = trYout video
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
     ord('0')          : UI.showMediaCaption;                  // 0 = briefly show media caption
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('2')          : UI.ResizeWindow2;                     // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
+//    ord('3')          : ;                                     // 3 =
     ord('4')          : doMiniWindow;                         // 4 = mini window top right corner of screen
     ord('5')          : saveBookmark;                         // 5 = save current media position to an INI file     (bookmark)
     ord('6')          : resumeBookmark;                       // 6 = resume video from saved media position         (bookmark)
