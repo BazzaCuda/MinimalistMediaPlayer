@@ -1268,9 +1268,6 @@ begin
 end;
 
 procedure TUI.FormCreate(Sender: TObject);
-//var
-//  TW: TWMPEqualizerSettingsCtrl;
-//  EQ: IWMPEqualizerSettingsCtrl;
 begin
   addMenuItem;
   SetWindowLong(UI.Handle, GWL_STYLE, GetWindowLong(UI.Handle, GWL_STYLE) OR WS_CAPTION AND (NOT (WS_BORDER)));
@@ -1295,13 +1292,6 @@ begin
   WMP.windowlessVideo := TRUE;
   WMP.stretchToFit    := TRUE;
   WMP.settings.volume := 100;
-//  EQ := WMP as IWMPEqualizerSettingsCtrl;
-//  EQ.truBassLevel := 100;
-//  TW := TWMPEqualizerSettingsCtrl.Create(self);
-//  EQ := TW.GetDefaultInterface;
-//  EQ.truBassLevel := 100;
-
-
 
 // the only way for these to display is to make them child controls of WMP
   lblMediaCaption.Parent  := WMP;
