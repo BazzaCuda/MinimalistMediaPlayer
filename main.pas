@@ -442,7 +442,7 @@ begin
 end;
 
 function TFX.doPausePlay: boolean;
-// [SpaceBar] or double-click on video = Pause / Play
+// [SpaceBar] or double-click (or right-click) on video = Pause / Play
 begin
   case UI.WMP.playState of
                           wmppsPlaying:   UI.WMP.controls.pause;
@@ -1292,7 +1292,6 @@ begin
   WMP.windowlessVideo := TRUE;
   WMP.stretchToFit    := TRUE;
   WMP.settings.volume := 100;
-
 // the only way for these to display is to make them child controls of WMP
   lblMediaCaption.Parent  := WMP;
   lblXY.Parent            := WMP;
