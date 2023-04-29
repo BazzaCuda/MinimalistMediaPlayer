@@ -1028,7 +1028,9 @@ try
   case UIKey(Key, Shift, TRUE) of TRUE: EXIT; end;  // Keys that can be pressed singly or held down for repeat action: don't process the KeyUp as well as the KeyDown
 
   case Key of
-      VK_F11: begin openWithLosslessCut; EXIT; end;end;
+      VK_F10: begin playWithPotPlayer;    EXIT; end;
+      VK_F11: begin openWithLosslessCut;  EXIT; end;
+      VK_F12: begin openWithShotcut;      EXIT; end;end;
 
   case Key of
     VK_ESCAPE: case UI.WMP.fullScreen of  TRUE: fullScreen;    // eXit fullscreen mode, or...
@@ -1041,7 +1043,6 @@ try
     191 {Slash}:      SpeedIncrease([ssCtrl]);      // Ctrl-UpArrow = Speed up
     220 {Backslash}:  SpeedDecrease([ssCtrl]);      // Ctrl-DnArrow = Slow down
 
-    VK_F12: openWithShotcut;
 
     9:                  tabForwardsBackwards(200);            // TAB tab forwards/backwards 1/200th   Mods: Ctrl-TAB
     187               : clipboardCurrentFileName;             // =   copy current filename to clipboard
@@ -1570,7 +1571,7 @@ begin
 
                                   FX.isVideoOffScreen;                                    // 2. this ensures none of the video is off the screen.
 
-                                  case FX.isCapsLockOn or GV.userMoved of FALSE: FX.doCentreWindow; end;
+                                  case {FX.isCapsLockOn or} GV.userMoved of FALSE: FX.doCentreWindow; end;
   end;end;
 end;
 
