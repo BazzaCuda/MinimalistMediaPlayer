@@ -45,6 +45,7 @@ type
     WMP: TWindowsMediaPlayer;
     lblMediaCaption: TLabel;
     tmrMediaCaption: TTimer;
+    tmrResize: TTimer;
     procedure applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
     procedure FormActivate(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -68,6 +69,7 @@ type
     procedure WMPPlayStateChange(ASender: TObject; NewState: Integer);
     procedure WMSysCommand(var Message : TWMSysCommand); Message WM_SYSCOMMAND;
     procedure tmrMediaCaptionTimer(Sender: TObject);
+    procedure tmrResizeTimer(Sender: TObject);
   private
   protected
   public
@@ -75,12 +77,15 @@ type
     function  addMenuItem: boolean;
     function  fakeSystemMenu: boolean;
     function  hideLabels: boolean;
+    function  positionWindow(winNum: WORD): boolean;
+    function  posWinXY(x: integer; y: integer): boolean;
     function  repositionLabels: boolean;
     function  repositionTimeDisplay: boolean;
     function  repositionWMP: boolean;
     function  resizeWindow1: boolean;
     function  resizeWindow2: boolean;
     function  resizeWindow3(Shift: TShiftState): boolean;
+    function  resizeWindow4(numApps: WORD): boolean;
     function  setupProgressBar: boolean;
     function  showAboutBox: boolean;
     function  showHelpWindow(create: boolean = TRUE): boolean;
@@ -101,8 +106,16 @@ uses
   FormInputBox, MMSystem, Mixer, VCL.Graphics, clipbrd, System.IOUtils, ShellAPI, FormAbout, FormHelp, _debugWindow;
 
 const
-  MENU_ABOUT_ID = 1001;
-  MENU_HELP_ID  = 1002;
+  MENU_ABOUT_ID   = 1001;
+  MENU_HELP_ID    = 1002;
+  WIN_CLOSEAPP    = 1103;
+  WIN_RESIZE      = 1004;
+  WIN_POSITION    = 1005;
+  WIN_CONTROLS    = 1006;
+  WIN_RESTART     = 1007;
+  WIN_TAB         = 1008;
+  WIN_CAPTION     = 1009;
+  WIN_PAUSE_PLAY  = 1010;
 
 type
   TGV = class                        // Global [application-wide] Variables
@@ -114,6 +127,7 @@ type
     FInputBox:      boolean;
     FmetaDataCount: integer;
     FMute:          boolean;
+    FnumApps:       integer;
     FnewMediaFile:  boolean;
     FSampling:      boolean;
     FShowingHelp:   boolean;
@@ -138,6 +152,7 @@ type
     property    mute:               boolean       read FMute          write FMute;
     property    metaDataCount:      integer       read FmetaDataCount write FmetaDataCount;
     property    newMediaFile:       boolean       read FnewMediaFile  write FnewMediaFile;
+    property    numApps:            integer       read FnumApps       write FnumApps;
     property    playIx:             integer       read FplayIx        write FplayIx;
     property    playlist:           TList<string> read Fplaylist;
     property    sampling:           boolean       read FSampling      write FSampling;
@@ -203,6 +218,7 @@ type
     function resumeBookmark: boolean;
     function sampleVideo: boolean;
     function saveBookmark: boolean;
+    function sendToAll(cmd: WORD): boolean;
     function ShowOKCancelMsgDlg(aMsg: string;
                                 msgDlgType: TMsgDlgType = mtConfirmation;
                                 msgDlgButtons: TMsgDlgButtons = MBOKCANCEL;
@@ -256,6 +272,9 @@ begin
 
   checkScreenLimits;
   UI.showHelpWindow(FALSE);
+//  debugInteger('screen height', FX.getScreenHeight);
+//  debugInteger('screen width', FX.getScreenWidth);
+//  debugInteger('UI width', UI.width);
 end;
 
 function TFX.blackOut: boolean;
@@ -906,6 +925,41 @@ begin
   UI.showInfo('bookmarked');
 end;
 
+var handles: array of HWND;
+function enumAllWindows(handle: HWND; lparam: LPARAM): BOOL; stdcall;
+var
+  windowName : array[0..255] of char;
+  className  : array[0..255] of char;
+begin
+  case getClassName(handle, className, sizeOf(className)) > 0 of TRUE:
+    case strComp(className, 'TUI') = 0 of TRUE: begin setLength(handles, length(handles) + 1);
+                                                      handles[high(handles)] := handle; end;end;end;
+
+  result := TRUE;
+end;
+
+function TFX.sendToAll(cmd: WORD): boolean;
+// send the user's command to all running instances of MinimalistMediaPlayer
+var
+  i: integer;
+begin
+  setLength(handles, 0);
+  enumWindows(@enumAllWindows, 0);
+
+  for i := low(handles) to high(handles) do begin
+    case cmd of
+      WIN_CLOSEAPP:   sendMessage(handles[i], WM_SYSCOMMAND, WIN_RESIZE, 0);                    // CTRL-0 = closeApp;
+      WIN_RESIZE:     begin sendMessage(handles[i], WM_SYSCOMMAND, WIN_RESIZE, high(handles));  // CTRL-9 = resize however many simultaneous windows there are
+                            sendMessage(handles[i], WM_SYSCOMMAND, WIN_POSITION, i + 1); end;   //          then tell each window which number they are, e.g. 1-9
+      WIN_CONTROLS:   sendMessage(handles[i], WM_SYSCOMMAND, WIN_CONTROLS, 0);                  // get each window to toggle full controls
+      WIN_RESTART:    sendMessage(handles[i], WM_SYSCOMMAND, WIN_RESTART, 0);                   // get each window to restart their video
+      WIN_TAB:        sendMessage(handles[i], WM_SYSCOMMAND, WIN_TAB, 0);                       // get each window to tab forwards
+      WIN_CAPTION:    sendMessage(handles[i], WM_SYSCOMMAND, WIN_CAPTION, 0);                   // get each window to display caption
+      WIN_PAUSE_PLAY: sendMessage(handles[i], WM_SYSCOMMAND, WIN_PAUSE_PLAY, 0);                // toggle pause/play in each window
+  end;end;
+  setLength(handles, 0);
+end;
+
 function TFX.speedDecrease(Shift: TShiftState): boolean;
 // Ctrl-DownArrow = decrease playback speed by 10%
 begin
@@ -1025,6 +1079,9 @@ end;
 function TFX.UIKeyUp(var Key: Word; Shift: TShiftState): boolean;
 begin
 try
+  case (ssCtrl in shift) and (key = 48) of TRUE: begin sendToAll(WIN_CLOSEAPP); EXIT; end;end; // Ctrl-0
+  case (ssCtrl in shift) and (key = 57) of TRUE: begin sendToAll(WIN_RESIZE);   EXIT; end;end; // Ctrl-9
+
   case UIKey(Key, Shift, TRUE) of TRUE: EXIT; end;  // Keys that can be pressed singly or held down for repeat action: don't process the KeyUp as well as the KeyDown
 
   case Key of
@@ -1036,7 +1093,7 @@ try
     VK_ESCAPE: case UI.WMP.fullScreen of  TRUE: fullScreen;    // eXit fullscreen mode, or...
                                          FALSE: UI.CLOSE; end; // eXit app
 
-    VK_SPACE:  doPausePlay;                         // Pause / Play
+    VK_SPACE:  sendToAll(WIN_PAUSE_PLAY); // doPausePlay;                         // Pause / Play
 
     VK_UP:            SpeedIncrease(Shift);         // Ctrl-UpArrow = Speed up
     VK_DOWN:          SpeedDecrease(Shift);         // Ctrl-DnArrow = Slow down
@@ -1048,7 +1105,7 @@ try
     187               : clipboardCurrentFileName;             // =   copy current filename to clipboard
     ord('a'), ord('A'): PlayFirstFile;                        // A = Play first
     ord('b'), ord('B'): BlackOut;                             // B = Blackout                       Mods: Ctrl-B
-    ord('c'), ord('C'): UI.ToggleControls(Shift);             // C = Control Panel show/hide        Mods: Ctrl-C
+    ord('c'), ord('C'): sendToAll(WIN_CONTROLS);              // C = Control Panel show/hide        Mods: Ctrl-C
     ord('d'), ord('D'), VK_DELETE: deleteCurrentFile(Shift);  // D = Delete File                    Mods: Ctrl-D / Ctrl-DEL
     ord('e'), ord('E'): DoMuteUnmute;                         // E = (Ears)Mute/Unmute
     ord('f'), ord('F'): fullScreen;                           // F = Fullscreen
@@ -1064,15 +1121,15 @@ try
     ord('p'), ord('P'): PlayWithPotPlayer;                    // P = Play current video with Pot Player
     ord('q'), ord('Q'): PlayPrevFile;                         // Q = Play previous in folder
     ord('r'), ord('R'): RenameCurrentFile;                    // R = Rename
-    ord('s'), ord('S'): startOver;                            // S = Start-over
-    ord('t'), ord('T'): TabForwardsBackwards;                 // T = Tab forwards/backwards n%      Mods: ALT-T, SHIFT-T, CAPSLOCK, Ctrl-T
+    ord('s'), ord('S'): sendToAll(WIN_RESTART);               // S = Start-over
+    ord('t'), ord('T'): sendToAll(WIN_TAB);                   // T = Tab forwards/backwards n%      Mods: ALT-T, SHIFT-T, CAPSLOCK, Ctrl-T
     ord('u'), ord('U'): UnZoom;                               // U = Unzoom
     ord('v'), ord('V'): WindowMaximizeRestore;                // V = View Maximize/Restore
     ord('w'), ord('W'): PlayNextFile;                         // W = Watch next in folder
     ord('x'), ord('X'): closeApp;                             // X = eXit app
     ord('y'), ord('Y'): sampleVideo;                          // Y = trYout video
     ord('z'), ord('Z'): PlayLastFile;                         // Z = Play last in folder
-    ord('0')          : UI.showMediaCaption;                  // 0 = briefly show media caption
+    ord('0')          : sendToAll(WIN_CAPTION);               // 0 = briefly show media caption
     ord('1')          : RateReset;                            // 1 = Rate 1[00%]
     ord('2')          : UI.ResizeWindow2;                     // 2 = resize so that two videos can be positioned side-by-side horizontally by the user
 //    ord('3')          : ;                                     // 3 =
@@ -1357,6 +1414,76 @@ begin
   FX.doMuteUnmute;
 end;
 
+function TUI.positionWindow(winNum: WORD): boolean;
+// position all the running windows depending on how many there are in total and which # this instance has been given
+// see the comment in resizeWindow4 about how the windows are resized to acoommodate the various numbers of rows of windows
+// currently, this code allows for up to 9 windows in a 3x3 grid
+// I may revisit this later to allow it to cater for any number of windows dynamically rather than the rows being hardcoded below
+// GV.numApps was received in resizeWindow4
+begin
+  case GV.numApps of
+    1:  FX.doCentreWindow;                        // 1 app running, just centre it
+    2:  case winNum of                            // 2 apps running
+          1: posWinXY(0, height div 2);           //   this instance is window #1 of 2, or
+          2: posWinXY(width, height div 2); end;  //   this instance is window #2 of 2
+    3: case winNum of
+          1: posWinXY(0, 0);                      // etc.
+          2: posWinXY(width, 0);
+          3: posWinXY(width div 2, height); end;
+    4: case winNum of
+          1: posWinXY(0, 0);
+          2: posWinXY(width, 0);
+          3: posWinXY(0, height);
+          4: posWinXY(width, height); end;
+    5: case winNum of
+          1: posWinXY(0, 0);
+          2: posWinXY(width, 0);
+          3: posWinXY(width * 2, 0);
+          4: posWinXY(width div 2, height);
+          5: posWinXY(width div 2 + width, height); end;
+    6: case winNum of
+          1: posWinXY(0, 0);
+          2: posWinXY(width, 0);
+          3: posWinXY(width * 2, 0);
+          4: posWinXY(0, height);
+          5: posWinXY(width, height);
+          6: posWinXY(width * 2, height); end;
+    7: case winNum of
+          1: posWinXY(0, 0);
+          2: posWinXY(width, 0);
+          3: posWinXY(width * 2, 0);
+          4: posWinXY(width * 3, 0);
+          5: posWinXY(width div 3, height);
+          6: posWinXY(width div 3 + width, height);
+          7: posWinXY(width div 3 + width * 2, height); end;
+    8: case winNum of
+          1: posWinXY(0, 0);
+          2: posWinXY(width, 0);
+          3: posWinXY(width * 2, 0);
+          4: posWinXY(width * 3, 0);
+          5: posWinXY(0, height);
+          6: posWinXY(width, height);
+          7: posWinXY(width * 2, height);
+          8: posWinXY(width * 3, height); end;
+    9: case winNum of
+          1: posWinXY(0, 0);
+          2: posWinXY(width, 0);
+          3: posWinXY(width * 2, 0);
+          4: posWinXY(0, height);
+          5: posWinXY(width, height);
+          6: posWinXY(width * 2, height);
+          7: posWinXY(0, height * 2);
+          8: posWinXY(width, height * 2);
+          9: posWinXY(width * 2, height * 2); end;
+  end;
+end;
+
+function TUI.posWinXY(x, y: integer): boolean;
+begin
+  SetWindowPos(UI.Handle, 0, x, y, 0, 0, SWP_NOZORDER + SWP_NOSIZE);
+  GV.userMoved := TRUE;
+end;
+
 procedure TUI.progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 // When a SHIFT key is held down, calculate a new video position based on where the mouse is on the prograss bar.
 // This *was* intended to allow dragging/scrubbing through the video.
@@ -1484,6 +1611,39 @@ begin
   end;
 end;
 
+function TUI.resizeWindow4(numApps: WORD): boolean;
+// resize the window aocording to how many running instances there are of MinimalistMediaPlayer
+// set the width and height depending on how the windows will be displayed:
+// 1 taking up 90% of the screen width
+// 2 or 3 side by side in one row
+// 4 in two rows of 2 & 2
+// 5 or 6 in two rows of 3 & 2 and 3 & 3 respectively
+// 7 or 8 in two rows of 4 & 3 and 4 & 4 respectively
+// 9 three rows of 3
+begin
+  GV.numApps := numApps; // used by positionWindow
+  case numApps of
+    0: FX.closeApp;
+    1:    UI.width := trunc(FX.getScreenWidth * 0.90);
+    2:    UI.width := FX.getScreenWidth div 2;
+    3:    UI.width := FX.getScreenWidth div 2;
+    4:    UI.width := FX.getScreenWidth div 2;
+    5, 6: UI.width := FX.getScreenWidth div 3;
+    7, 8: UI.width := FX.getScreenWidth div 4;
+    9:    UI.width := FX.getScreenWidth div 3;
+  end;
+  GV.userMoved := TRUE;
+  FX.adjustAspectRatio;      // apply the correct aspect ratio before modifying the height
+  tmrResize.enabled := TRUE; // force WMP to resize to new UI size
+  case numApps of
+    3:    UI.height := FX.getScreenHeight div 2;
+    4:    UI.height := FX.getScreenHeight div 2;
+    5, 6: UI.height := FX.getScreenHeight div 2;
+    7, 8: UI.height := FX.getScreenHeight div 2;
+    9:    UI.height := FX.getScreenHeight div 3;
+  end;
+end;
+
 function TUI.setupProgressBar: boolean;
 // change the Progress Bar from it's Windows default characteristics to a minimalist display
 begin
@@ -1582,6 +1742,13 @@ begin
   FX.PlayNextFile;
 end;
 
+procedure TUI.tmrResizeTimer(Sender: TObject);
+begin
+  tmrResize.enabled := FALSE;
+  UI.width := UI.width + 1;
+  UI.width := UI.width - 1;
+end;
+
 procedure TUI.tmrTimeDisplayTimer(Sender: TObject);
 // update the video timestamp display
 // This is also a convenient time and place to hide the cursor
@@ -1595,6 +1762,7 @@ function TUI.toggleControls(Shift: TShiftState): boolean;
 // Ctrl-C Show/Hide all displayed controls/metadata
 // If the timestamp and Mute/Unmute button are already being displayed, Ctrl-C will also display all the metadata info
 begin
+  case (getKeyState(VK_CONTROL) and $80) <> 0 of TRUE: include(shift, ssCtrl); end;
   case (ssCtrl in Shift) AND lblTimeDisplay.Visible and NOT lblXY.Visible of TRUE: begin // add the metadata to the currently displayed timestamp etc
     lblXY.Visible           := TRUE;
     lblXY2.Visible          := TRUE;
@@ -1699,7 +1867,7 @@ begin
   GetWindowRect(UI.Handle, vR2);
 
   // we do less auto-positioning of the next video if the user has deliberately moved the window somewhere.
-  GV.userMoved := (vR1.left <> vR2.left) and (vR1.top <> vR2.top);
+  case GV.userMoved of FALSE: GV.userMoved := (vR1.left <> vR2.left) and (vR1.top <> vR2.top); end; // don't reset once it's been set to TRUE
 
   isVideoOffScreen;
   showHelpWindow(FALSE); // move the help window, if any, with the main window, but don't create one
@@ -1738,10 +1906,18 @@ begin
 end;
 
 procedure TUI.WMSysCommand(var Message: TWMSysCommand);
+// respond to the WM_SYSCOMMAND messages this app sends to itself
 begin
   inherited;
   case Message.CmdType of MENU_ABOUT_ID:  showAboutBox; end;
   case Message.CmdType of MENU_HELP_ID:   showHelpWindow; end;
+  case Message.CmdType of WIN_RESIZE:     resizeWindow4(message.key); end;  // key contains number of running instances of MinimalistMediaPlayer
+  case Message.CmdType of WIN_POSITION:   positionWindow(message.key); end; // key designates which window # this is of all the running instances
+  case Message.CmdType of WIN_CONTROLS:   toggleControls([]); end;
+  case Message.CmdType of WIN_RESTART:    FX.startOver; end;
+  case Message.CmdType of WIN_TAB:        FX.tabForwardsBackwards; end;
+  case Message.CmdType of WIN_CAPTION:    showMediaCaption; end;
+  case Message.CmdType of WIN_PAUSE_PLAY: FX.doPausePlay; end;
 end;
 
 { TGV }

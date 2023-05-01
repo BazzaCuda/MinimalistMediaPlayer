@@ -7258,4 +7258,11 @@ object UI: TUI
     Left = 400
     Top = 304
   end
+  object tmrResize: TTimer
+    Enabled = False
+    Interval = 10
+    OnTimer = tmrResizeTimer
+    Left = 488
+    Top = 112
+  end
 end
