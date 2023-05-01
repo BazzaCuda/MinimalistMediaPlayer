@@ -44,8 +44,8 @@ Control | Action
 `S`						| re[S]tart the current media file from the beginning, aka [S]tartover (all media windows)
 `T`						| [T]ab through the media file a 200th, 100th (default), 50th, 20th or 10th of its duration (use SHIFT-ALT, ALT, SHIFT, CAPS LOCK to modify) (all media windows)
 `Ctrl-T`				| [T]ab back through the media file a 100th (default), 50th, 20th or 10th of its duration (use ALT, SHIFT, CAPS LOCK to modify) (all media windows)
-`TAB`					| tab forwards 1/200th the duration of the media file (all media windows)
-`Ctrl-TAB`				| tab backwards 1/200th the duration of the media file (all media windows)
+`TAB`					| tab forwards 1/200th the duration of the media file
+`Ctrl-TAB`				| tab backwards 1/200th the duration of the media file
 `U`						| [U]nzoom, i.e. re-fit the video to the window
 `V`						| maximize / restore [V]iew, same as [M]
 `W`						| [W]atch the next video in the list (or play the next audio)
