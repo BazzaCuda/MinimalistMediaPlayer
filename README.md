@@ -22,8 +22,8 @@ Control | Action
 `=`						| copy media file name to clipboard
 `A`						| play the first media file in the playlist (Z plays last)
 `B`						| [B]lackout/restore progress [B]ar
-`C`						| show/Hide on-screen [C]ontrols and media file timestamp
-`Ctrl-C`				| show/Hide all on-screen controls, media file timestamp and media metadata
+`C`						| show/Hide on-screen [C]ontrols and media file timestamp (all media windows)
+`Ctrl-C`				| show/Hide all on-screen controls, media file timestamp and media metadata (all media windows)
 `D` and `DEL`			| [D]elete current media file (after confirmation)
 `Ctrl-D and Ctrl-DEL`	| [D]elete all files in the current media file's folder (after confirmation)
 `E`						| [E]ars - Mute/Unmute sound
@@ -41,11 +41,11 @@ Control | Action
 `P` 					| pause the media file and play it instead with [P]otplayer, if installed
 `Q`						| play the previous media file in the [Q]ueue/playlist
 `R`						| [R]ename the current media file
-`S`						| re[S]tart the current media file from the beginning, aka [S]tartover
-`T`						| [T]ab through the media file a 200th, 100th (default), 50th, 20th or 10th of its duration (use SHIFT-ALT, ALT, SHIFT, CAPS LOCK to modify)
-`Ctrl-T`				| [T]ab back through the media file a 100th (default), 50th, 20th or 10th of its duration (use ALT, SHIFT, CAPS LOCK to modify)
-`TAB`					| tab forwards 1/200th the duration of the media file
-`Ctrl-TAB`				| tab backwards 1/200th the duration of the media file
+`S`						| re[S]tart the current media file from the beginning, aka [S]tartover (all media windows)
+`T`						| [T]ab through the media file a 200th, 100th (default), 50th, 20th or 10th of its duration (use SHIFT-ALT, ALT, SHIFT, CAPS LOCK to modify) (all media windows)
+`Ctrl-T`				| [T]ab back through the media file a 100th (default), 50th, 20th or 10th of its duration (use ALT, SHIFT, CAPS LOCK to modify) (all media windows)
+`TAB`					| tab forwards 1/200th the duration of the media file (all media windows)
+`Ctrl-TAB`				| tab backwards 1/200th the duration of the media file (all media windows)
 `U`						| [U]nzoom, i.e. re-fit the video to the window
 `V`						| maximize / restore [V]iew, same as [M]
 `W`						| [W]atch the next video in the list (or play the next audio)
@@ -56,7 +56,7 @@ Control | Action
 `Down Arrow`			| decrease the volume by 1%
 `Ctrl-Up Arrow`			| increase the playback speed by 10%
 `Ctrl-Down Arrow`		| decrease the playback speed by 10%
-`0`						| briefly show media caption
+`0`						| briefly show media caption (all media windows)
 `1`						| reset the playback speed to normal, i.e. [1]00%
 `2`						| resize the window so that 2 instances of the application can be placed side-by-side
 `4`						| resize to a mini-window in the top-right corner of the screen
@@ -78,6 +78,8 @@ Additional |
 `Left double-click video` | pause / resume playback
 `Right single-click video` | pause / resume playback
 `SHIFT key (either)` | show or hide the Help window listing all the keyboard functions
+`Ctrl-9` | auto-arrange up to 9 instances of ``Minimalist Media Player`` in a 3x3 grid (all media windows)
+`Ctrl-0` | close all running instances of ``Minimalist Media Player`` (all media windows)
 
 Media File Formats
 ------------------
