@@ -946,10 +946,14 @@ begin
   setLength(handles, 0);
   enumWindows(@enumAllWindows, 0);
 
+  debugInteger('lengthHandles', length(handles));
+  debugInteger('low(handles', low(handles));
+  debugInteger('high(handles', high(handles));
+
   for i := low(handles) to high(handles) do begin
     case cmd of
       WIN_CLOSEAPP:   sendMessage(handles[i], WM_SYSCOMMAND, WIN_RESIZE, 0);                    // CTRL-0 = closeApp;
-      WIN_RESIZE:     begin sendMessage(handles[i], WM_SYSCOMMAND, WIN_RESIZE, high(handles));  // CTRL-9 = resize however many simultaneous windows there are
+      WIN_RESIZE:     begin sendMessage(handles[i], WM_SYSCOMMAND, WIN_RESIZE, length(handles));  // CTRL-9 = resize however many simultaneous windows there are
                             sendMessage(handles[i], WM_SYSCOMMAND, WIN_POSITION, i + 1); end;   //          then tell each window which number they are, e.g. 1-9
       WIN_CONTROLS:   sendMessage(handles[i], WM_SYSCOMMAND, WIN_CONTROLS, 0);                  // get each window to toggle full controls
       WIN_RESTART:    sendMessage(handles[i], WM_SYSCOMMAND, WIN_RESTART, 0);                   // get each window to restart their video
