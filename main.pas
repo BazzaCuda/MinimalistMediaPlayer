@@ -301,7 +301,7 @@ begin
 end;
 
 function TFX.checkScreenLimits: boolean;
-// checks whether the UI window is taller than the height of the screen and readjusts until it isn't
+// checks whether the UI window is taller than the height of the screen and readjusts until it isn't.
 // this can happen with some phone videos which were filmed in portrait, e.g. Vines and Tiktoks.
 // Purely for completeness, we also check the width.
 begin
@@ -309,12 +309,16 @@ begin
   case UI.Height > rect.bottom - rect.top of TRUE:  begin
                                                       UI.width := trunc(UI.width * 0.90);   // Yes, adjust the width!!...
                                                       adjustAspectRatio;                    // ...then let adjustAspectRatio do the rest
-                                                      end;end;
+                                                      end;end;                              // adjustAspectRatio recalls checkScreenLimits
 
   case UI.Width > rect.right - rect.left of TRUE:  begin
                                                       UI.width := trunc(UI.width * 0.90);
-                                                      adjustAspectRatio;
-                                                      end;end;
+                                                      adjustAspectRatio;                    // adjustAspectRatio recalls checkScreenLimits
+                                                      end;end;                              // until both the width and height of the window fit the screen work area dimensions
+
+  var vR: TRect;
+  GetWindowRect(UI.Handle, vR);
+  case vR.bottom > rect.bottom of TRUE: UI.top := UI.top - (vR.bottom - rect.bottom); end;  // is the bottom of the window below the taskbar? Move the window up.
 
   case GV.userMoved of FALSE: doCentreWindow; end; // re-centre the window unless the user has deliberately positioned it somewhere
 
