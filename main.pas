@@ -946,10 +946,6 @@ begin
   setLength(handles, 0);
   enumWindows(@enumAllWindows, 0);
 
-  debugInteger('lengthHandles', length(handles));
-  debugInteger('low(handles', low(handles));
-  debugInteger('high(handles', high(handles));
-
   for i := low(handles) to high(handles) do begin
     case cmd of
       WIN_CLOSEAPP:   sendMessage(handles[i], WM_SYSCOMMAND, WIN_RESIZE, 0);                    // CTRL-0 = closeApp;
