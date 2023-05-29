@@ -25,7 +25,7 @@ uses
   System.Classes, WMPLib_TLB, Vcl.AppEvnts, WinApi.Messages, WinApi.Windows;
 
 type
-  TUI = class(TForm)
+  TMMPUI = class(TForm)
     applicationEvents: TApplicationEvents;
     lblAudioBitRate: TLabel;
     lblBitRate: TLabel;
@@ -92,11 +92,12 @@ type
     function  showHideHelp: boolean;
     function  showInfo(aInfo: string): boolean;
     function  showMediaCaption: boolean;
+    function  showXY: boolean;
     function  toggleControls(Shift: TShiftState): boolean;
   end;
 
 var
-  UI: TUI;  // User Interface
+  UI: TMMPUI;  // User Interface
 
 implementation
 
@@ -129,6 +130,7 @@ type
     FMute:          boolean;
     FnumApps:       integer;
     FnewMediaFile:  boolean;
+    FPotPlayer:     boolean;
     FSampling:      boolean;
     FShowingHelp:   boolean;
     FStartUp:       boolean;
@@ -143,6 +145,7 @@ type
     constructor create;
     destructor  destroy;  override;
     function    invalidPlayIx: boolean;
+    property    alwaysPlayWithPotPlayer: boolean  read FPotPlayer     write FPotPlayer;
     property    appBuildVersion:    string        read getAppBuildVersion;
     property    appReleaseVersion:  string        read getAppReleaseVersion;
     property    blackOut:           boolean       read FBlackOut      write FBlackOut;
@@ -764,6 +767,7 @@ begin
     GV.newMediaFile   := TRUE;
     GV.metaDataCount  := 0;     // tmrMetaData will be enabled in WMPplay after playback commences
     WMPplay;
+    case GV.alwaysPlayWithPotPlayer of TRUE: begin delay(3000); playWithPotPlayer; end;end;
   end;end;
 end;
 
@@ -880,6 +884,7 @@ begin
   case GV.userMoved of FALSE: doCentreWindow; end;
   UI.showHelpWindow(FALSE);
   windowCaption;
+  UI.showXY;
 end;
 
 function TFX.resumeBookmark: boolean;
@@ -936,8 +941,8 @@ var
   className  : array[0..255] of char;
 begin
   case getClassName(handle, className, sizeOf(className)) > 0 of TRUE:
-    case strComp(className, 'TUI') = 0 of TRUE: begin setLength(handles, length(handles) + 1);
-                                                      handles[high(handles)] := handle; end;end;end;
+    case strComp(className, 'TMMPUI') = 0 of TRUE: begin setLength(handles, length(handles) + 1);
+                                                         handles[high(handles)] := handle; end;end;end;
 
   result := TRUE;
 end;
@@ -952,8 +957,8 @@ begin
 
   for i := low(handles) to high(handles) do begin
     case cmd of
-      WIN_CLOSEAPP:   sendMessage(handles[i], WM_SYSCOMMAND, WIN_RESIZE, 0);                    // CTRL-0 = closeApp;
-      WIN_RESIZE:     begin sendMessage(handles[i], WM_SYSCOMMAND, WIN_RESIZE, length(handles));  // CTRL-9 = resize however many simultaneous windows there are
+      WIN_CLOSEAPP:   sendMessage(handles[i], WM_SYSCOMMAND, WIN_CLOSEAPP, 0);                  // CTRL-0 = closeApp;
+      WIN_RESIZE:     begin sendMessage(handles[i], WM_SYSCOMMAND, WIN_RESIZE, length(handles));// CTRL-9 = resize however many simultaneous windows there are
                             sendMessage(handles[i], WM_SYSCOMMAND, WIN_POSITION, i + 1); end;   //          then tell each window which number they are, e.g. 1-9
       WIN_CONTROLS:   sendMessage(handles[i], WM_SYSCOMMAND, WIN_CONTROLS, 0);                  // get each window to toggle full controls
       WIN_RESTART:    sendMessage(handles[i], WM_SYSCOMMAND, WIN_RESTART, 0);                   // get each window to restart their video
@@ -1085,6 +1090,7 @@ begin
 try
   case (ssCtrl in shift) and (key = 48) of TRUE: begin sendToAll(WIN_CLOSEAPP); EXIT; end;end; // Ctrl-0
   case (ssCtrl in shift) and (key = 57) of TRUE: begin sendToAll(WIN_RESIZE);   EXIT; end;end; // Ctrl-9
+  case (ssCtrl in shift) and (key in [80, 112]) of TRUE: GV.alwaysPlayWithPotPlayer := NOT GV.alwaysPlayWithPotPlayer; end; // Ctrl-P or Ctrl-p
 
   case UIKey(Key, Shift, TRUE) of TRUE: EXIT; end;  // Keys that can be pressed singly or held down for repeat action: don't process the KeyUp as well as the KeyDown
 
@@ -1273,7 +1279,7 @@ end;
 
 {$R *.dfm}
 
-function TUI.addMenuItem: boolean;
+function TMMPUI.addMenuItem: boolean;
 var vSysMenu: HMENU;
 begin
   vSysMenu := GetSystemMenu(Handle, False);
@@ -1282,7 +1288,7 @@ begin
   AppendMenu(vSysMenu, MF_STRING, MENU_HELP_ID, 'Show &Keyboard functions');
 end;
 
-procedure TUI.applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
+procedure TMMPUI.applicationEventsMessage(var Msg: tagMSG; var Handled: Boolean);
 // main event handler for capturing keystrokes
 var
   Key: word;
@@ -1304,7 +1310,7 @@ begin
                                             end;end;
 end;
 
-function TUI.fakeSystemMenu: boolean;
+function TMMPUI.fakeSystemMenu: boolean;
 // There's a problem with showing additional Delphi forms in applications with an active Windows Media Player component.
 // The forms will flash up momentarily but will then disappear.
 // The only solution I have found so far is to add menu items for the windows in the System Menu (alt-space) of the application (see TUI.addMenuItem).
@@ -1315,12 +1321,12 @@ begin
   SendMessage(Handle, WM_SYSCOMMAND, MENU_HELP_ID, 0);
 end;
 
-procedure TUI.FormActivate(Sender: TObject);
+procedure TMMPUI.FormActivate(Sender: TObject);
 begin
 //  showInfo(GV.appReleaseVersion);
 end;
 
-procedure TUI.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+procedure TMMPUI.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 // make sure to stop video playback before exiting the app or WMP can get upset
 begin
   WMP.controls.stop;
@@ -1329,7 +1335,7 @@ begin
   DragAcceptFiles(UI.Handle, FALSE);
 end;
 
-procedure TUI.FormCreate(Sender: TObject);
+procedure TMMPUI.FormCreate(Sender: TObject);
 begin
   addMenuItem;
   SetWindowLong(UI.Handle, GWL_STYLE, GetWindowLong(UI.Handle, GWL_STYLE) OR WS_CAPTION AND (NOT (WS_BORDER)));
@@ -1383,17 +1389,17 @@ begin
   GV.startup := TRUE;                               // used in FormResize to initially left-justify the application window if required
 end;
 
-procedure TUI.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure TMMPUI.FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
   case (ssAlt in Shift) and ((Key = 84) or (Key = 116)) of TRUE: begin FX.tabForwardsBackwards; Key := 0; end;end; // alt-t or alt-T = Tab forwards/backwards n%      Mods: ALT-T, SHIFT-T, CAPSLOCK, Ctrl-T
 end;
 
-procedure TUI.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+procedure TMMPUI.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
   WMP.cursor := crDefault;  // gets reset to crNone in tmrTimeDisplay event
 end;
 
-procedure TUI.FormResize(Sender: TObject);
+procedure TMMPUI.FormResize(Sender: TObject);
 begin
   FX.windowCaption;
 
@@ -1405,26 +1411,27 @@ begin
   showHelpWindow(FALSE); // reposition the help window if it's open but don't create it if it's not
 end;
 
-function TUI.hideLabels: boolean;
+function TMMPUI.hideLabels: boolean;
 // called from ZoomIn and ZoomOut
 begin
   case lblTimeDisplay.Visible of TRUE: toggleControls([]); end;
 end;
 
-procedure TUI.lblMuteUnmuteClick(Sender: TObject);
+procedure TMMPUI.lblMuteUnmuteClick(Sender: TObject);
 // The user clicked the Mute/Unmute label in the top right corner of the window
 // Currently, this label isn't operational.
 begin
   FX.doMuteUnmute;
 end;
 
-function TUI.positionWindow(winNum: WORD): boolean;
+function TMMPUI.positionWindow(winNum: WORD): boolean;
 // position all the running windows depending on how many there are in total and which # this instance has been given
 // see the comment in resizeWindow4 about how the windows are resized to acoommodate the various numbers of rows of windows
-// currently, this code allows for up to 9 windows in a 3x3 grid
+// currently, this code allows for up to 12 windows in a 4x3 grid
 // I may revisit this later to allow it to cater for any number of windows dynamically rather than the rows being hardcoded below
 // GV.numApps was received in resizeWindow4
 begin
+  showInfo(format('%d of %d', [winNum, GV.numApps]));
   case GV.numApps of
     1:  FX.doCentreWindow;                        // 1 app running, just centre it
     2:  case winNum of                            // 2 apps running
@@ -1437,18 +1444,21 @@ begin
     4: case winNum of
           1: posWinXY(0, 0);
           2: posWinXY(width, 0);
+
           3: posWinXY(0, height);
           4: posWinXY(width, height); end;
     5: case winNum of
           1: posWinXY(0, 0);
           2: posWinXY(width, 0);
           3: posWinXY(width * 2, 0);
+
           4: posWinXY(width div 2, height);
           5: posWinXY(width div 2 + width, height); end;
     6: case winNum of
           1: posWinXY(0, 0);
           2: posWinXY(width, 0);
           3: posWinXY(width * 2, 0);
+
           4: posWinXY(0, height);
           5: posWinXY(width, height);
           6: posWinXY(width * 2, height); end;
@@ -1456,39 +1466,87 @@ begin
           1: posWinXY(0, 0);
           2: posWinXY(width, 0);
           3: posWinXY(width * 2, 0);
-          4: posWinXY(width * 3, 0);
-          5: posWinXY(width div 3, height);
-          6: posWinXY(width div 3 + width, height);
-          7: posWinXY(width div 3 + width * 2, height); end;
+
+          4: posWinXY(0, height);
+          5: posWinXY(width, height);
+          6: posWinXY(width * 2, height);
+
+          7: posWinXY(width, height * 2); end;
     8: case winNum of
           1: posWinXY(0, 0);
           2: posWinXY(width, 0);
           3: posWinXY(width * 2, 0);
-          4: posWinXY(width * 3, 0);
-          5: posWinXY(0, height);
-          6: posWinXY(width, height);
-          7: posWinXY(width * 2, height);
-          8: posWinXY(width * 3, height); end;
+
+          4: posWinXY(0, height);
+          5: posWinXY(width, height);
+          6: posWinXY(width * 2, height);
+
+          7: posWinXY(width div 2, height * 2);
+          8: posWinXY(width div 2 + width, height * 2); end;
     9: case winNum of
           1: posWinXY(0, 0);
           2: posWinXY(width, 0);
           3: posWinXY(width * 2, 0);
+
           4: posWinXY(0, height);
           5: posWinXY(width, height);
           6: posWinXY(width * 2, height);
+
           7: posWinXY(0, height * 2);
           8: posWinXY(width, height * 2);
           9: posWinXY(width * 2, height * 2); end;
+    10: case winNum of
+          1: posWinXY(0, 0);
+          2: posWinXY(width, 0);
+          3: posWinXY(width * 2, 0);
+          4: posWinXY(width * 3, 0);
+
+          5: posWinXY(0, height);
+          6: posWinXY(width, height);
+          7: posWinXY(width * 2, height);
+          8: posWinXY(width * 3, height);
+
+          9: posWinXY(width, height * 2);
+          10: posWinXY(width * 2, height * 2); end;
+    11: case winNum of
+          1: posWinXY(0, 0);
+          2: posWinXY(width, 0);
+          3: posWinXY(width * 2, 0);
+          4: posWinXY(width * 3, 0);
+
+          5: posWinXY(0, height);
+          6: posWinXY(width, height);
+          7: posWinXY(width * 2, height);
+          8: posWinXY(width * 3, height);
+
+          9: posWinXY(width div 2, height * 2);
+          10: posWinXY(width div 2 + width, height * 2);
+          11: posWinXY(width div 2 + width * 2, height * 2); end;
+    12: case winNum of
+          1: posWinXY(0, 0);
+          2: posWinXY(width, 0);
+          3: posWinXY(width * 2, 0);
+          4: posWinXY(width * 3, 0);
+
+          5: posWinXY(0, height);
+          6: posWinXY(width, height);
+          7: posWinXY(width * 2, height);
+          8: posWinXY(width * 3, height);
+
+          9: posWinXY(0, height * 2);
+          10: posWinXY(width, height * 2);
+          11: posWinXY(width * 2, height * 2);
+          12: posWinXY(width * 3, height * 2); end;
   end;
 end;
 
-function TUI.posWinXY(x, y: integer): boolean;
+function TMMPUI.posWinXY(x, y: integer): boolean;
 begin
   SetWindowPos(UI.Handle, 0, x, y, 0, 0, SWP_NOZORDER + SWP_NOSIZE);
   GV.userMoved := TRUE;
 end;
 
-procedure TUI.progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+procedure TMMPUI.progressBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 // When a SHIFT key is held down, calculate a new video position based on where the mouse is on the prograss bar.
 // This *was* intended to allow dragging/scrubbing through the video.
 // Unfortunately, WMP can't cope. It doesn't react to the new positions fast enough and gets itself in a right pickle.
@@ -1507,7 +1565,7 @@ begin
 //  FX.updateTimeDisplay;
 end;
 
-procedure TUI.progressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TMMPUI.progressBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 // calculate a new video position based on where the progress bar is clicked
 begin
   case FX.noMediaFiles of TRUE: EXIT; end; // prevent invalid call to WMP when there's no video and the user still clicks the progressBar anyway
@@ -1518,7 +1576,7 @@ begin
   FX.updateTimeDisplay;
 end;
 
-function TUI.repositionLabels: boolean;
+function TMMPUI.repositionLabels: boolean;
 // called from FormResize
 // Delphi 10.4 seems to have a problem with Anchors = [akRight, akBottom] and placed all the labels offscreen about 1000 pixels too far to the right.
 // I now position them manually.
@@ -1558,7 +1616,7 @@ begin
   repositionTimeDisplay;
 end;
 
-function TUI.repositionTimeDisplay: boolean;
+function TMMPUI.repositionTimeDisplay: boolean;
 // We always want the timestamp display to be sat either on top of the progressBar or sat on the bottom edge of the window
 // On other displays, the magic numbers may need to be adjusted and configurable via an application INI file
 begin
@@ -1567,7 +1625,7 @@ begin
                               FALSE:  lblTimeDisplay.Top := UI.Height - lblTimeDisplay.Height - 7; end; // magic number
 end;
 
-function TUI.repositionWMP: boolean;
+function TMMPUI.repositionWMP: boolean;
 // Set WMP to be 1 pixel bigger than the window on all four sides.
 // This [in theory] eliminates any chance of a border pixel on the left and right of the window
 // Windows still insists on drawing a 1-pixel border!
@@ -1579,7 +1637,7 @@ begin
   WMP.Top     := -1;
 end;
 
-function TUI.resizeWindow1: boolean;
+function TMMPUI.resizeWindow1: boolean;
 // default window size, called by FormCreate when the CAPS LOCK key isn't down
 // Modified to just set a default width for the window. Playing the initial video clip and automatically adjusting the aspect ratio will set the height.
 // NB gets the param from HKEY_CURRENT_USER\SOFTWARE\Classes\Applications\MinimalistMediaPlayer.exe\shell\open\command
@@ -1590,7 +1648,7 @@ begin
   FX.doCentreWindow;
 end;
 
-function TUI.resizeWindow2: boolean;
+function TMMPUI.resizeWindow2: boolean;
 // [2] = resize so that two videos can be positioned side-by-side horizontally by the user on a 1920-width screen
 // If the user opens two video files simultaneously from Explorer with the CAPS LOCK key on, two instances of MediaPlayer will be launched.
 // FormCreate will call resizeWindow2 to allow both videos to be positioned by the user alongside each other on a 1920-pixel-width monitor.
@@ -1604,7 +1662,7 @@ begin
   UI.height  := 640;
 end;
 
-function TUI.resizeWindow3(Shift: TShiftState): boolean;
+function TMMPUI.resizeWindow3(Shift: TShiftState): boolean;
 // [G]reater  = increase size of window
 // Ctrl-G     = decrease size of window
 // Called from TFX.greaterWindow
@@ -1615,40 +1673,42 @@ begin
   end;
 end;
 
-function TUI.resizeWindow4(numApps: WORD): boolean;
+function TMMPUI.resizeWindow4(numApps: WORD): boolean;
 // resize the window aocording to how many running instances there are of MinimalistMediaPlayer
 // set the width and height depending on how the windows will be displayed:
 // 1 taking up 90% of the screen width
-// 2 or 3 side by side in one row
-// 4 in two rows of 2 & 2
+// 2 side by side in one row
+// 3 or 4 in two rows of 2 & 1 and 2 & 2 respectively
 // 5 or 6 in two rows of 3 & 2 and 3 & 3 respectively
 // 7 or 8 in two rows of 4 & 3 and 4 & 4 respectively
 // 9 three rows of 3
 begin
   GV.numApps := numApps; // used by positionWindow
   case numApps of
-    0: FX.closeApp;
+//    0: FX.closeApp;
     1:    UI.width := trunc(FX.getScreenWidth * 0.90);
-    2:    UI.width := FX.getScreenWidth div 2;
+    2:    UI.width := FX.getScreenWidth div 2; // 2 columns
     3:    UI.width := FX.getScreenWidth div 2;
     4:    UI.width := FX.getScreenWidth div 2;
-    5, 6: UI.width := FX.getScreenWidth div 3;
-    7, 8: UI.width := FX.getScreenWidth div 4;
+    5, 6: UI.width := FX.getScreenWidth div 3; // 3 columns
+    7, 8: UI.width := FX.getScreenWidth div 3;
     9:    UI.width := FX.getScreenWidth div 3;
+   10, 11, 12: UI.width := FX.getScreenWidth div 4; // 4 columns
   end;
   GV.userMoved := TRUE;
   FX.adjustAspectRatio;      // apply the correct aspect ratio before modifying the height
   tmrResize.enabled := TRUE; // force WMP to resize to new UI size
   case numApps of
-    3:    UI.height := FX.getScreenHeight div 2;
+    3:    UI.height := FX.getScreenHeight div 2; // 2 rows
     4:    UI.height := FX.getScreenHeight div 2;
     5, 6: UI.height := FX.getScreenHeight div 2;
-    7, 8: UI.height := FX.getScreenHeight div 2;
+    7, 8: UI.height := FX.getScreenHeight div 3; // 3 rows
     9:    UI.height := FX.getScreenHeight div 3;
+    10, 11, 12: UI.height := FX.getScreenHeight div 3; // 3 rows
   end;
 end;
 
-function TUI.setupProgressBar: boolean;
+function TMMPUI.setupProgressBar: boolean;
 // change the Progress Bar from it's Windows default characteristics to a minimalist display
 begin
   SetThemeAppProperties(0);
@@ -1664,7 +1724,7 @@ begin
   UI.Width := UI.Width + 1; // the progressBar gets a nasty 1-pixel border, despite the above code.
 end;
 
-function TUI.showAboutBox: boolean;
+function TMMPUI.showAboutBox: boolean;
 begin
   with TAboutForm.Create(NIL) do
   try
@@ -1676,26 +1736,31 @@ begin
   end;
 end;
 
-function TUI.showHelpWindow(create: boolean = TRUE): boolean;
+function TMMPUI.showHelpWindow(create: boolean = TRUE): boolean;
 begin
   var vPt := ClientToScreen(point(WMP.left + WMP.width - 17, WMP.top + 1)); // screen position of the top right corner of the application window, roughly.
   showHelp(vPt, create);
 end;
 
-function TUI.showMediaCaption: boolean;
+function TMMPUI.showMediaCaption: boolean;
 begin
   lblMediaCaption.Visible := TRUE;
   tmrMediaCaption.Enabled := TRUE;
 end;
 
-function TUI.showHideHelp: boolean;
+function TMMPUI.showXY: boolean;
+begin
+  showInfo(format('%d x %d', [UI.width, UI.height]));
+end;
+
+function TMMPUI.showHideHelp: boolean;
 begin
   GV.showingHelp := NOT GV.showingHelp;
   case GV.showingHelp of  TRUE: fakeSystemMenu;
                          FALSE: shutHelp; end;
 end;
 
-function TUI.showInfo(aInfo: string): boolean;
+function TMMPUI.showInfo(aInfo: string): boolean;
 begin
   lblInfo.Caption := aInfo;
   lblInfo.Visible := TRUE;
@@ -1703,20 +1768,20 @@ begin
   tmrInfo.Enabled := TRUE;
 end;
 
-procedure TUI.tmrInfoTimer(Sender: TObject);
+procedure TMMPUI.tmrInfoTimer(Sender: TObject);
 // We want the feedback info to only be shown briefly. So, we use a timer to hide it again.
 begin
   tmrInfo.Enabled := FALSE;
   lblInfo.Visible := FALSE;
 end;
 
-procedure TUI.tmrMediaCaptionTimer(Sender: TObject);
+procedure TMMPUI.tmrMediaCaptionTimer(Sender: TObject);
 begin
   tmrMediaCaption.Enabled := FALSE;
   lblMediaCaption.Visible := FALSE;
 end;
 
-procedure TUI.tmrMetaDataTimer(Sender: TObject);
+procedure TMMPUI.tmrMetaDataTimer(Sender: TObject);
 // We use this timer to delay fetching the video metadata from WMP. Trying to access it too soon after playback commences can cause WMP internal problems.
 // Some metadata is available quickly, like the source dimensions. Other bits take longer, like the various bitrates, which can take up to 3 seconds.
 // As soon as we have the source dimensions, we can call adjustAspectRatio.
@@ -1739,21 +1804,21 @@ begin
   end;end;
 end;
 
-procedure TUI.tmrPlayNextTimer(Sender: TObject);
+procedure TMMPUI.tmrPlayNextTimer(Sender: TObject);
 // At the end of a video, WMP behaves better (internal to itself) if we use a timer to slightly delay playing the next video in the list
 begin
   tmrPlayNext.Enabled := FALSE;
   FX.PlayNextFile;
 end;
 
-procedure TUI.tmrResizeTimer(Sender: TObject);
+procedure TMMPUI.tmrResizeTimer(Sender: TObject);
 begin
   tmrResize.enabled := FALSE;
   UI.width := UI.width + 1;
   UI.width := UI.width - 1;
 end;
 
-procedure TUI.tmrTimeDisplayTimer(Sender: TObject);
+procedure TMMPUI.tmrTimeDisplayTimer(Sender: TObject);
 // update the video timestamp display
 // This is also a convenient time and place to hide the cursor
 begin
@@ -1761,7 +1826,7 @@ begin
   WMP.Cursor := crNone;
 end;
 
-function TUI.toggleControls(Shift: TShiftState): boolean;
+function TMMPUI.toggleControls(Shift: TShiftState): boolean;
 // [C] = Show the timestamp display and the Mute/Unmute button OR Hide all displayed controls/metadata
 // Ctrl-C Show/Hide all displayed controls/metadata
 // If the timestamp and Mute/Unmute button are already being displayed, Ctrl-C will also display all the metadata info
@@ -1797,7 +1862,7 @@ begin
   repositionLabels;
 end;
 
-procedure TUI.WMDropFiles(var Msg: TWMDropFiles);
+procedure TMMPUI.WMDropFiles(var Msg: TWMDropFiles);
 // Allow a media file to be dropped onto the window.
 // The playlist will be entirely refreshed using the contents of this media file's folder.
 var vFilePath: string;
@@ -1820,13 +1885,13 @@ begin
   Msg.Result := 0;
 end;
 
-procedure TUI.WMPClick(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
+procedure TMMPUI.WMPClick(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
 // Standard functionality: Play/Pause a video when the user left-clicks on it
 begin
   main.FX.doPausePlay;
 end;
 
-procedure TUI.WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
+procedure TMMPUI.WMPKeyDown(ASender: TObject; nKeyCode, nShiftState: SmallInt);
 // Handle a KeyDown message from the media player
 var Key: WORD;
 begin
@@ -1834,7 +1899,7 @@ begin
   FX.UIKey(Key, TShiftState(nShiftState));
 end;
 
-procedure TUI.WMPKeyUp(ASender: TObject; nKeyCode, nShiftState: SmallInt);
+procedure TMMPUI.WMPKeyUp(ASender: TObject; nKeyCode, nShiftState: SmallInt);
 // Handle a KeyUp message from the media player
 var Key: WORD;
 begin
@@ -1850,7 +1915,7 @@ begin
   FX.isVideoOffscreen;
 end;
 
-procedure TUI.WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
+procedure TMMPUI.WMPMouseDown(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
 // If there is no window caption you can still drag the window around by holding down a CTRL key and dragging with the left mouse button on the video.
 // Edit: Removed CTRL key so that just dragging the window with the left mouse button now matches what happens when you do that with the title bar of any window.
 // A side effect of this change is that media files can be paused/resumed using a left double-click, but no longer with a single left click.
@@ -1877,13 +1942,13 @@ begin
   showHelpWindow(FALSE); // move the help window, if any, with the main window, but don't create one
 end;
 
-procedure TUI.WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
+procedure TMMPUI.WMPMouseMove(ASender: TObject; nButton, nShiftState: SmallInt; fX, fY: Integer);
 // Handle a MouseMove message from the media player: display the standard mouse cursor
 begin
   WMP.cursor := crDefault; // this is changed back to crNone when tmrTimeDisplay fires
 end;
 
-procedure TUI.WMPPlayStateChange(ASender: TObject; NewState: Integer);
+procedure TMMPUI.WMPPlayStateChange(ASender: TObject; NewState: Integer);
 {*
 wmppsUndefined	    Windows Media Player is in an undefined state.
 wmppsStopped	      Playback is stopped.
@@ -1909,12 +1974,13 @@ begin
   case NewState of wmppsMediaEnded: tmrPlayNext.Enabled     := TRUE; end;         // WMP needs a thread break before initiating the next video cleanly
 end;
 
-procedure TUI.WMSysCommand(var Message: TWMSysCommand);
+procedure TMMPUI.WMSysCommand(var Message: TWMSysCommand);
 // respond to the WM_SYSCOMMAND messages this app sends to itself
 begin
   inherited;
   case Message.CmdType of MENU_ABOUT_ID:  showAboutBox; end;
   case Message.CmdType of MENU_HELP_ID:   showHelpWindow; end;
+  case Message.CmdType of WIN_CLOSEAPP:   FX.closeApp; end;
   case Message.CmdType of WIN_RESIZE:     resizeWindow4(message.key); end;  // key contains number of running instances of MinimalistMediaPlayer
   case Message.CmdType of WIN_POSITION:   positionWindow(message.key); end; // key designates which window # this is of all the running instances
   case Message.CmdType of WIN_CONTROLS:   toggleControls([]); end;

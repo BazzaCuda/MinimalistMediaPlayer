@@ -132,7 +132,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="main.pas">
-            <Form>UI</Form>
+            <Form>MMPUI</Form>
         </DCCReference>
         <DCCReference Include="FormInputBox.pas">
             <Form>InputBoxForm</Form>

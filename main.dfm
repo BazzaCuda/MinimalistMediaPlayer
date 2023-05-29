@@ -1,4 +1,4 @@
-object UI: TUI
+object MMPUI: TMMPUI
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]

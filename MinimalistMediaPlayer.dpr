@@ -20,7 +20,7 @@ program MinimalistMediaPlayer;
 
 uses
   Vcl.Forms,
-  main in 'main.pas' {UI},
+  main in 'main.pas' {MMPUI},
   FormInputBox in 'FormInputBox.pas' {InputBoxForm},
   Vcl.Themes,
   Vcl.Styles,
@@ -40,7 +40,7 @@ begin
 
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TUI, UI);
+  Application.CreateForm(TMMPUI, UI);
   try
     Application.Run;
   except
