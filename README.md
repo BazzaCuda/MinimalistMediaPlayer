@@ -78,7 +78,7 @@ Additional |
 `Left double-click video` | pause / resume playback
 `Right single-click video` | pause / resume playback
 `SHIFT key (either)` | show or hide the Help window listing all the keyboard functions
-`Ctrl-9` | auto-arrange up to 9 instances of ``Minimalist Media Player`` in a 3x3 grid (all media windows)
+`Ctrl-9` | auto-arrange up to 12 instances of ``Minimalist Media Player`` in a 4x3 grid (all media windows)
 `Ctrl-0` | close all running instances of ``Minimalist Media Player`` (all media windows)
 
 Media File Formats
