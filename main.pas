@@ -749,6 +749,9 @@ end;
 
 function TFX.playCurrentFile: boolean;
 // CurrentFile is the one whose index in the playList equals playIx
+var
+  media: IWMPMedia;
+  playlist: IWMPPlayList;
 begin
   case GV.invalidPlayIx of TRUE: EXIT; end;             // sanity check
 
@@ -762,7 +765,17 @@ begin
     UI.tmrMediaCaption.Enabled  := FALSE;
     UI.tmrMediaCaption.Enabled  := TRUE;
 
+    // Load subtitles
+    UI.WMP.closedCaption.captioningId := 'captions';
+    UI.WMP.closedCaption.SAMIFileName := 'file://B:\Movies\Let The Right One In (2008).smi';
+
     UI.WMP.URL := 'file://' + currentFilePath;
+
+//    playlist := UI.WMP.currentPlaylist;
+//    media := UI.WMP.newMedia('B:\Movies\Let The Right One In (2008).srt');
+//    playlist.appendItem(Media);
+//    UI.WMP.currentPlaylist := playlist;
+
     unZoom;
     GV.newMediaFile   := TRUE;
     GV.metaDataCount  := 0;     // tmrMetaData will be enabled in WMPplay after playback commences
@@ -1712,10 +1725,8 @@ function TMMPUI.setupProgressBar: boolean;
 // change the Progress Bar from it's Windows default characteristics to a minimalist display
 begin
   SetThemeAppProperties(0);
-  ProgressBar.Brush.Color := clBlack;
-  // Set Background colour
-  SendMessage(ProgressBar.Handle, PBM_SETBARCOLOR, 0, clDkGray);
-  // Set bar colour
+  ProgressBar.Brush.Color := clBlack; // Set Background colour
+  SendMessage(ProgressBar.Handle, PBM_SETBARCOLOR, 0, $202020); // Set bar colour
   var vProgressBarStyle := GetWindowLong(ProgressBar.Handle, GWL_EXSTYLE);
   vProgressBarStyle := vProgressBarStyle - WS_EX_STATICEDGE;
   SetWindowLong(ProgressBar.Handle, GWL_EXSTYLE, vProgressBarStyle);

@@ -40,6 +40,7 @@ begin
 
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
+//  TStyleManager.TrySetStyle('Charcoal Dark Slate');
   Application.CreateForm(TMMPUI, UI);
   try
     Application.Run;

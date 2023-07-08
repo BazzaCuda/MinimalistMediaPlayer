@@ -7016,7 +7016,7 @@ object MMPUI: TMMPUI
   end
   object lblBitRate: TLabel
     Left = 10
-    Top = 281
+    Top = 283
     Width = 86
     Height = 13
     Hint = 'Overall Bitrate'
