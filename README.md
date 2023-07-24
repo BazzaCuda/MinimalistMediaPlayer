@@ -124,6 +124,8 @@ MPlayer vs Microsoft Media Foundation vs Windows Media Player
 --------------
 Ultimately, I would like to replace Windows Media Player as the video renderer and make ``Minimalist Media Player`` a front-end for MPlayer with its superior video-handling capabilities, or possibly Microsoft Media Foundation / MfPack (I would appreciate some advice on which would be the most up-to-date approach). For instance, WMP really doesn't do Frame Backwards properly (it goes back 1 second not 1 frame!), and I also had to comment out the video scrubbing facility (dragging the mouse along the progress bar to quickly scan through a video - WMP gets in a right pickle!). If you would like to implement MPlayer or MMF/MfPack (whichever would provide the richest functionality going forward) to replace WMP, please be my guest!!
 
+EDIT: I am currently beta-testing a complete rewrite of this project based on MPV! ``MinimalistMediaPlayerX`` will be released into the wild in a matter of weeks. Stay tuned.
+
 And finally, Esther...
 ------------------
 This is my first ever attempt at releasing a source code project as Open Source. Please be gentle :P If this goes well, I have many more projects that I may be willing to release into the wild.
