@@ -275,6 +275,8 @@ begin
 
   checkScreenLimits;
   UI.showHelpWindow(FALSE);
+
+//  debugInteger('X', X); debugInteger('Y', Y); debugFormat('vRatio: %f', [vRatio]);
 //  debugInteger('screen height', FX.getScreenHeight);
 //  debugInteger('screen width', FX.getScreenWidth);
 //  debugInteger('UI width', UI.width);
@@ -1350,6 +1352,7 @@ end;
 
 procedure TMMPUI.FormCreate(Sender: TObject);
 begin
+  styleElements := [seFont]; // remove seClient from theme styling
   addMenuItem;
   SetWindowLong(UI.Handle, GWL_STYLE, GetWindowLong(UI.Handle, GWL_STYLE) OR WS_CAPTION AND (NOT (WS_BORDER)));
   DragAcceptFiles(UI.Handle, TRUE);
