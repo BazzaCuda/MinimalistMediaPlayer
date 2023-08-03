@@ -1,3 +1,8 @@
+**ANNOUNCEMENT**: This project is now entirely superseded by https://github.com/BazzaCuda/MinimalistMediaPlayerX/ which is built on the famous MPV API, libmpv. As such it provides better control over the video-playback experience, including proper zoom, pan, rotation, frame forwards and backwards(!), subtitles, brightness, contrast, gamma and saturation, as well as providing superior support for the world's media formats.
+
+Unless I get any specific requests for amendments (bug fixes), the current release of this [here] version of Minimalist Media Player (built on Microsoft's more limited Windows Media Player ActiveX control) is likely to be its last. Goodbye, faithful servant!
+
+
 Minimalist Media Player
 =====================
 
