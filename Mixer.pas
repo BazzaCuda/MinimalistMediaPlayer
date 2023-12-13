@@ -1,5 +1,5 @@
 {   Minimalist Media Player
-    Copyright (C) 2021 Baz Cuda <bazzacuda@gmx.com>
+    Copyright (C) 2021 Baz Cuda
     https://github.com/BazzaCuda/MinimalistMediaPlayer
 
     NB: I didn't write this unit and I don't remember where I got it.
